@@ -1,0 +1,1259 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kevin Keet | Visual Resume</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 24px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .header-left p span {
+            color: #5eead4;
+            font-weight: 500;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-links {
+            display: flex;
+            gap: 8px;
+            margin-right: 8px;
+        }
+
+        .header-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: rgba(94, 234, 212, 0.1);
+            border: 1px solid rgba(94, 234, 212, 0.2);
+            border-radius: 8px;
+            color: #5eead4;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .header-link:hover {
+            background: rgba(94, 234, 212, 0.2);
+            border-color: rgba(94, 234, 212, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .header-link i {
+            font-size: 0.75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(20, 184, 166, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(30, 41, 59, 0.8);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(51, 65, 85, 0.8);
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        /* Instruction Banner */
+        .instruction-banner {
+            max-width: 1400px;
+            margin: 0 auto 16px;
+            padding: 0 24px;
+        }
+
+        .instruction-content {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(94, 234, 212, 0.2);
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .instruction-content i {
+            color: #5eead4;
+            font-size: 1rem;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+        }
+
+        /* Interactive Image Container */
+        .image-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: #1e293b;
+        }
+
+        .background-media {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Hotspot Overlay - covers video exactly */
+        .hotspot-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        /* Hotspot Base Styles */
+        .hotspot {
+            position: absolute;
+            cursor: pointer;
+            border: 2px solid transparent;
+            background: transparent;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .hotspot:hover {
+            background: rgba(94, 234, 212, 0.1);
+            border-color: rgba(94, 234, 212, 0.5);
+        }
+
+        .hotspot-dog:hover {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        /* Pulse indicator */
+        .hotspot::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 10px;
+            height: 10px;
+            background: #5eead4;
+            border-radius: 50%;
+            opacity: 0.9;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px rgba(94, 234, 212, 0.8);
+        }
+
+        .hotspot-dog::after {
+            background: #f59e0b;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.3); opacity: 0.5; }
+        }
+
+        /* Floating Tooltip - fixed position on screen */
+        .tooltip {
+            position: fixed;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(94, 234, 212, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 280px;
+            max-width: 320px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .tooltip.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .tooltip-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, rgba(94, 234, 212, 0.2), rgba(94, 234, 212, 0.1));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5eead4;
+            font-size: 1rem;
+        }
+
+        .tooltip-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .tooltip-body {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .tooltip-body ul {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .tooltip-body li {
+            padding: 4px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .tooltip-body li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #5eead4;
+        }
+
+        .tooltip-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(94, 234, 212, 0.1);
+            color: #5eead4;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .tag-amber {
+            background: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+        }
+
+        /* Chat Window */
+        .chat-window {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 380px;
+            height: 520px;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-window.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.8);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-avatar {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            color: #f8fafc;
+            font-size: 0.95rem;
+        }
+
+        .chat-status {
+            font-size: 0.75rem;
+            color: #5eead4;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #5eead4;
+            border-radius: 50%;
+        }
+
+        .chat-close {
+            background: rgba(148, 163, 184, 0.1);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .message-bot {
+            background: rgba(30, 41, 59, 0.8);
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .message-user {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        .message-typing {
+            display: flex;
+            gap: 4px;
+            padding: 16px;
+        }
+
+        .message-typing span {
+            width: 8px;
+            height: 8px;
+            background: #5eead4;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .message-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .message-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-4px); }
+        }
+
+        .chat-input-area {
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #f8fafc;
+            font-size: 0.875rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: #5eead4;
+        }
+
+        .chat-input::placeholder {
+            color: #64748b;
+        }
+
+        .chat-send {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chat-send:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Chat Toggle Button */
+        .chat-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 32px rgba(245, 158, 11, 0.5);
+        }
+
+        .chat-toggle.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8);
+        }
+
+        /* Music Player */
+        .music-player {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 50;
+        }
+
+        .music-info {
+            font-size: 0.75rem;
+            color: #5eead4;
+            font-weight: 500;
+        }
+
+        .music-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(94, 234, 212, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: #5eead4;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .music-btn:hover {
+            background: rgba(94, 234, 212, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .instruction-banner {
+                display: none;
+            }
+
+            .hotspot {
+                display: none;
+            }
+
+            .chat-window {
+                width: calc(100% - 32px);
+                right: 16px;
+                bottom: 16px;
+                height: 60vh;
+            }
+
+            .music-player {
+                bottom: 16px;
+                left: 16px;
+            }
+
+            .chat-toggle {
+                right: 16px;
+                bottom: 16px;
+            }
+        }
+
+        /* API Key Modal - removed, using backend proxy */
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1>Kevin Keet</h1>
+        </div>
+        <div class="header-right">
+            <div class="header-links">
+                <a href="https://aitest.kevinkeet.com" target="_blank" class="header-link">
+                    <i class="fas fa-flask"></i> AI Test
+                </a>
+                <a href="https://aieducator.kevinkeet.com" target="_blank" class="header-link">
+                    <i class="fas fa-chalkboard-teacher"></i> AI Educator
+                </a>
+                <a href="https://meds.kevinkeet.com" target="_blank" class="header-link">                    <i class="fas fa-pills"></i> Medication Evaluator
+                </a>
+            </div>
+            <a href="mailto:kkeet@stanford.edu" class="btn btn-primary">
+                <i class="fas fa-envelope"></i> Contact Me
+            </a>
+            <a href="https://www.linkedin.com/in/kevin-keet-0357ab19a/" target="_blank" class="btn btn-secondary">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+        </div>
+    </header>
+
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="image-wrapper" id="imageWrapper">
+            <video class="background-media" id="bgVideo" autoplay muted loop playsinline poster="background.jpg">
+                <source src="background.mp4" type="video/mp4">
+                <img src="background.jpg" alt="Kevin Keet's Visual Resume">
+            </video>
+
+            <!-- Hotspot overlay - dynamically positioned -->
+            <div class="hotspot-overlay" id="hotspotOverlay"></div>
+        </div>
+    </main>
+
+    <!-- Floating Tooltip -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <!-- Chat Toggle Button -->
+    <button class="chat-toggle" id="chatToggle" onclick="openChat()">
+        <i class="fas fa-dog"></i>
+    </button>
+
+    <!-- Chat Window -->
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar">🐕</div>
+                <div>
+                    <div class="chat-name">Frankenstein</div>
+                    <div class="chat-status">Online</div>
+                </div>
+            </div>
+            <button class="chat-close" onclick="closeChat()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message message-bot">
+                *wags tail* 🐕 Woof! Hi there! I'm Frankenstein, Kevin's trusty Bloodhound. Ask me anything about Kevin's work, background, or interests!
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Ask Frankenstein about Kevin..." onkeydown="handleKeyDown(event)">
+            <button class="chat-send" id="sendBtn" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Music Player -->
+    <div class="music-player">
+        <div class="music-info">Lo-Fi Beats</div>
+        <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
+            <i class="fas fa-play" id="musicIcon"></i>
+        </button>
+        <audio id="bgMusic" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
+    </div>
+
+    <!-- API Key handled by backend proxy -->
+
+    <script>
+        // =====================================================
+        // GOOGLE SHEETS CONFIGURATION
+        // =====================================================
+        // To use Google Sheets for content:
+        // 1. Create a copy of the template sheet (link below)
+        // 2. Go to File → Share → Publish to web
+        // 3. Select "Sheet1" and "Comma-separated values (.csv)"
+        // 4. Click Publish and copy the URL
+        // 5. Paste the URL below (replace the placeholder)
+        //
+        // Template: https://docs.google.com/spreadsheets/d/1YOUR_SHEET_ID/edit
+        // =====================================================
+
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqdgZEQUHEF2TCT4GOZd_el3jEHvmh4JBiOR_-6-kRnZU-QYchW8O48A0HKrQJcO9o1V-7tg1z45B5/pub?output=csv'; // Paste your published CSV URL here
+
+        // --- FALLBACK/DEFAULT HOTSPOT DATA ---
+        // This is used if Google Sheets isn't configured or fails to load
+        const defaultHotspots = [
+            {
+                id: 'diplomas',
+                pos: [1, 2, 28, 32],
+                icon: 'fa-graduation-cap',
+                title: 'Education & Credentials',
+                bullets: ['MD, University of Vermont (2007)', 'Internal Medicine Residency, UCSF (2007-2010)', 'BA, UC San Diego (2002)'],
+                tags: ['Board Certified', 'UCSF Trained'],
+                isDog: false
+            },
+            {
+                id: 'family',
+                pos: [1, 36, 10, 26],
+                icon: 'fa-heart',
+                title: 'Family',
+                bullets: ['Wife owns "Ethos" in Santa Cruz', 'Daughter (17) – University of Oregon', 'Daughter (15) – Water Polo player'],
+                tags: ['Santa Cruz', 'Proud Dad*'],
+                isDog: false
+            },
+            {
+                id: 'map',
+                pos: [12, 33, 9, 20],
+                icon: 'fa-globe-americas',
+                title: 'Travel',
+                intro: 'Places I\'ve explored:',
+                bullets: ['Spain, Greece, New Zealand', 'Australia, Bali, Singapore'],
+                tags: ['Adventure', 'Exploration'],
+                isDog: false
+            },
+            {
+                id: 'reading',
+                pos: [0, 56, 15, 26],
+                icon: 'fa-newspaper',
+                title: 'Reading & Interests',
+                bullets: ['Asterix comics', 'Astral Codex Ten (blog)', 'AI/ML research papers'],
+                tags: ['Curious Mind'],
+                isDog: false
+            },
+            {
+                id: 'laptop',
+                pos: [21, 40, 16, 26],
+                icon: 'fa-laptop-code',
+                title: 'Current Focus',
+                bullets: ['Co-Director: AI for Medicine Residents Curriculum (2024-)', 'Researching GPT-4 vs authentic residency statements', 'Building AI literacy programs'],
+                tags: ['AI in Medicine', 'Education'],
+                isDog: false
+            },
+            {
+                id: 'awards',
+                pos: [52, 38, 22, 15],
+                icon: 'fa-trophy',
+                title: 'Awards & Recognition',
+                bullets: ['Stanford Teaching Award (2024)', 'Medical Educator Award – VA (2015)'],
+                tags: ['Excellence*', 'Teaching'],
+                isDog: false
+            },
+            {
+                id: 'bookshelf',
+                pos: [52, 54, 22, 20],
+                icon: 'fa-book',
+                title: 'Bookshelf',
+                intro: 'Favorite reads:',
+                bullets: ['Project Hail Mary', 'Cloud Atlas', 'Medical journals & AI research'],
+                tags: ['Sci-Fi Fan', 'Lifelong Learner'],
+                isDog: false
+            },
+            {
+                id: 'calendar',
+                pos: [77, 40, 11, 20],
+                icon: 'fa-calendar-alt',
+                title: 'Schedule & Events',
+                bullets: ['Upcoming: IHME Presentation', 'Teaching sessions weekly', 'AI curriculum development'],
+                tags: ['Speaker'],
+                isDog: false
+            },
+            {
+                id: 'surfboard',
+                pos: [87, 18, 7, 74],
+                icon: 'fa-water',
+                title: 'Hobbies',
+                bullets: ['Surfing – Santa Cruz breaks', 'Basketball', 'Outdoor adventures'],
+                tags: ['Active Lifestyle*'],
+                isDog: false
+            },
+            {
+                id: 'whitecoat',
+                pos: [94, 4, 6, 38],
+                icon: 'fa-stethoscope',
+                title: 'Clinical Practice',
+                bullets: ['Hospitalist, Stanford Medicine (2021-)', 'Hospitalist, Palo Alto VA (2010-)', 'Associate Program Director'],
+                tags: ['Stanford', 'VA Healthcare'],
+                isDog: false
+            },
+            {
+                id: 'dog',
+                pos: [54, 68, 18, 26],
+                icon: 'fa-dog',
+                title: 'Frankenstein',
+                intro: 'Kevin\'s loyal Bloodhound companion. Click to chat with me and ask questions about Kevin!',
+                bullets: [],
+                tags: ['AI Assistant*', 'Click to Chat!*'],
+                isDog: true
+            }
+        ];
+
+        // Active hotspots (will be populated from Google Sheets or defaults)
+        let hotspots = [];
+
+        // --- PARSE CSV FROM GOOGLE SHEETS ---
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+            return lines.slice(1).map(line => {
+                // Handle commas inside quoted strings
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let char of line) {
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
+
+                const obj = {};
+                headers.forEach((header, i) => {
+                    obj[header] = values[i] || '';
+                });
+                return obj;
+            });
+        }
+
+        // --- CONVERT SHEET ROW TO HOTSPOT ---
+        function rowToHotspot(row) {
+            // Parse position (format: "left,top,width,height")
+            const pos = (row.position || '0,0,10,10').split(',').map(n => parseFloat(n.trim()));
+
+            // Parse bullets (semicolon-separated)
+            const bullets = (row.bullets || '').split(';').map(b => b.trim()).filter(b => b);
+
+            // Parse tags (semicolon-separated, * suffix = amber)
+            const tags = (row.tags || '').split(';').map(t => t.trim()).filter(t => t);
+
+            return {
+                id: row.id || 'item',
+                pos: pos,
+                icon: row.icon || 'fa-circle',
+                title: row.title || 'Untitled',
+                intro: row.intro || '',
+                bullets: bullets,
+                tags: tags,
+                isDog: (row.isdog || '').toLowerCase() === 'true'
+            };
+        }
+
+        // --- LOAD CONTENT FROM GOOGLE SHEETS ---
+        async function loadFromGoogleSheets() {
+            if (!GOOGLE_SHEET_CSV_URL) {
+                console.log('No Google Sheet URL configured, using defaults');
+                return defaultHotspots;
+            }
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                if (!response.ok) throw new Error('Failed to fetch sheet');
+
+                const csv = await response.text();
+                const rows = parseCSV(csv);
+
+                if (rows.length === 0) {
+                    console.log('Sheet is empty, using defaults');
+                    return defaultHotspots;
+                }
+
+                console.log('Loaded ' + rows.length + ' hotspots from Google Sheets');
+                return rows.map(rowToHotspot);
+
+            } catch (error) {
+                console.error('Error loading from Google Sheets:', error);
+                console.log('Using default hotspots');
+                return defaultHotspots;
+            }
+        }
+
+        // --- GENERATE HTML CONTENT FOR TOOLTIP ---
+        function generateTooltipContent(hs) {
+            let html = '';
+
+            if (hs.intro) {
+                html += hs.intro;
+            }
+
+            if (hs.bullets && hs.bullets.length > 0) {
+                html += '<ul>';
+                hs.bullets.forEach(bullet => {
+                    html += `<li>${bullet}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            if (hs.tags && hs.tags.length > 0) {
+                html += '<div class="tooltip-tags">';
+                hs.tags.forEach(tag => {
+                    // Tags ending with * are amber colored
+                    const isAmber = tag.endsWith('*');
+                    const tagText = isAmber ? tag.slice(0, -1) : tag;
+                    const tagClass = isAmber ? 'tag tag-amber' : 'tag';
+                    html += `<span class="${tagClass}">${tagText}</span>`;
+                });
+                html += '</div>';
+            }
+
+            return html;
+        }
+
+        // --- CREATE HOTSPOTS ---
+        const overlay = document.getElementById('hotspotOverlay');
+        const tooltip = document.getElementById('tooltip');
+
+        function createHotspots() {
+            overlay.innerHTML = '';
+
+            hotspots.forEach(hs => {
+                const btn = document.createElement('button');
+                btn.className = 'hotspot' + (hs.isDog ? ' hotspot-dog' : '');
+                btn.style.cssText = `left: ${hs.pos[0]}%; top: ${hs.pos[1]}%; width: ${hs.pos[2]}%; height: ${hs.pos[3]}%;`;
+                btn.dataset.id = hs.id;
+
+                btn.addEventListener('mouseenter', (e) => showTooltip(e, hs));
+                btn.addEventListener('mouseleave', hideTooltip);
+                btn.addEventListener('mousemove', (e) => moveTooltip(e));
+
+                if (hs.isDog) {
+                    btn.addEventListener('click', openChat);
+                }
+
+                overlay.appendChild(btn);
+            });
+        }
+
+        function showTooltip(e, hs) {
+            const iconStyle = hs.isDog
+                ? 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); color: #f59e0b;'
+                : '';
+
+            const content = generateTooltipContent(hs);
+
+            tooltip.innerHTML = `
+                <div class="tooltip-header">
+                    <div class="tooltip-icon" style="${iconStyle}"><i class="fas ${hs.icon}"></i></div>
+                    <div class="tooltip-title">${hs.title}</div>
+                </div>
+                <div class="tooltip-body">${content}</div>
+            `;
+
+            tooltip.classList.add('active');
+            moveTooltip(e);
+        }
+
+        function moveTooltip(e) {
+            const padding = 15;
+            const tooltipRect = tooltip.getBoundingClientRect();
+
+            let x = e.clientX + padding;
+            let y = e.clientY + padding;
+
+            // Keep tooltip on screen
+            if (x + tooltipRect.width > window.innerWidth - padding) {
+                x = e.clientX - tooltipRect.width - padding;
+            }
+            if (y + tooltipRect.height > window.innerHeight - padding) {
+                y = e.clientY - tooltipRect.height - padding;
+            }
+
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = y + 'px';
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('active');
+        }
+
+        // --- INITIALIZE ---
+        async function init() {
+            // Load hotspots from Google Sheets (or use defaults)
+            hotspots = await loadFromGoogleSheets();
+            createHotspots();
+
+            // Load chat context from Google Doc (or use defaults)
+            RESUME_CONTEXT = await loadContextFromGoogleDoc();
+        }
+
+        // Start loading
+        init();
+
+        // --- CHAT FUNCTIONS ---
+        // API calls go through Cloudflare Worker proxy (no client-side key needed)
+        const CHAT_PROXY_URL = 'https://frankenstein-proxy.kevinkeet.workers.dev';
+
+        // =====================================================
+        // GOOGLE DOC CONTEXT CONFIGURATION
+        // =====================================================
+        // To use a Google Doc for Frankenstein's context:
+        // 1. Create/edit your Google Doc with the context info
+        // 2. Go to File → Share → Publish to web
+        // 3. Click Publish and copy the URL
+        // 4. Paste the URL below
+        // =====================================================
+        const GOOGLE_DOC_CONTEXT_URL = 'https://docs.google.com/document/d/e/2PACX-1vQtota8A4-jfLXuSI7l43aFkgoRHriqrTvpx2K8fUt4EHT8bS8ph4DD4jJ4WavzR79dxh7BctGK3O_V/pub';
+
+        // Default context (used if Google Doc fails to load)
+        const DEFAULT_CONTEXT = `You are Frankenstein, Kevin Keet's friendly and loyal Bloodhound dog. You speak in a warm, slightly playful manner with occasional dog-related expressions (like "woof" or tail-wagging descriptions), but you're also knowledgeable and helpful. Keep responses concise and conversational.
+
+ABOUT KEVIN KEET:
+- Current Role: Hospitalist & Associate Program Director at Stanford University School of Medicine
+- Also works at Palo Alto VA Healthcare System (since 2010)
+- Co-Director of the AI for Medicine Residents Curriculum (started 2024)
+
+EDUCATION:
+- MD from University of Vermont (2007)
+- Internal Medicine Residency at UCSF (2007-2010)
+- BA from UC San Diego (2002)
+
+AWARDS & RECOGNITION:
+- Stanford Teaching Award (2024)
+- Medical Educator Award from VA (2015)
+
+RESEARCH & PUBLICATIONS:
+- Currently researching AI in medical education
+- Published work comparing GPT-4 generated vs authentic Internal Medicine residency personal statements
+- H1N1 case series publication
+
+PERSONAL LIFE:
+- Lives in Santa Cruz, California
+- Wife owns a business called "Ethos" in Santa Cruz
+- Two daughters: one (17) at University of Oregon, one (15) who plays water polo
+- Hobbies: Surfing (loves Santa Cruz breaks), Basketball
+- Has traveled to: Spain, New Zealand, Australia, Bali, Singapore, Greece
+
+INTERESTS:
+- Favorite books: Project Hail Mary, Cloud Atlas
+- Reads: Asterix comics, Astral Codex Ten blog
+- Passionate about AI in medicine and medical education
+
+Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occasionally playful. Keep answers relatively brief (2-4 sentences usually) unless asked for more detail.`;
+
+        // Dynamic context (will be loaded from Google Doc)
+        let RESUME_CONTEXT = DEFAULT_CONTEXT;
+
+        // --- LOAD CONTEXT FROM GOOGLE DOC ---
+        async function loadContextFromGoogleDoc() {
+            if (!GOOGLE_DOC_CONTEXT_URL) {
+                console.log('No Google Doc URL configured, using default context');
+                return DEFAULT_CONTEXT;
+            }
+
+            try {
+                const response = await fetch(GOOGLE_DOC_CONTEXT_URL);
+                if (!response.ok) throw new Error('Failed to fetch Google Doc');
+
+                const html = await response.text();
+
+                // Parse HTML and extract text content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Get the main content area
+                const content = doc.querySelector('.doc-content') || doc.body;
+
+                // Extract text, preserving some structure
+                let text = '';
+                const elements = content.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6');
+                elements.forEach(el => {
+                    const tagName = el.tagName.toLowerCase();
+                    const elText = el.textContent.trim();
+                    if (elText) {
+                        if (tagName.startsWith('h')) {
+                            text += '\n' + elText.toUpperCase() + ':\n';
+                        } else if (tagName === 'li') {
+                            text += '- ' + elText + '\n';
+                        } else {
+                            text += elText + '\n';
+                        }
+                    }
+                });
+
+                // Clean up the text
+                text = text.trim();
+
+                if (text.length > 100) {
+                    console.log('Loaded context from Google Doc (' + text.length + ' chars)');
+                    return text;
+                } else {
+                    console.log('Google Doc content too short, using default');
+                    return DEFAULT_CONTEXT;
+                }
+
+            } catch (error) {
+                console.error('Error loading context from Google Doc:', error);
+                return DEFAULT_CONTEXT;
+            }
+        }
+
+        const chatWindow = document.getElementById('chatWindow');
+        const chatToggle = document.getElementById('chatToggle');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function openChat() {
+            chatWindow.classList.add('active');
+            chatToggle.classList.add('hidden');
+            chatInput.focus();
+        }
+
+        function closeChat() {
+            chatWindow.classList.remove('active');
+            chatToggle.classList.remove('hidden');
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'message-user' : 'message-bot'}`;
+            messageDiv.textContent = content;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message message-bot message-typing';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            chatInput.value = '';
+            sendBtn.disabled = true;
+            addTypingIndicator();
+
+            try {
+                const response = await fetch(CHAT_PROXY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1024,
+                        system: RESUME_CONTEXT,
+                        messages: [{ role: 'user', content: message }]
+                    })
+                });
+
+                removeTypingIndicator();
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'API request failed');
+                }
+
+                const data = await response.json();
+                addMessage(data.content[0].text);
+
+            } catch (error) {
+                removeTypingIndicator();
+                console.error('Chat error:', error);
+                addMessage("*tilts head* Woof... I had trouble fetching that information. Please try again!");
+            }
+
+            sendBtn.disabled = false;
+        }
+
+        // --- MUSIC PLAYER ---
+        const bgMusic = document.getElementById('bgMusic');
+        const musicIcon = document.getElementById('musicIcon');
+
+        function toggleMusic() {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                musicIcon.classList.replace('fa-play', 'fa-pause');
+            } else {
+                bgMusic.pause();
+                musicIcon.classList.replace('fa-pause', 'fa-play');
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeChat();
+        });
+    </script>
+</body>
+</html>
