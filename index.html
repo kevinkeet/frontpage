@@ -61,6 +61,7 @@
 
         .header-links {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
             margin-right: 8px;
         }
@@ -598,11 +599,101 @@
             transform: scale(1.1);
         }
 
+        /* Details List (mobile / accessible fallback for hotspots) */
+        .details-list {
+            display: none;
+            margin-top: 24px;
+            gap: 12px;
+            grid-template-columns: 1fr;
+        }
+
+        .detail-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+
+        .detail-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .detail-card-icon {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(94, 234, 212, 0.2), rgba(94, 234, 212, 0.1));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5eead4;
+            font-size: 1rem;
+        }
+
+        .detail-card-icon.is-dog {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
+            color: #f59e0b;
+        }
+
+        .detail-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .detail-card-body {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .detail-card-body ul {
+            list-style: none;
+        }
+
+        .detail-card-body li {
+            padding: 4px 0 4px 16px;
+            position: relative;
+        }
+
+        .detail-card-body li::before {
+            content: '\2192';
+            position: absolute;
+            left: 0;
+            color: #5eead4;
+        }
+
+        .detail-card-chat {
+            margin-top: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Hotspot keyboard focus */
+        .hotspot:focus-visible {
+            outline: none;
+            background: rgba(94, 234, 212, 0.12);
+            border-color: rgba(94, 234, 212, 0.7);
+        }
+
+        .hotspot-dog:focus-visible {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.7);
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .header-links {
+                justify-content: center;
             }
 
             .instruction-banner {
@@ -611,6 +702,10 @@
 
             .hotspot {
                 display: none;
+            }
+
+            .details-list {
+                display: grid;
             }
 
             .chat-window {
@@ -639,6 +734,7 @@
     <header class="header">
         <div class="header-left">
             <h1>Kevin Keet</h1>
+            <p>Hospitalist &amp; Associate Program Director · <span>Stanford Medicine</span> · AI in Medical Education</p>
         </div>
         <div class="header-right">
             <div class="header-links">
@@ -679,6 +775,9 @@
             <!-- Hotspot overlay - dynamically positioned -->
             <div class="hotspot-overlay" id="hotspotOverlay"></div>
         </div>
+
+        <!-- Accessible / mobile detail cards (mirrors the hotspots) -->
+        <div class="details-list" id="detailsList"></div>
     </main>
 
     <!-- Floating Tooltip -->
@@ -741,7 +840,7 @@
         // Template: https://docs.google.com/spreadsheets/d/1YOUR_SHEET_ID/edit
         // =====================================================
 
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqdgZEQUHEF2TCT4GOZd_el3jEHvmh4JBiOR_-6-kRnZU-QYchW8O48A0HKrQJcO9o1V-7tg1z45B5/pub?output=csv'; // Paste your published CSV URL here
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQZinX9u2_gDmo1KOUiOvR7ooqtPpNw8KN6iLCG-djZV9yFo5Xgpxvly7napuRDS7fPcjBTvTKbNePZ/pub?output=csv'; // Paste your published CSV URL here
 
         // --- FALLBACK/DEFAULT HOTSPOT DATA ---
         // This is used if Google Sheets isn't configured or fails to load
@@ -766,7 +865,7 @@
             },
             {
                 id: 'map',
-                pos: [12, 33, 9, 20],
+                pos: [25, 22, 11, 11],
                 icon: 'fa-globe-americas',
                 title: 'Travel',
                 intro: 'Places I\'ve explored:',
@@ -785,10 +884,10 @@
             },
             {
                 id: 'laptop',
-                pos: [21, 40, 16, 26],
+                pos: [17, 51, 17, 18],
                 icon: 'fa-laptop-code',
-                title: 'Current Focus',
-                bullets: ['Co-Director: AI for Medicine Residents Curriculum (2024-)', 'Researching GPT-4 vs authentic residency statements', 'Building AI literacy programs'],
+                title: 'Current Roles',
+                bullets: ['Associate Program Director, Stanford IM Residency', 'Co-Director, Generative AI in Medicine Curriculum', 'Lead, GME-wide AI Education Expansion (2026)', 'Co-Director, MERIT Pathway of Distinction'],
                 tags: ['AI in Medicine', 'Education'],
                 isDog: false
             },
@@ -797,13 +896,13 @@
                 pos: [52, 38, 22, 15],
                 icon: 'fa-trophy',
                 title: 'Awards & Recognition',
-                bullets: ['Stanford Teaching Award (2024)', 'Medical Educator Award – VA (2015)'],
+                bullets: ['Stanford GME Outstanding Contribution Award (2026)', 'Stanford IM Residency Teaching & Mentoring Award (2024)', 'Excellent Medical Educator Award, Palo Alto VA (2015)', 'Henry J. Kaiser Family Foundation Teaching Award (2012)'],
                 tags: ['Excellence*', 'Teaching'],
                 isDog: false
             },
             {
                 id: 'bookshelf',
-                pos: [52, 54, 22, 20],
+                pos: [33, 41, 9, 10],
                 icon: 'fa-book',
                 title: 'Bookshelf',
                 intro: 'Favorite reads:',
@@ -813,10 +912,10 @@
             },
             {
                 id: 'calendar',
-                pos: [77, 40, 11, 20],
+                pos: [70, 44, 9, 13],
                 icon: 'fa-calendar-alt',
-                title: 'Schedule & Events',
-                bullets: ['Upcoming: IHME Presentation', 'Teaching sessions weekly', 'AI curriculum development'],
+                title: 'Recent Talks',
+                bullets: ['AHME national workshop, Reno (May 2026)', 'Alice Walton School of Medicine (Mar 2026)', 'UVA Hospital Medicine grand rounds (2026)'],
                 tags: ['Speaker'],
                 isDog: false
             },
@@ -840,7 +939,7 @@
             },
             {
                 id: 'dog',
-                pos: [54, 68, 18, 26],
+                pos: [56, 45, 15, 33],
                 icon: 'fa-dog',
                 title: 'Frankenstein',
                 intro: 'Kevin\'s loyal Bloodhound companion. Click to chat with me and ask questions about Kevin!',
@@ -979,10 +1078,15 @@
                 btn.className = 'hotspot' + (hs.isDog ? ' hotspot-dog' : '');
                 btn.style.cssText = `left: ${hs.pos[0]}%; top: ${hs.pos[1]}%; width: ${hs.pos[2]}%; height: ${hs.pos[3]}%;`;
                 btn.dataset.id = hs.id;
+                btn.setAttribute('aria-label', hs.isDog ? 'Chat with Frankenstein' : hs.title);
 
                 btn.addEventListener('mouseenter', (e) => showTooltip(e, hs));
                 btn.addEventListener('mouseleave', hideTooltip);
                 btn.addEventListener('mousemove', (e) => moveTooltip(e));
+
+                // Keyboard accessibility: reveal tooltip on focus
+                btn.addEventListener('focus', () => showTooltipAtElement(btn, hs));
+                btn.addEventListener('blur', hideTooltip);
 
                 if (hs.isDog) {
                     btn.addEventListener('click', openChat);
@@ -990,6 +1094,38 @@
 
                 overlay.appendChild(btn);
             });
+        }
+
+        // --- BUILD ACCESSIBLE / MOBILE DETAIL CARDS ---
+        function createDetailCards() {
+            const list = document.getElementById('detailsList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            hotspots.forEach(hs => {
+                const card = document.createElement('div');
+                card.className = 'detail-card';
+
+                const body = generateTooltipContent(hs);
+                const dogBtn = hs.isDog
+                    ? '<button class="btn btn-secondary detail-card-chat" onclick="openChat()"><i class="fas fa-dog"></i> Chat with Frankenstein</button>'
+                    : '';
+
+                card.innerHTML = `
+                    <div class="detail-card-header">
+                        <div class="detail-card-icon${hs.isDog ? ' is-dog' : ''}"><i class="fas ${hs.icon}"></i></div>
+                        <div class="detail-card-title">${hs.title}</div>
+                    </div>
+                    <div class="detail-card-body">${body}${dogBtn}</div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        // Position the tooltip next to a focused element (keyboard nav)
+        function showTooltipAtElement(el, hs) {
+            const rect = el.getBoundingClientRect();
+            showTooltip({ clientX: rect.left + rect.width / 2, clientY: rect.bottom }, hs);
         }
 
         function showTooltip(e, hs) {
@@ -1039,6 +1175,7 @@
             // Load hotspots from Google Sheets (or use defaults)
             hotspots = await loadFromGoogleSheets();
             createHotspots();
+            createDetailCards();
 
             // Load chat context from Google Doc (or use defaults)
             RESUME_CONTEXT = await loadContextFromGoogleDoc();
@@ -1060,43 +1197,94 @@
         // 3. Click Publish and copy the URL
         // 4. Paste the URL below
         // =====================================================
-        const GOOGLE_DOC_CONTEXT_URL = 'https://docs.google.com/document/d/e/2PACX-1vQtota8A4-jfLXuSI7l43aFkgoRHriqrTvpx2K8fUt4EHT8bS8ph4DD4jJ4WavzR79dxh7BctGK3O_V/pub';
+        const GOOGLE_DOC_CONTEXT_URL = 'https://docs.google.com/document/d/e/2PACX-1vSPXkOjKQmG4r9ZGwggkifisj3eGSOw9X-byTgE00XFII0Xds0T15IH1mkuUmrE8sW7992Hfc71lJaA/pub';
 
         // Default context (used if Google Doc fails to load)
         const DEFAULT_CONTEXT = `You are Frankenstein, Kevin Keet's friendly and loyal Bloodhound dog. You speak in a warm, slightly playful manner with occasional dog-related expressions (like "woof" or tail-wagging descriptions), but you're also knowledgeable and helpful. Keep responses concise and conversational.
 
 ABOUT KEVIN KEET:
 - Current Role: Hospitalist & Associate Program Director at Stanford University School of Medicine
-- Also works at Palo Alto VA Healthcare System (since 2010)
-- Co-Director of the AI for Medicine Residents Curriculum (started 2024)
+- Also an Academic Hospitalist at the Palo Alto VA Healthcare System (since 2010)
+- Co-Director of the Generative AI in Medicine Curriculum for Internal Medicine Residents (since 2024)
+- Lead of Stanford's GME-wide AI Education Expansion (2026)
+- Co-Director of the Medical Education Pathway of Distinction, MERIT (since 2023)
+
+PHILOSOPHY AROUND AI:
+- Generally optimistic, though careful about the risks of never-skilling and de-skilling
+- Believes AI can be an incredibly efficient learning tool
+- Hopes AI will unburden doctors from administrative work and get them back to the bedside
+
+KEVIN'S APPROACH TO PATIENT CARE (bedside medicine & empathy):
+- Bedside medicine is the heart of what Kevin does. He believes the most important part of caring for a hospitalized patient is being present — pulling up a chair, listening, and making sense of a frightening experience together.
+- He sees every patient as a whole person with a story, never just a diagnosis. Helping a patient understand their own sprawling story is, to him, the core of being a good doctor.
+- He cares deeply about patients who feel unheard, and works to make sure they feel seen, respected, and included in every decision about their care.
+- He knows the hospital can be scary and disorienting, and believes a doctor's warmth, patience, and honesty matter as much as any test or treatment.
+- He's genuinely hopeful about medicine: unburdening doctors from paperwork should give them more time at the bedside, where they belong.
 
 EDUCATION:
 - MD from University of Vermont (2007)
 - Internal Medicine Residency at UCSF (2007-2010)
-- BA from UC San Diego (2002)
+- BA in Cognitive Science from UC San Diego (2002), also studied Film
+- Board certified, American Board of Internal Medicine (2010)
 
 AWARDS & RECOGNITION:
-- Stanford Teaching Award (2024)
-- Medical Educator Award from VA (2015)
+- Stanford GME Outstanding Contribution Award (2026)
+- Stanford Internal Medicine Residency Teaching and Mentoring Award (2024)
+- Excellent Medical Educator Award, Palo Alto VA (2015)
+- Henry J. Kaiser Family Foundation Award for Excellence in Preclinical Teaching (2012)
+- Thomas Evans Teaching Award, UCSF (2010); Gold Humanism Honor Society and Alpha Omega Alpha (2007)
+
+RECENT TALKS:
+- AI in Medical Education workshop, AHME national conference, Reno (May 2026)
+- Invited educator on AI in education, Alice L. Walton School of Medicine (March 2026)
+- Grand rounds, UVA Hospital Medicine (2026)
+- Invited panelist on AI in education, Stanford Dept of Medicine Leadership Retreat (Oct 2025)
+
+GRANTS & FUNDED RESEARCH:
+- Josiah Macy Jr. Foundation / ARISE grant, $200,000 — Principal Investigator on a multi-center RCT of generative AI in medical education (2025-)
+- Stanford Innovations in Curriculum Development and Pedagogy (ICDP) grant, $25,000 — AI curriculum for IM residents (2025)
+- IRB submitted for a "de-skilling" RCT; member of the ARISE network
 
 RESEARCH & PUBLICATIONS:
-- Currently researching AI in medical education
-- Published work comparing GPT-4 generated vs authentic Internal Medicine residency personal statements
-- H1N1 case series publication
+- Keet K. "From iPatient to AI-Patient: a responsibility to medical education." BMJ (2026), editorial
+- Nair V, ..., Keet K, et al. "Comparing IM residency application personal statements generated by GPT-4 and authentic applicants." J Gen Intern Med (2024)
+- MedVAL: toward expert-level medical text validation with language models. arXiv preprint (2025)
+- Lai AR, Keet K, et al. Severe H1N1-associated ARDS: a case series. Am J Med (2010)
+- In progress: an invited BMJ AI narrative piece and resident collaborations
 
 PERSONAL LIFE:
 - Lives in Santa Cruz, California
 - Wife owns a business called "Ethos" in Santa Cruz
 - Two daughters: one (17) at University of Oregon, one (15) who plays water polo
-- Hobbies: Surfing (loves Santa Cruz breaks), Basketball
+- Hobbies: Surfing (loves Santa Cruz breaks), Basketball, and tromping through the redwoods with me (Frankie!)
 - Has traveled to: Spain, New Zealand, Australia, Bali, Singapore, Greece
 
 INTERESTS:
-- Favorite books: Project Hail Mary, Cloud Atlas
-- Reads: Asterix comics, Astral Codex Ten blog
+- Favorite books: Project Hail Mary, Cloud Atlas, Special Topics in Calamity Physics
+- Urban planning: loves walkable, people-friendly neighborhoods
+- Reads: Asterix, Astral Codex Ten blog
 - Passionate about AI in medicine and medical education
 
-Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occasionally playful. Keep answers relatively brief (2-4 sentences usually) unless asked for more detail.`;
+KEVIN'S WRITING & IDEAS (recent drafts on AI in medicine and clinical reasoning):
+Overarching theme: how generative AI is reshaping clinical reasoning and medical education. Kevin is optimistic but focused on preserving the cognitive skills that make doctors good. He's a clear, story-driven writer.
+
+1. Skill-preserving AI use ("The Foundational AI Skill We Are Not Teaching"): The most important AI skill we are NOT teaching isn't prompting or spotting hallucinations — those have a short half-life as models improve. What lasts is a learner's "interaction posture": whether they ask AI to think FOR them or ALONGSIDE them. He uses the NEJM framing of three risks — never-skilling (never developing a skill because AI did it during formation), de-skilling (losing skills you had), and mis-skilling (adopting wrong AI patterns) — with evidence of skill decay from GPS use, aviation autopilot, AI-assisted colonoscopy, and radiology. He names three teachable, skill-preserving patterns: Conceptual Inquiry (ask AI about concepts, not the answer), Generation-Then-Comprehension (treat output as a hypothesis; ask "why" and "what-if" before acting), and Hybrid Reasoning (get answer + reasoning, then probe the weakest link). Memorable: he tried a Socratic system prompt on his teen daughters' Claude account — "pedagogically beautiful and practically useless"; they just switched to a friend's account.
+
+2. The question, not the answer ("The Question, Not the Answer"): Through bedside stories of patients arriving with ChatGPT/Claude, Kevin argues a doctor's value was never the answer — it's helping frame the right question. AI's clinical knowledge doesn't translate to lay users: models alone identify the right condition ~95% of the time, but people using them succeed under 35%. His line: "AI just means that everyone now has an aunt in their pocket." When the answer arrives before the doctor does, "the move is not to bristle. It's to pull up a chair" and build the context together. He maps AI's "context/prompting" onto medicine's "problem representation/framing."
+
+3. Cognitive offloading ("Cognitive Offloading by AI in Medicine"): Uses "anticipatory nostalgia" for the present moment in med ed. Cognitive offloading can free trainees from administrative burden for bedside time and deep work — but the challenge is offloading the RIGHT tasks while protecting the clinical-reasoning skills we want learners to keep. His institution's approach: build narrow workflow-agent tools (not just general chat), teach curricula on intentional offloading, and embed tools thoughtfully — e.g. an ambient AI scribe paired with residents recording 30 seconds of out-loud clinical reasoning to end each visit.
+
+4. Management reasoning: Real-world clinical reasoning isn't a USMLE question — "the right treatment is often the wrong question." The same patient yields opposite answers depending on framing (ask a cardiologist to reduce cardiac risk vs. a geriatrician to reduce polypharmacy). Management-reasoning benchmarks struggle because there's often no single "right" answer; it hinges on weighing outcomes and patient preference.
+
+5. Humans through an AI lens: A playful, speculative piece — Kevin increasingly thinks about people in model terms (prompting, context, training data, RLHF), e.g. wondering how much of political division is a small "system prompt" difference that spins to extremes.
+
+6. The optimistic take: The Red Queen effect plus cognitive architecture — like ants whose collective intelligence vanishes when the trail is washed away, modern medical "genius" rests on accumulated cognitive scaffolding. AI is poised to supercharge that architecture: more efficient training, a higher floor of care, streamlined workflows.
+
+If asked about Kevin's views, writing, or opinions on AI, draw on these. He is pro-AI but insists on protecting how doctors learn to think.
+
+IF YOU'RE TALKING WITH A PATIENT OR WORRIED FAMILY MEMBER: Be especially warm, gentle, and reassuring. Let them know doctors like Kevin care immensely about their patients, listen closely, and that no one is alone in this. Do NOT give medical advice, diagnoses, or interpretations of symptoms — kindly encourage them to bring their questions to their own care team, who genuinely want to hear them. What you can always offer is comfort, a friendly ear, and the reminder that being heard is part of good care (you're a very good dog, after all).
+
+Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occasionally playful. Keep answers relatively brief (2-4 sentences usually) unless asked for more detail. Above all, lead with warmth — especially with anyone who seems to be a patient or a family member.`;
 
         // Dynamic context (will be loaded from Google Doc)
         let RESUME_CONTEXT = DEFAULT_CONTEXT;
