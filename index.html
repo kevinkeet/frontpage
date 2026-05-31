@@ -849,7 +849,7 @@
         const defaultHotspots = [
             {
                 id: 'diplomas',
-                pos: [1, 2, 28, 32],
+                pos: [1, 2, 28, 31],
                 icon: 'fa-graduation-cap',
                 title: 'Education & Credentials',
                 bullets: ['MD, University of Vermont (2007)', 'Internal Medicine Residency, UCSF (2007-2010)', 'BA, UC San Diego (2002)'],
@@ -858,7 +858,7 @@
             },
             {
                 id: 'family',
-                pos: [1, 36, 10, 26],
+                pos: [1, 33, 21, 32],
                 icon: 'fa-heart',
                 title: 'Family',
                 bullets: ['Wife owns "Ethos" in Santa Cruz', 'Daughter (17) – University of Oregon', 'Daughter (15) – Water Polo player'],
@@ -867,7 +867,7 @@
             },
             {
                 id: 'map',
-                pos: [25, 22, 11, 11],
+                pos: [22, 31, 9, 17],
                 icon: 'fa-globe-americas',
                 title: 'Travel',
                 intro: 'Places I\'ve explored:',
@@ -877,7 +877,7 @@
             },
             {
                 id: 'reading',
-                pos: [0, 56, 15, 26],
+                pos: [0, 58, 15, 22],
                 icon: 'fa-newspaper',
                 title: 'Reading & Interests',
                 bullets: ['Asterix comics', 'Astral Codex Ten (blog)', 'AI/ML research papers'],
@@ -886,7 +886,7 @@
             },
             {
                 id: 'laptop',
-                pos: [17, 51, 17, 18],
+                pos: [16, 64, 17, 22],
                 icon: 'fa-laptop-code',
                 title: 'Current Roles',
                 bullets: ['Associate Program Director, Stanford IM Residency', 'Co-Director, Generative AI in Medicine Curriculum', 'Lead, GME-wide AI Education Expansion (2026)', 'Co-Director, MERIT Pathway of Distinction'],
@@ -895,7 +895,7 @@
             },
             {
                 id: 'awards',
-                pos: [52, 38, 22, 15],
+                pos: [49, 51, 18, 13],
                 icon: 'fa-trophy',
                 title: 'Awards & Recognition',
                 bullets: ['Stanford GME Outstanding Contribution Award (2026)', 'Stanford IM Residency Teaching & Mentoring Award (2024)', 'Excellent Medical Educator Award, Palo Alto VA (2015)', 'Henry J. Kaiser Family Foundation Teaching Award (2012)'],
@@ -904,7 +904,7 @@
             },
             {
                 id: 'bookshelf',
-                pos: [33, 41, 9, 10],
+                pos: [33, 53, 10, 11],
                 icon: 'fa-book',
                 title: 'Bookshelf',
                 intro: 'Favorite reads:',
@@ -914,7 +914,7 @@
             },
             {
                 id: 'calendar',
-                pos: [70, 44, 9, 13],
+                pos: [66, 59, 13, 14],
                 icon: 'fa-calendar-alt',
                 title: 'Recent Talks',
                 bullets: ['AHME national workshop, Reno (May 2026)', 'Alice Walton School of Medicine (Mar 2026)', 'UVA Hospital Medicine grand rounds (2026)'],
@@ -923,7 +923,7 @@
             },
             {
                 id: 'surfboard',
-                pos: [87, 18, 7, 74],
+                pos: [83, 17, 9, 63],
                 icon: 'fa-water',
                 title: 'Hobbies',
                 bullets: ['Surfing – Santa Cruz breaks', 'Basketball', 'Outdoor adventures'],
@@ -932,7 +932,7 @@
             },
             {
                 id: 'whitecoat',
-                pos: [94, 4, 6, 38],
+                pos: [92, 16, 8, 46],
                 icon: 'fa-stethoscope',
                 title: 'Clinical Practice',
                 bullets: ['Hospitalist, Stanford Medicine (2021-)', 'Hospitalist, Palo Alto VA (2010-)', 'Associate Program Director'],
@@ -941,7 +941,7 @@
             },
             {
                 id: 'dog',
-                pos: [59, 50, 14, 30],
+                pos: [58, 68, 22, 28],
                 icon: 'fa-dog',
                 title: 'Frankenstein',
                 intro: 'Kevin\'s loyal Bloodhound companion. Click to chat with me and ask questions about Kevin!',
@@ -986,9 +986,20 @@
         }
 
         // --- CONVERT SHEET ROW TO HOTSPOT ---
+        // Hotspot positions [left, top, width, height] as % of the background art.
+        // Kept in code (not the Sheet) so they can be tuned precisely without a
+        // Sheet round-trip. The Sheet's position column is ignored for these ids.
+        const HOTSPOT_POSITIONS = {
+            diplomas: [1, 2, 28, 31], family: [1, 33, 21, 32], map: [22, 31, 9, 17],
+            reading: [0, 58, 15, 22], laptop: [16, 64, 17, 22], bookshelf: [33, 53, 10, 11],
+            awards: [49, 51, 18, 13], calendar: [66, 59, 13, 14], dog: [58, 68, 22, 28],
+            surfboard: [83, 17, 9, 63], whitecoat: [92, 16, 8, 46]
+        };
+
         function rowToHotspot(row) {
-            // Parse position (format: "left,top,width,height")
-            const pos = (row.position || '0,0,10,10').split(',').map(n => parseFloat(n.trim()));
+            // Position from HOTSPOT_POSITIONS (by id); fall back to the Sheet's
+            // position column only for ids without a hardcoded position.
+            const pos = HOTSPOT_POSITIONS[row.id] || (row.position || '0,0,10,10').split(',').map(n => parseFloat(n.trim()));
 
             // Parse bullets (semicolon-separated)
             const bullets = (row.bullets || '').split(';').map(b => b.trim()).filter(b => b);
