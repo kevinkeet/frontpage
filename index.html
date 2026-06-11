@@ -278,7 +278,10 @@
             max-width: 320px;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.25s ease;
+            transform: translateY(6px);
+            transition: opacity 0.18s cubic-bezier(0.165, 0.84, 0.44, 1),
+                        transform 0.18s cubic-bezier(0.165, 0.84, 0.44, 1),
+                        visibility 0.18s;
             pointer-events: none;
             z-index: 1000;
             box-shadow: 0 14px 32px rgba(20, 12, 6, 0.55), 0 2px 6px rgba(20, 12, 6, 0.3);
@@ -287,6 +290,7 @@
         .tooltip.active {
             opacity: 1;
             visibility: visible;
+            transform: translateY(0);
         }
 
         .tooltip-header {
@@ -803,7 +807,7 @@
     <header class="header">
         <div class="header-left">
             <h1>Kevin Keet</h1>
-            <p>Hospitalist &amp; Associate Program Director · <span>Stanford Medicine</span><br>AI in medical education · PI, $200K Macy Foundation RCT · BMJ author</p>
+            <p>Hospitalist &amp; Associate Program Director · <span>Stanford Medicine</span> · AI in Medical Education</p>
         </div>
         <div class="header-right">
             <div class="header-links">
@@ -1068,11 +1072,20 @@
         // Hotspot positions [left, top, width, height] as % of the background art.
         // Kept in code (not the Sheet) so they can be tuned precisely without a
         // Sheet round-trip. The Sheet's position column is ignored for these ids.
+        // Measured against background.jpg (1024x576): px / image size * 100
         const HOTSPOT_POSITIONS = {
-            diplomas: [1, 2, 28, 31], family: [1, 33, 21, 32], map: [22, 31, 9, 17],
-            reading: [0, 56, 14, 15], research: [3, 72, 14, 20], laptop: [16, 64, 17, 22],
-            bookshelf: [33, 53, 10, 11], awards: [49, 51, 18, 13], calendar: [66, 59, 13, 14],
-            dog: [58, 68, 22, 28], surfboard: [83, 17, 9, 63], whitecoat: [92, 16, 8, 46]
+            diplomas: [1, 1, 27, 26],        // framed certificates + medals, top-left wall
+            family: [0, 28, 17, 31],         // photo wall column
+            map: [18.5, 25, 11.5, 24],       // world map
+            reading: [2, 54, 10, 16],        // magazine rack
+            research: [0, 69, 13, 23],       // paper stacks
+            laptop: [13.5, 57, 18.5, 26],    // laptop screen + keyboard
+            awards: [48.5, 46.5, 16.5, 12],  // trophy + plaques on the sill
+            bookshelf: [49, 59, 15, 19],     // bookcase under the awards
+            calendar: [66.5, 53.5, 10.5, 15.5],
+            dog: [58, 66, 22, 30],           // resting spot on the rug (video animates him)
+            surfboard: [80.5, 10, 11, 72],   // full board, nose to tail
+            whitecoat: [91, 9, 9, 59]        // coat + stethoscope on the hook
         };
 
         // Defined in code (not the Sheet) so the strongest credentials always ship.
@@ -1193,12 +1206,11 @@
                 btn.dataset.id = hs.id;
                 btn.setAttribute('aria-label', hs.isDog ? 'Chat with Frankenstein' : hs.title);
 
-                btn.addEventListener('mouseenter', (e) => showTooltip(e, hs));
+                btn.addEventListener('mouseenter', () => showSpotTooltip(btn, hs));
                 btn.addEventListener('mouseleave', hideTooltip);
-                btn.addEventListener('mousemove', (e) => moveTooltip(e));
 
                 // Keyboard accessibility: reveal tooltip on focus
-                btn.addEventListener('focus', () => showTooltipAtElement(btn, hs));
+                btn.addEventListener('focus', () => showSpotTooltip(btn, hs));
                 btn.addEventListener('blur', hideTooltip);
 
                 if (hs.isDog) {
@@ -1240,15 +1252,10 @@
             });
         }
 
-        // Position the tooltip next to a focused element (keyboard nav)
-        function showTooltipAtElement(el, hs) {
-            const rect = el.getBoundingClientRect();
-            showTooltip({ clientX: rect.left + rect.width / 2, clientY: rect.bottom }, hs);
-        }
-
-        function showTooltip(e, hs) {
+        // Show the tooltip anchored beside the hotspot (calmer than cursor-following)
+        function showSpotTooltip(el, hs) {
             const iconStyle = hs.isDog
-                ? 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); color: #f59e0b;'
+                ? 'background: rgba(143, 174, 106, 0.2); color: #5d7a3c;'
                 : '';
 
             const content = generateTooltipContent(hs);
@@ -1261,27 +1268,22 @@
                 <div class="tooltip-body">${content}</div>
             `;
 
-            tooltip.classList.add('active');
-            moveTooltip(e);
-        }
+            const pad = 14;
+            const r = el.getBoundingClientRect();
+            const tw = tooltip.offsetWidth;
+            const th = tooltip.offsetHeight;
 
-        function moveTooltip(e) {
-            const padding = 15;
-            const tooltipRect = tooltip.getBoundingClientRect();
+            // Prefer beside the hotspot: right first, then left, else centered above/below
+            let x = r.right + pad;
+            if (x + tw > window.innerWidth - pad) x = r.left - tw - pad;
+            if (x < pad) x = Math.min(Math.max(pad, r.left + r.width / 2 - tw / 2), window.innerWidth - tw - pad);
 
-            let x = e.clientX + padding;
-            let y = e.clientY + padding;
-
-            // Keep tooltip on screen
-            if (x + tooltipRect.width > window.innerWidth - padding) {
-                x = e.clientX - tooltipRect.width - padding;
-            }
-            if (y + tooltipRect.height > window.innerHeight - padding) {
-                y = e.clientY - tooltipRect.height - padding;
-            }
+            let y = r.top + r.height / 2 - th / 2;
+            y = Math.max(pad, Math.min(y, window.innerHeight - th - pad));
 
             tooltip.style.left = x + 'px';
             tooltip.style.top = y + 'px';
+            tooltip.classList.add('active');
         }
 
         function hideTooltip() {
