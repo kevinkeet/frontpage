@@ -308,12 +308,20 @@ function render(){
     const detail = hasProfile(s);
     if(detail) profiled++;
     const color = DIV[schoolDiv(s)];
+    // visible dot (purely visual)
     L.circleMarker([s.lat, s.lng], {
       radius: detail ? 8 : 6,
       color:"#fff", weight: detail ? 2 : 1.4,
-      fillColor:color, fillOpacity: detail ? .95 : .78
+      fillColor:color, fillOpacity: detail ? .95 : .78,
+      interactive:false
+    }).addTo(layer);
+    // generous transparent hit target — easy one-click/tap. bubblingMouseEvents:false keeps
+    // the click from also reaching the map (which would instantly close the panel).
+    L.circleMarker([s.lat, s.lng], {
+      radius: 15, stroke:false, fillColor:color, fillOpacity:0,
+      bubblingMouseEvents:false
     })
-      .bindTooltip(s.n + (detail ? "  ⓘ" : ""), {className:"school-tt", direction:"top", offset:[0,-6]})
+      .bindTooltip(s.n + (detail ? "  ⓘ" : ""), {className:"school-tt", direction:"top", offset:[0,-9]})
       .on("click", () => openPanel(s))
       .addTo(layer);
   });
