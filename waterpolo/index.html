@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<title>NCAA Water Polo Programs Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+  :root{
+    --d1:#2563eb; --d2:#ea580c; --d3:#7c3aed;
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f1f5f9;
+    --ocean1:#0c4a6e; --ocean2:#0369a1;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg);
+    display:flex; flex-direction:column; height:100vh; overflow:hidden;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    background:linear-gradient(135deg,var(--ocean1),var(--ocean2));
+    color:#fff; padding:10px 16px;
+    box-shadow:0 2px 10px rgba(2,8,23,.18); z-index:1000;
+    display:flex; align-items:center; gap:16px 22px; flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:11px; margin-right:auto;}
+  .brand .logo{font-size:26px; line-height:1;}
+  .brand h1{font-size:17px; margin:0; font-weight:700; letter-spacing:.2px;}
+  .brand p{margin:2px 0 0; font-size:12px; color:#cfe6f5; font-weight:500;}
+
+  .controls{display:flex; align-items:center; gap:14px 18px; flex-wrap:wrap;}
+  .group{display:flex; align-items:center; gap:8px;}
+  .group > .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:#bcdcef; font-weight:700;}
+
+  .seg{display:inline-flex; background:rgba(255,255,255,.14); border-radius:999px; padding:3px;}
+  .seg button{
+    border:0; background:transparent; color:#e6f2fb; font-weight:600; font-size:13px;
+    padding:6px 14px; border-radius:999px; cursor:pointer; transition:.15s; white-space:nowrap;
+  }
+  .seg button:hover{color:#fff;}
+  .seg button.on{background:#fff; color:var(--ocean1); box-shadow:0 1px 4px rgba(0,0,0,.2);}
+
+  .pill{
+    display:inline-flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
+    border:1.5px solid rgba(255,255,255,.55); background:rgba(255,255,255,.10);
+    color:#fff; font-weight:700; font-size:13px; padding:6px 13px; border-radius:999px;
+    transition:.15s; opacity:.55;
+  }
+  .pill .swatch{width:11px; height:11px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.85);}
+  .pill.on{opacity:1; background:#fff; color:var(--ink); border-color:#fff;}
+  .pill:hover{opacity:.85;}
+  .pill.on:hover{opacity:1;}
+
+  .count{font-size:12.5px; color:#dff0fb; font-weight:600; white-space:nowrap;}
+  .count b{color:#fff;}
+  .fitbtn{
+    border:1.5px solid rgba(255,255,255,.55); background:rgba(255,255,255,.10); color:#fff;
+    font-weight:600; font-size:12.5px; padding:6px 12px; border-radius:8px; cursor:pointer; transition:.15s;
+  }
+  .fitbtn:hover{background:rgba(255,255,255,.22);}
+
+  /* ---------- Stage / Map ---------- */
+  #stage{position:relative; flex:1; overflow:hidden;}
+  #map{position:absolute; inset:0; background:#aadaff;}
+
+  .leaflet-tooltip.school-tt{
+    font-weight:600; font-size:12px; color:var(--ink);
+    border:0; box-shadow:0 1px 6px rgba(2,8,23,.25); border-radius:6px; padding:3px 8px;
+  }
+
+  /* ---------- Detail panel ---------- */
+  #panel{
+    position:absolute; top:0; right:0; height:100%; width:374px; max-width:90%;
+    background:#fff; box-shadow:-8px 0 30px rgba(2,8,23,.18);
+    transform:translateX(102%); transition:transform .28s cubic-bezier(.4,0,.2,1);
+    z-index:1200; display:flex; flex-direction:column;
+  }
+  #panel.open{transform:none;}
+  .panel-close{
+    position:absolute; top:12px; right:12px; z-index:2; width:32px; height:32px; border-radius:50%;
+    border:0; background:#f1f5f9; color:#334155; font-size:19px; line-height:1; cursor:pointer; transition:.15s;
+  }
+  .panel-close:hover{background:#e2e8f0;}
+  .panel-body{padding:22px 22px 28px; overflow-y:auto;}
+  .p-name{font-size:21px; font-weight:800; line-height:1.2; padding-right:34px;}
+  .p-loc{font-size:13px; color:var(--muted); margin-top:3px; font-weight:600;}
+  .p-chips{display:flex; flex-wrap:wrap; gap:7px; margin:15px 0 2px;}
+  .chip{font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:999px; background:#eef2f7; color:#334155; white-space:nowrap;}
+  .chip-div{color:#fff;}
+  .p-section{margin-top:18px;}
+  .p-h{font-size:11px; text-transform:uppercase; letter-spacing:.7px; color:#94a3b8; font-weight:800; margin-bottom:7px;}
+  .prg{display:flex; align-items:center; gap:8px; font-size:13.5px; padding:4px 0;}
+  .prg .dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .prg .gx{width:15px;text-align:center;flex:none; font-size:14px;}
+  .prg .conf{color:var(--muted); margin-left:auto; font-size:12px;}
+  .p-stats{display:flex; gap:10px; margin-top:18px;}
+  .stat{flex:1; background:linear-gradient(160deg,#f8fafc,#eef2f7); border:1px solid var(--line); border-radius:12px; padding:12px 10px; text-align:center;}
+  .stat-v{font-size:22px; font-weight:800; color:var(--ocean2); line-height:1;}
+  .stat-l{font-size:11px; color:var(--muted); font-weight:700; margin-top:5px;}
+  .p-desc{margin-top:18px; font-size:13.5px; line-height:1.55; color:#334155;}
+  .p-foot{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px;}
+  .p-link{display:inline-flex; align-items:center; gap:6px; background:var(--ocean2); color:#fff; text-decoration:none; font-weight:700; font-size:13px; padding:9px 14px; border-radius:9px; transition:.15s;}
+  .p-link:hover{background:var(--ocean1);}
+  .p-badge{font-size:12px; font-weight:700; padding:6px 10px; border-radius:8px;}
+  .p-badge.ok{background:#dcfce7; color:#15803d;}
+  .p-note{margin-top:16px; font-size:11.5px; color:#94a3b8; line-height:1.45;}
+  .p-empty{margin-top:18px; font-size:13px; color:var(--muted); background:#f8fafc; border:1px dashed var(--line); border-radius:10px; padding:14px; line-height:1.5;}
+
+  @media (max-width:720px){
+    header{padding:9px 12px; gap:9px 14px;}
+    .brand{margin-right:0; width:100%;}
+    .brand h1{font-size:15px;}
+    .controls{width:100%; gap:10px 14px;}
+    .group > .lbl{display:none;}
+    #panel{top:auto; bottom:0; left:0; right:0; width:auto; max-width:none; height:auto; max-height:76%;
+      transform:translateY(102%); border-radius:18px 18px 0 0; box-shadow:0 -8px 30px rgba(2,8,23,.22);}
+    #panel.open{transform:none;}
+    .panel-body{padding-top:26px;}
+    #panel::before{content:""; position:absolute; top:8px; left:50%; transform:translateX(-50%);
+      width:40px; height:4px; border-radius:99px; background:#cbd5e1;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="logo">🤽</span>
+    <div>
+      <h1>NCAA Water Polo Programs</h1>
+      <p>Every varsity men's &amp; women's program · 2025 season</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="group" id="genderSeg">
+      <span class="lbl">Show</span>
+      <div class="seg">
+        <button data-g="all" class="on">Both</button>
+        <button data-g="men">Men's</button>
+        <button data-g="women">Women's</button>
+      </div>
+    </div>
+
+    <div class="group" id="divGroup">
+      <span class="lbl">Division</span>
+      <span class="pill on" data-d="D1"><span class="swatch" style="background:var(--d1)"></span>D1</span>
+      <span class="pill on" data-d="D2"><span class="swatch" style="background:var(--d2)"></span>D2</span>
+      <span class="pill on" data-d="D3"><span class="swatch" style="background:var(--d3)"></span>D3</span>
+    </div>
+
+    <div class="group">
+      <span class="count" id="count"></span>
+      <button class="fitbtn" id="fit" title="Zoom to fit all visible schools">⤢ Fit</button>
+    </div>
+  </div>
+</header>
+
+<div id="stage">
+  <div id="map"></div>
+  <aside id="panel" aria-hidden="true">
+    <button class="panel-close" id="panelClose" aria-label="Close">✕</button>
+    <div class="panel-body" id="panelBody"></div>
+  </aside>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const DIV = {D1:"#2563eb", D2:"#ea580c", D3:"#7c3aed"};
+const DIV_NAME = {D1:"Division I", D2:"Division II", D3:"Division III"};
+
+/* Each entry: n,c,s,lat,lng, m/w=[div,conf]|0, plus optional profile fields
+   (desc, region, size, type, acad, wp, link, formFilled) merged from the spreadsheet. */
+const SCHOOLS = [{"n":"California (Cal)","c":"Berkeley","s":"CA","lat":37.8719,"lng":-122.2585,"m":["D1","MPSF"],"w":["D1","MPSF"],"desc":"Public flagship overlooking the San Francisco Bay with a legacy of academic excellence and activism. Premier programs span engineering, CS, sciences, social sciences, and the arts.","region":"West (CA)","size":"Very large (~30k+ UG)","type":"Public","acad":6,"wp":3,"link":"https://calbears.com/sports/2013/4/17/208195140.aspx","formFilled":false},{"n":"Stanford","c":"Stanford","s":"CA","lat":37.4275,"lng":-122.1697,"m":["D1","MPSF"],"w":["D1","MPSF"],"desc":"Private R1 university in Silicon Valley known for pioneering research and a strong entrepreneurial culture. Highly selective, with strengths across engineering, computer science, and the humanities.","region":"West (CA)","size":"Medium undergrad (~7k UG; large research)","type":"Private","acad":2,"wp":2,"link":"https://questionnaires.armssoftware.com/cebf4fa0ba01","formFilled":false},{"n":"USC","c":"Los Angeles","s":"CA","lat":34.0224,"lng":-118.2851,"m":["D1","MPSF"],"w":["D1","MPSF"],"desc":"Private research university in Los Angeles with strengths in engineering, business, and the arts (including film and media). Extensive alumni network and industry ties.","region":"West (CA)","size":"Large (~18–22k UG)","type":"Private","acad":11,"wp":4,"link":"https://questionnaires.armssoftware.com/976f3a64dc50","formFilled":false},{"n":"UCLA","c":"Los Angeles","s":"CA","lat":34.0689,"lng":-118.4452,"m":["D1","MPSF"],"w":["D1","MPSF"],"desc":"Large public flagship in Westwood, Los Angeles, and a top global research university. Broad strengths from engineering and life sciences to arts and film.","region":"West (CA)","size":"Very large (~30k+ UG)","type":"Public","acad":7,"wp":1,"link":"https://questionnaires.armssoftware.com/1a723bf2113f","formFilled":false},{"n":"UC Irvine","c":"Irvine","s":"CA","lat":33.6405,"lng":-117.8443,"m":["D1","Big West"],"w":["D1","Big West"],"desc":"Young research university in Orange County with strengths in computer science, engineering, and the biological sciences. Suburban campus with a modern, planned layout.","region":"West (CA)","size":"Very large (~30k UG)","type":"Public","acad":14,"wp":6,"link":"https://ucirvinesports.com/sports/womens-water-polo","formFilled":false},{"n":"UC San Diego","c":"La Jolla","s":"CA","lat":32.8801,"lng":-117.234,"m":["D1","Big West"],"w":["D1","Big West"],"desc":"Research university in La Jolla with a distinctive college system and strengths in engineering, biological sciences, and oceanography. Coastal setting with a STEM tilt.","region":"West (CA)","size":"Very large (~30k+ UG)","type":"Public","acad":12,"wp":9,"link":"https://ucsdtritons.com/sports/2020/7/4/recruiting-questionnaires-psa.aspx","formFilled":false},{"n":"UC Santa Barbara","c":"Santa Barbara","s":"CA","lat":34.414,"lng":-119.8489,"m":["D1","Big West"],"w":["D1","Big West"],"desc":"Coastal public research university known for materials science, physics, and a strong liberal‑arts foundation. Sunny campus culture in Isla Vista with ocean access.","region":"West (CA)","size":"Large (~20–25k UG)","type":"Public","acad":15,"wp":13,"link":"https://questionnaires.armssoftware.com/8fe66bfbe1e0","formFilled":false},{"n":"UC Davis","c":"Davis","s":"CA","lat":38.5382,"lng":-121.7617,"m":["D1","Big West"],"w":["D1","Big West"],"desc":"Public research university near Sacramento with noted programs in life sciences, agriculture, and engineering. Bike‑friendly college‑town vibe and collaborative culture.","region":"West (CA)","size":"Very large (~30k+ UG)","type":"Public","acad":13,"wp":12,"link":"https://questionnaires.armssoftware.com/ef49c4a59e99","formFilled":false},{"n":"Long Beach State","c":"Long Beach","s":"CA","lat":33.7838,"lng":-118.1141,"m":["D1","Big West"],"w":["D1","Big West"]},{"n":"Cal State Fullerton","c":"Fullerton","s":"CA","lat":33.8823,"lng":-117.8851,"m":["D1","Big West"],"w":["D1","Big West"]},{"n":"Cal State Northridge","c":"Northridge","s":"CA","lat":34.2412,"lng":-118.5278,"m":0,"w":["D1","Big West"]},{"n":"Loyola Marymount","c":"Los Angeles","s":"CA","lat":33.9696,"lng":-118.418,"m":["D1","WCC"],"w":["D1","GCC"],"desc":"Jesuit and Marymount tradition university on the bluffs of Los Angeles. Known for film/television, communications, business, and a service‑oriented culture.","region":"West (CA)","size":"Small (~2–2.5k UG)","type":"Private","acad":20,"wp":7,"link":"https://questionnaires.armssoftware.com/be167dbabba8","formFilled":false},{"n":"Pepperdine","c":"Malibu","s":"CA","lat":34.0411,"lng":-118.7106,"m":["D1","WCC"],"w":0},{"n":"Pacific","c":"Stockton","s":"CA","lat":37.9806,"lng":-121.3108,"m":["D1","WCC"],"w":["D1","GCC"]},{"n":"Santa Clara","c":"Santa Clara","s":"CA","lat":37.3496,"lng":-121.939,"m":["D1","WCC"],"w":["D1","GCC"],"desc":"Jesuit university in the heart of Silicon Valley with strengths in business, engineering, and the liberal arts. Tight‑knit campus with strong ties to Bay Area industry.","region":"West (CA)","size":"Medium (~5–6k UG)","type":"Private","acad":19,"wp":17,"link":"https://docs.google.com/forms/d/e/1FAIpQLSc0wHJQh3_qfmmeyTal0Myur8cVwmZOZBdWbJTV9sB63b_3Gg/viewform?c=0&w=1","formFilled":false},{"n":"California Baptist","c":"Riverside","s":"CA","lat":33.9285,"lng":-117.4256,"m":["D1","WCC"],"w":["D1","GCC"]},{"n":"San Jose State","c":"San Jose","s":"CA","lat":37.3352,"lng":-121.8811,"m":["D1","WCC"],"w":["D1","MPSF"]},{"n":"Fresno State","c":"Fresno","s":"CA","lat":36.8133,"lng":-119.7456,"m":0,"w":["D1","GCC"]},{"n":"San Diego State","c":"San Diego","s":"CA","lat":32.7757,"lng":-117.0719,"m":0,"w":["D1","GCC"]},{"n":"Arizona State","c":"Tempe","s":"AZ","lat":33.4242,"lng":-111.9281,"m":0,"w":["D1","MPSF"]},{"n":"Hawai'i","c":"Honolulu","s":"HI","lat":21.2969,"lng":-157.8171,"m":0,"w":["D1","Big West"],"desc":"Flagship research university in Honolulu with strengths in Pacific/Asian studies, marine sciences, and public health. Diverse, multicultural campus with unique island opportunities.","region":"Pacific (HI)","size":"Large (~12–18k UG)","type":"Public","acad":21,"wp":5,"link":"https://hawaiiathletics.com/sports/2011/10/6/wwp-prospective.aspx","formFilled":false},{"n":"Air Force","c":"Colorado Springs","s":"CO","lat":38.9983,"lng":-104.8613,"m":["D1","WCC"],"w":0},{"n":"Biola","c":"La Mirada","s":"CA","lat":33.9081,"lng":-118.0148,"m":["D2","WWPA"],"w":["D2","WWPA"]},{"n":"Concordia Irvine","c":"Irvine","s":"CA","lat":33.6634,"lng":-117.853,"m":["D2","WWPA"],"w":["D2","GCC"]},{"n":"Fresno Pacific","c":"Fresno","s":"CA","lat":36.743,"lng":-119.786,"m":["D2","WWPA"],"w":["D2","WWPA"]},{"n":"UC Merced","c":"Merced","s":"CA","lat":37.3661,"lng":-120.4237,"m":["D2","WWPA"],"w":["D2","WWPA"]},{"n":"Azusa Pacific","c":"Azusa","s":"CA","lat":34.1336,"lng":-117.8876,"m":0,"w":["D2","GCC"]},{"n":"Cal State Monterey Bay","c":"Seaside","s":"CA","lat":36.6537,"lng":-121.7984,"m":0,"w":["D2","WWPA"]},{"n":"Pomona-Pitzer","c":"Claremont","s":"CA","lat":34.0967,"lng":-117.7117,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Two highly selective liberal‑arts colleges that share an NCAA program within the Claremont Consortium. Broad, rigorous liberal‑arts curriculum with close faculty engagement.","region":"West (CA)","size":"Small (~2.5–3k combined UG)","type":"Private","acad":9,"wp":16,"link":"https://sagehens.com/sports/2023/7/27/information-prospective-athletes.aspx","formFilled":true},{"n":"Claremont-Mudd-Scripps","c":"Claremont","s":"CA","lat":34.103,"lng":-117.7065,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Three elite liberal‑arts colleges fielding one joint NCAA program within the seven‑college Claremont Consortium. Each college is small and highly selective; students benefit from shared resources.","region":"West (CA)","size":"Small (each ~1k; ~3k combined)","type":"Private","acad":10,"wp":18,"link":"https://questionnaires.armssoftware.com/4b9122fdf6d3","formFilled":false},{"n":"Redlands","c":"Redlands","s":"CA","lat":34.0633,"lng":-117.1635,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Private liberal‑arts university in the Inland Empire with strengths in business, education, and spatial studies. Residential campus with a personalized learning environment.","region":"West (CA)","size":"Small (~2–3k UG)","type":"Private","acad":23,"wp":25,"link":"https://goredlands.com/information/Inside_Athletics/Prospective_Student-Athletes","formFilled":false},{"n":"Chapman","c":"Orange","s":"CA","lat":33.7934,"lng":-117.8514,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Private university in Orange with a fast‑rising profile and noted programs in film (Dodge), business, and health sciences. Charming Old Towne campus with strong industry connections.","region":"West (CA)","size":"Medium (~7–9k UG)","type":"Private","acad":22,"wp":20,"link":"https://athletics.chapman.edu/recruits/prospective-student","formFilled":false},{"n":"Occidental","c":"Los Angeles","s":"CA","lat":34.1276,"lng":-118.212,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Selective liberal‑arts college in Los Angeles with strong ties to diplomacy, public policy, and the arts. Close‑knit community and urban internship access.","region":"West (CA)","size":"Small (~2–3k UG)","type":"Private","acad":18,"wp":23,"link":"https://oxyathletics.com/information/inside_oxy/PSA","formFilled":false},{"n":"Whittier","c":"Whittier","s":"CA","lat":33.9792,"lng":-118.0317,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Small liberal‑arts college in Los Angeles County known for writing and interdisciplinary programs like the Whittier Scholars. Diverse, close‑knit campus community.","region":"West (CA)","size":"Small (~1–2k UG)","type":"Private","acad":25,"wp":24,"link":"https://whittier.prestosports.com/general/2016-17/prospective_student-athletes","formFilled":false},{"n":"La Verne","c":"La Verne","s":"CA","lat":34.1009,"lng":-117.7676,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Private university in the San Gabriel Valley with strengths in business, education, and public administration. Mix of traditional and working‑professional students.","region":"West (CA)","size":"Medium (~6–8k UG)","type":"Private","acad":26,"wp":22,"link":"https://questionnaires.armssoftware.com/194e3372d314","formFilled":false},{"n":"California Lutheran","c":"Thousand Oaks","s":"CA","lat":34.2272,"lng":-118.8665,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Private university in Thousand Oaks offering small classes and close faculty access. Strong programs in business, science, and professional studies.","region":"West (CA)","size":"Small (~1k UG)","type":"Private","acad":24,"wp":21,"link":"https://clumusekingsmen.com/sports/w-wpolo/index","formFilled":false},{"n":"Caltech","c":"Pasadena","s":"CA","lat":34.1377,"lng":-118.1253,"m":["D3","SCIAC"],"w":["D3","SCIAC"],"desc":"Tiny STEM‑focused institute in Pasadena with an intense research culture and exceptional faculty mentorship. Known for producing scientists, engineers, and Nobel laureates.","region":"West (CA)","size":"Small (~2–3k UG)","type":"Private","acad":4,"wp":26,"link":"https://beaverbind.caltech.edu/prospective-student-athletes","formFilled":false},{"n":"McKendree","c":"Lebanon","s":"IL","lat":38.6039,"lng":-89.8073,"m":["D2","WWPA"],"w":["D2","WWPA"]},{"n":"Augustana","c":"Rock Island","s":"IL","lat":41.5067,"lng":-90.551,"m":["D3","MPSF East"],"w":["D3","CWPA"]},{"n":"Carthage","c":"Kenosha","s":"WI","lat":42.5847,"lng":-87.8212,"m":0,"w":["D3","CWPA"]},{"n":"Macalester","c":"Saint Paul","s":"MN","lat":44.9398,"lng":-93.1689,"m":0,"w":["D3","CWPA"]},{"n":"Indiana","c":"Bloomington","s":"IN","lat":39.1682,"lng":-86.523,"m":0,"w":["D1","MPSF"],"desc":"Big Ten research university with standout programs in business (Kelley) and music (Jacobs). Classic college‑town experience with vast academic breadth.","region":"Midwest (IN)","size":"Very large (~30k+ UG)","type":"Public","acad":16,"wp":10,"link":"https://questionnaires.armssoftware.com/0787153df7a0","formFilled":false},{"n":"Michigan","c":"Ann Arbor","s":"MI","lat":42.278,"lng":-83.7382,"m":0,"w":["D1","CWPA"],"desc":"Public research powerhouse with a classic college‑town setting and strong school spirit. Top‑ranked across engineering, business, social sciences, and the arts.","region":"Midwest (MI)","size":"Very large (~30k+ UG)","type":"Public","acad":8,"wp":11,"link":"https://mgoblue.com/sports/2021/6/18/recruiting-questionnaires","formFilled":false},{"n":"Austin College","c":"Sherman","s":"TX","lat":33.6357,"lng":-96.6086,"m":["D3","MPSF East"],"w":["D3","CWPA"]},{"n":"Navy","c":"Annapolis","s":"MD","lat":38.9835,"lng":-76.4861,"m":["D1","CWPA"],"w":0},{"n":"Johns Hopkins","c":"Baltimore","s":"MD","lat":39.3299,"lng":-76.6205,"m":["D3","CWPA"],"w":0},{"n":"Mount St. Mary's","c":"Emmitsburg","s":"MD","lat":39.7065,"lng":-77.3258,"m":["D1","CWPA"],"w":0},{"n":"George Washington","c":"Washington","s":"DC","lat":38.8997,"lng":-77.0487,"m":["D1","CWPA"],"w":0},{"n":"Fordham","c":"Bronx","s":"NY","lat":40.861,"lng":-73.8857,"m":["D1","CWPA"],"w":["D1","MAAC"]},{"n":"Iona","c":"New Rochelle","s":"NY","lat":40.9215,"lng":-73.7846,"m":["D1","CWPA"],"w":["D1","MAAC"]},{"n":"Wagner","c":"Staten Island","s":"NY","lat":40.6151,"lng":-74.0937,"m":["D1","CWPA"],"w":["D1","MAAC"]},{"n":"Long Island University","c":"Brooklyn","s":"NY","lat":40.6907,"lng":-73.9821,"m":["D1","CWPA"],"w":0},{"n":"Marist","c":"Poughkeepsie","s":"NY","lat":41.7222,"lng":-73.9324,"m":0,"w":["D1","MAAC"]},{"n":"Princeton","c":"Princeton","s":"NJ","lat":40.3431,"lng":-74.6551,"m":["D1","CWPA"],"w":["D1","CWPA"],"desc":"Ivy League university with an undergraduate focus and renowned residential college system. Exceptional strengths in mathematics, engineering, public policy, and the humanities.","region":"Northeast (NJ)","size":"Medium undergrad (~5–6k UG)","type":"Private","acad":3,"wp":8,"link":"https://questionnaires.armssoftware.com/49db31693409?DB_OEM_ID=10600","formFilled":false},{"n":"Bucknell","c":"Lewisburg","s":"PA","lat":40.9543,"lng":-76.8841,"m":["D1","CWPA"],"w":["D1","CWPA"]},{"n":"Mercyhurst","c":"Erie","s":"PA","lat":42.1019,"lng":-80.0728,"m":["D1","CWPA"],"w":["D1","CWPA"]},{"n":"Gannon","c":"Erie","s":"PA","lat":42.1292,"lng":-80.0851,"m":["D2","WWPA"],"w":["D2","WWPA"]},{"n":"Penn State Behrend","c":"Erie","s":"PA","lat":42.1086,"lng":-79.978,"m":["D3","MPSF East"],"w":["D3","CWPA"]},{"n":"La Salle","c":"Philadelphia","s":"PA","lat":40.0349,"lng":-75.1527,"m":0,"w":["D1","MAAC"]},{"n":"Villanova","c":"Villanova","s":"PA","lat":40.0367,"lng":-75.3413,"m":0,"w":["D1","MAAC"],"desc":"Augustinian Catholic university outside Philadelphia with notable strengths in business, engineering, and nursing. Mid‑sized campus community with Big East spirit.","region":"Northeast (PA)","size":"Medium undergrad (~7k UG)","type":"Private","acad":17,"wp":19,"link":"https://villanova.com/sports/womens-water-polo","formFilled":false},{"n":"Saint Francis (PA)","c":"Loretto","s":"PA","lat":40.5103,"lng":-78.6342,"m":0,"w":["D1","CWPA"]},{"n":"Grove City","c":"Grove City","s":"PA","lat":41.1581,"lng":-80.0884,"m":0,"w":["D3","CWPA"]},{"n":"Washington & Jefferson","c":"Washington","s":"PA","lat":40.1742,"lng":-80.2462,"m":["D3","MPSF East"],"w":["D3","CWPA"]},{"n":"Harvard","c":"Cambridge","s":"MA","lat":42.377,"lng":-71.1167,"m":["D1","CWPA"],"w":["D1","CWPA"],"desc":"Historic Ivy League university in Cambridge with vast resources and global reach. Strong liberal‑arts core paired with leading research across nearly every field.","region":"Northeast (MA)","size":"Medium undergrad (~7k UG; large research)","type":"Private","acad":1,"wp":15,"link":"https://questionnaires.armssoftware.com/b1fd88b3a17b","formFilled":true},{"n":"MIT","c":"Cambridge","s":"MA","lat":42.3601,"lng":-71.0942,"m":["D3","CWPA"],"w":0},{"n":"Wheaton (MA)","c":"Norton","s":"MA","lat":41.9686,"lng":-71.185,"m":["D3","MPSF East"],"w":["D3","CWPA"]},{"n":"Brown","c":"Providence","s":"RI","lat":41.8268,"lng":-71.4025,"m":["D1","CWPA"],"w":["D1","CWPA"],"desc":"Ivy League university in Providence known for its Open Curriculum and student‑driven learning. Collaborative culture with strong programs in life sciences, humanities, and data science.","region":"Northeast (RI)","size":"Medium undergrad (~7k UG)","type":"Private","acad":5,"wp":14,"link":"https://questionnaires.armssoftware.com/ef1574b4752a","formFilled":false},{"n":"Connecticut College","c":"New London","s":"CT","lat":41.3789,"lng":-72.1036,"m":["D3","CWPA"],"w":["D3","CWPA"]},{"n":"Salem","c":"Salem","s":"WV","lat":39.2834,"lng":-80.559,"m":0,"w":["D2","WWPA"]}];
+
+const RATED = SCHOOLS.filter(s => s.acad != null).length;
+
+/* ---------- State ---------- */
+const state = { gender:"all", divs:new Set(["D1","D2","D3"]) };
+
+/* ---------- Map ---------- */
+const map = L.map("map", {zoomControl:true, worldCopyJump:true}).setView([39.5, -98.35], 4);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains:"abcd", maxZoom:19
+}).addTo(map);
+
+const layer = L.layerGroup().addTo(map);
+
+/* ---------- Helpers ---------- */
+function programsOf(s){
+  const out = [];
+  if(s.m) out.push({g:"men", div:s.m[0], conf:s.m[1]});
+  if(s.w) out.push({g:"women", div:s.w[0], conf:s.w[1]});
+  return out;
+}
+function schoolDiv(s){ return (s.m || s.w)[0]; }
+function hasProfile(s){ return !!(s.desc || s.region || s.size || s.type || s.acad != null || s.wp != null || s.link); }
+function matchingPrograms(s){
+  return programsOf(s).filter(p =>
+    (state.gender==="all" || state.gender===p.g) && state.divs.has(p.div));
+}
+
+/* ---------- Detail panel ---------- */
+const panel = document.getElementById("panel");
+const panelBody = document.getElementById("panelBody");
+function closePanel(){ panel.classList.remove("open"); panel.setAttribute("aria-hidden","true"); }
+function openPanel(s){
+  const div = schoolDiv(s);
+  let chips = `<span class="chip chip-div" style="background:${DIV[div]}">${DIV_NAME[div]}</span>`;
+  if(s.type) chips += `<span class="chip">${s.type}</span>`;
+  if(s.size) chips += `<span class="chip">${s.size}</span>`;
+
+  const loc = `${s.c}, ${s.s}` + (s.region ? ` &middot; ${s.region}` : "");
+
+  const prg = programsOf(s).map(p => `
+    <div class="prg">
+      <span class="dot" style="background:${DIV[p.div]}"></span>
+      <span class="gx">${p.g==="men"?"♂":"♀"}</span>
+      <b>${p.g==="men"?"Men's":"Women's"}</b> &middot; ${p.div}
+      <span class="conf">${p.conf}</span>
+    </div>`).join("");
+
+  let stats = "";
+  if(s.acad != null || s.wp != null){
+    stats = `<div class="p-stats">
+      ${s.acad!=null?`<div class="stat"><div class="stat-v">#${s.acad}</div><div class="stat-l">Academic rigor</div></div>`:""}
+      ${s.wp!=null?`<div class="stat"><div class="stat-v">#${s.wp}</div><div class="stat-l">Water&nbsp;polo level</div></div>`:""}
+    </div>`;
+  }
+
+  const desc = s.desc ? `<div class="p-desc">${s.desc}</div>` : "";
+
+  let foot = "";
+  if(s.link || s.formFilled){
+    foot = `<div class="p-foot">
+      ${s.link?`<a class="p-link" href="${s.link}" target="_blank" rel="noopener">Recruiting questionnaire ↗</a>`:""}
+      ${s.formFilled?`<span class="p-badge ok">✓ Form submitted</span>`:""}
+    </div>`;
+  }
+
+  const note = (s.acad!=null||s.wp!=null)
+    ? `<div class="p-note">Academic &amp; water-polo ranks are 1–${RATED} across the profiled schools in the source sheet (1 = toughest).</div>` : "";
+
+  const empty = hasProfile(s) ? ""
+    : `<div class="p-empty">No extra profile for this school in the spreadsheet yet — showing program info only.</div>`;
+
+  panelBody.innerHTML = `
+    <div class="p-name">${s.n}</div>
+    <div class="p-loc">${loc}</div>
+    <div class="p-chips">${chips}</div>
+    <div class="p-section"><div class="p-h">Programs</div>${prg}</div>
+    ${stats}${desc}${foot}${empty}${note}`;
+
+  panel.classList.add("open");
+  panel.setAttribute("aria-hidden","false");
+}
+document.getElementById("panelClose").addEventListener("click", closePanel);
+map.on("click", closePanel);
+
+/* ---------- Render ---------- */
+function render(){
+  layer.clearLayers();
+  let schools = 0, programs = 0, profiled = 0;
+  SCHOOLS.forEach(s => {
+    const matches = matchingPrograms(s);
+    if(matches.length === 0) return;
+    schools++; programs += matches.length;
+    const detail = hasProfile(s);
+    if(detail) profiled++;
+    const color = DIV[schoolDiv(s)];
+    L.circleMarker([s.lat, s.lng], {
+      radius: detail ? 8 : 6,
+      color:"#fff", weight: detail ? 2 : 1.4,
+      fillColor:color, fillOpacity: detail ? .95 : .78
+    })
+      .bindTooltip(s.n + (detail ? "  ⓘ" : ""), {className:"school-tt", direction:"top", offset:[0,-6]})
+      .on("click", () => openPanel(s))
+      .addTo(layer);
+  });
+  document.getElementById("count").innerHTML =
+    `<b>${schools}</b> ${schools===1?"school":"schools"} · <b>${programs}</b> ${programs===1?"program":"programs"} · <b>${profiled}</b> profiled`;
+}
+
+function fitVisible(){
+  const pts = [];
+  SCHOOLS.forEach(s => { if(matchingPrograms(s).length) pts.push([s.lat, s.lng]); });
+  if(pts.length) map.fitBounds(pts, {padding:[40,40], maxZoom:7});
+}
+
+/* ---------- Controls ---------- */
+document.querySelectorAll("#genderSeg .seg button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#genderSeg .seg button").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    state.gender = btn.dataset.g;
+    render();
+  });
+});
+document.querySelectorAll("#divGroup .pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    const d = pill.dataset.d;
+    if(state.divs.has(d)){ state.divs.delete(d); pill.classList.remove("on"); }
+    else { state.divs.add(d); pill.classList.add("on"); }
+    render();
+  });
+});
+document.getElementById("fit").addEventListener("click", fitVisible);
+
+/* ---------- Go ---------- */
+render();
+</script>
+</body>
+</html>
