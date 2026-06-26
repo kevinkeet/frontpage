@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
 <title>NCAA Water Polo Programs Map</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMjkiIGZpbGw9IiNGRkM0MDAiIHN0cm9rZT0iI0IwN0QwQSIgc3Ryb2tlLXdpZHRoPSIzIi8+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQjA3RDBBIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTMyIDN2NTgiLz48cGF0aCBkPSJNMyAzMmg1OCIvPjxwYXRoIGQ9Ik0zMiAzYTM5IDM5IDAgMCAxIDAgNTgiLz48cGF0aCBkPSJNMzIgM2EzOSAzOSAwIDAgMCAwIDU4Ii8+PHBhdGggZD0iTTMgMzJhMzkgMzkgMCAwIDEgNTggMCIvPjxwYXRoIGQ9Ik0zIDMyYTM5IDM5IDAgMCAwIDU4IDAiLz48L2c+PC9zdmc+" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <style>
@@ -156,7 +157,7 @@
   .prg .conf{color:var(--muted); margin-left:auto; font-size:12px;}
   .p-stats{display:flex; gap:10px; margin-top:18px;}
   .stat{flex:1; background:linear-gradient(160deg,#f8fafc,#eef2f7); border:1px solid var(--line); border-radius:12px; padding:12px 10px; text-align:center;}
-  .stat-v{font-size:22px; font-weight:800; color:var(--ocean2); line-height:1;}
+  .stat-v{font-size:17px; font-weight:800; color:var(--ocean2); line-height:1.15;}
   .stat-l{font-size:11px; color:var(--muted); font-weight:700; margin-top:5px;}
   .p-desc{margin-top:18px; font-size:13.5px; line-height:1.55; color:#334155;}
   .p-foot{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px;}
@@ -274,7 +275,7 @@ let RATED = 0;
 let map, layer;
 
 const FILTERS = [
-  {key:"acad", label:"Academic difficulty", opts:["Most selective","Highly selective","Selective","Less selective"]},
+  {key:"acad", label:"Academic difficulty", opts:["Elite","Very high","High","Moderate"]},
   {key:"wp",   label:"Water polo level",    opts:["Elite","Strong","Competitive","Developing"]},
   {key:"size", label:"School size",         opts:["Small","Medium","Large","Very large"]},
   {key:"type", label:"Type",                opts:["Public","Private"]}
@@ -295,7 +296,7 @@ function matchingPrograms(s){
   return programsOf(s).filter(p =>
     (state.gender==="all" || state.gender===p.g) && state.divs.has(p.div));
 }
-function acadTier(s){ const r=s.acad; return r==null?null : r<=17?"Most selective" : r<=35?"Highly selective" : r<=52?"Selective" : "Less selective"; }
+function acadTier(s){ const r=s.acad; return r==null?null : r<=17?"Elite" : r<=35?"Very high" : r<=52?"High" : "Moderate"; }
 function wpTier(s){ const r=s.wp; return r==null?null : r<=15?"Elite" : r<=35?"Strong" : r<=52?"Competitive" : "Developing"; }
 function sizeCat(s){ if(!s.size) return null; return s.size.indexOf("Very large")===0 ? "Very large" : s.size.split(" ")[0]; }
 function typeCat(s){ if(!s.type) return null; return s.type.indexOf("Public")===0 ? "Public" : "Private"; }
@@ -328,8 +329,8 @@ function openPanel(s){
   let stats = "";
   if(s.acad != null || s.wp != null){
     stats = `<div class="p-stats">
-      ${s.acad!=null?`<div class="stat"><div class="stat-v">#${s.acad}</div><div class="stat-l">Academic rigor</div></div>`:""}
-      ${s.wp!=null?`<div class="stat"><div class="stat-v">#${s.wp}</div><div class="stat-l">Water&nbsp;polo level</div></div>`:""}
+      ${s.acad!=null?`<div class="stat"><div class="stat-v">${acadTier(s)}</div><div class="stat-l">Academic rigor</div></div>`:""}
+      ${s.wp!=null?`<div class="stat"><div class="stat-v">${wpTier(s)}</div><div class="stat-l">Water polo</div></div>`:""}
     </div>`;
   }
 
@@ -362,7 +363,7 @@ function openPanel(s){
   }
 
   const note = (s.acad!=null||s.wp!=null)
-    ? `<div class="p-note">Ranks are 1–${RATED} across all programs (1 = toughest). Coaches &amp; costs change year to year — verify with the program.</div>` : "";
+    ? `<div class="p-note">Levels are relative across all programs (academic = selectivity; water polo = competitive strength). Coaches &amp; costs change year to year — verify with the program.</div>` : "";
 
   const empty = hasProfile(s) ? ""
     : `<div class="p-empty">No extra profile for this school yet — showing program info only.</div>`;
