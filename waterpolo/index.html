@@ -785,7 +785,7 @@ function renderCompare(){
     </tr>`;
   }).join("");
   body.innerHTML = `${sortIsDefault(cmpSort) ? "" : `<div class="lv-count" style="padding-top:0">Sorted${cmpSort.map((l,i)=>` ${i?"then ":""}by ${l.key}${l.dir==="desc"?" ▼":""}`).join(",")}.${sortResetHtml(cmpSort)}</div>`}<table class="cmp-table"><thead><tr>
-    ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${PROFILE ? sortableTh("fitA","🎓 Fit",cmpSort) + sortableTh("fitP","🤽 Fit",cmpSort) + sortableTh("youCost","Your $",cmpSort) : ""}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
+    ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${PROFILE ? sortableTh("fitP","🤽 Fit",cmpSort) + sortableTh("fitA","🎓 Fit",cmpSort) + sortableTh("youCost","Your $",cmpSort) : ""}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
   wireSortHeaders(body, cmpSort, renderCompare);
   body.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => {
@@ -927,7 +927,7 @@ function fitCells(s, withCost = true){
   const b = t => t ? `<span class="fit-b fit-${t}" style="padding:1px 7px;font-size:10.5px">${t[0]}</span>` : "–";
   const e = estCostYou(s);
   const polo = s.recBen === "none" ? `<span title="No admissions benefit for athletes — walk-on only">⚠️W</span>` : b(fitPolo(s));
-  return `<td>🎓${b(fitAcad(s))}</td><td>🤽${polo}</td>` + (withCost ? `<td style="white-space:nowrap">${e ? e.replace("/yr","") : "–"}</td>` : "");
+  return `<td>🤽${polo}</td><td>🎓${b(fitAcad(s))}</td>` + (withCost ? `<td style="white-space:nowrap">${e ? e.replace("/yr","") : "–"}</td>` : "");
 }
 /* The flagship recruit query: best academics where my polo makes me recruitable. */
 function bestPlayable(){
@@ -981,12 +981,26 @@ function sortSchools(arr, chain){
     return a.n.localeCompare(b.n);
   });
 }
+const TH_TIPS = {
+  name:    "Click a name to open the school's full profile. Chips show the team's division and conference.",
+  tier:    "Team strength from 2023–26 results: Title contender, NCAA tournament, Contender, Developing.",
+  recruit: "How hard it is to get recruited here, R1 (national pipeline, hardest) to R8 (JC open door), for the selected gender.",
+  accept:  "Share of applicants admitted — in-state or out-of-state rate where schools publish them (set your state in About me).",
+  cost:    "Published sticker price per year before any aid — the in-state rate where you're a resident.",
+  youCost: "Sticker price, then in green a rough estimate of what your family might actually pay after typical aid at this school, based on your About-me profile. Sorts by your estimate.",
+  fitP:    "Your polo fit from your About-me level vs this program's recruiting tier: R = Reach, T = Target, S = Safety. ⚠️ = athletes get no admissions benefit here (walk-on only).",
+  fitA:    "Your academic fit from your About-me grades/SAT vs this school's admitted-class bands: R = Reach, T = Target, S = Safety. Under-15%-admit schools are a Reach for everyone.",
+  where:   "Region of the country and campus setting.",
+  coach:   "Head coach for the selected gender.",
+  status:  "Your own outreach tracker — set a status per school; it saves in this browser."
+};
 function sortableTh(key, label, chain){
   const i = chain.findIndex(l => l.key === key);
   const arr = i >= 0
     ? `<span class="arr">${chain[i].dir === "desc" ? "▼" : "▲"}${chain.length > 1 ? (SUP[i] || "") : ""}</span>`
     : "";
-  return `<th class="sortable" data-sort="${key}">${label}${arr}</th>`;
+  const tip = TH_TIPS[key] ? ` title="${TH_TIPS[key]}"` : "";
+  return `<th class="sortable" data-sort="${key}"${tip}>${label}${arr}</th>`;
 }
 function sortIsDefault(chain){ return chain.length === 1 && chain[0].key === "name" && chain[0].dir === "asc"; }
 function sortResetHtml(chain){ return sortIsDefault(chain) ? "" : `<button class="sort-clear" type="button">↺ reset sort</button>`; }
@@ -1036,7 +1050,7 @@ function renderListView(){
   const gNote = state.gender === "all" ? " Conference & recruit tier show the women's program where a school fields both — pick Men's or Women's for that team's view." : "";
   lv.innerHTML = `<div class="lv-inner"><div class="lv-count"><b>${list.length} schools${gTxt}</b> shown — click a column to sort, another to sort within it, a name to open its profile.${gNote}${sortResetHtml(lvSort)}</div>
     <div class="cmp-scroll"><table class="cmp-table"><thead><tr>
-      <th></th>${sortableTh("name","School",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh(PROFILE ? "youCost" : "cost","Cost / yr",lvSort)}${PROFILE ? sortableTh("fitA","🎓 Fit",lvSort) + sortableTh("fitP","🤽 Fit",lvSort) : ""}
+      <th></th>${sortableTh("name","School",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh(PROFILE ? "youCost" : "cost","Cost / yr",lvSort)}${PROFILE ? sortableTh("fitP","🤽 Fit",lvSort) + sortableTh("fitA","🎓 Fit",lvSort) : ""}
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
   lv.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => openPanel(SCHOOLS[+el.dataset.i])));
   lv.querySelectorAll(".lv-row-star").forEach(el => el.addEventListener("click", e => {
