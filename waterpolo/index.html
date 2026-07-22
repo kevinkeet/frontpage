@@ -152,6 +152,8 @@
   .lv-row-star.on{color:#f59e0b;}
   .lv-row-star:hover{color:#f59e0b;}
   .lv-count{font-size:12px; color:var(--muted); padding:10px 4px 6px;}
+  .sort-clear{border:0; background:none; color:var(--ocean2); cursor:pointer; font-size:11.5px; text-decoration:underline; margin-left:8px; padding:0;}
+  .sort-clear:hover{color:var(--ocean1);}
 
   /* ---------- Stage / Map ---------- */
   #stage{position:relative; flex:1; overflow:hidden;}
@@ -597,7 +599,7 @@ const FAV_KEY = "wpMyList";
 let FAVS = {};
 try { FAVS = JSON.parse(localStorage.getItem(FAV_KEY) || "{}") || {}; } catch(e) { FAVS = {}; }
 const STATUS_OPTS = ["", "Emailed coach", "Replied", "Call / meeting", "Campus visit", "Applied", "Offer", "Committed"];
-const cmpSort = { key: "name", dir: "asc" };
+const cmpSort = [{ key: "name", dir: "asc" }];
 function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(FAVS)); } catch(e){} }
 function isFav(n){ return Object.prototype.hasOwnProperty.call(FAVS, n); }
 function toggleFav(n){
@@ -641,7 +643,7 @@ function renderCompare(){
       <td><button class="cmp-x" data-i="${i}" title="Remove from list">✕</button></td>
     </tr>`;
   }).join("");
-  body.innerHTML = `<table class="cmp-table"><thead><tr>
+  body.innerHTML = `${sortIsDefault(cmpSort) ? "" : `<div class="lv-count" style="padding-top:0">Sorted${cmpSort.map((l,i)=>` ${i?"then ":""}by ${l.key}${l.dir==="desc"?" ▼":""}`).join(",")}.${sortResetHtml(cmpSort)}</div>`}<table class="cmp-table"><thead><tr>
     ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
   wireSortHeaders(body, cmpSort, renderCompare);
@@ -697,33 +699,52 @@ function sortVal(s, key){
   }
   return 0;
 }
-function sortSchools(arr, sort){
-  if(!sort || !sort.key) return arr;
-  const dir = sort.dir === "desc" ? -1 : 1;
+/* Multi-level sort: chain = [{key,dir}, ...]. First click = primary; a click on a
+   NEW column adds it as the next level (sort-within-sort, max 3); clicking a
+   sorted column flips its direction; reset returns to name A–Z. */
+const SUP = ["¹", "²", "³"];
+function sortSchools(arr, chain){
+  if(!chain || !chain.length) return arr;
   return arr.slice().sort((a, b) => {
-    const va = sortVal(a, sort.key), vb = sortVal(b, sort.key);
-    if(va < vb) return -1 * dir;
-    if(va > vb) return 1 * dir;
+    for(const lv of chain){
+      const dir = lv.dir === "desc" ? -1 : 1;
+      const va = sortVal(a, lv.key), vb = sortVal(b, lv.key);
+      if(va < vb) return -1 * dir;
+      if(va > vb) return 1 * dir;
+    }
     return a.n.localeCompare(b.n);
   });
 }
-function sortableTh(key, label, sort){
-  const arr = (sort && sort.key === key) ? `<span class="arr">${sort.dir === "desc" ? "▼" : "▲"}</span>` : "";
+function sortableTh(key, label, chain){
+  const i = chain.findIndex(l => l.key === key);
+  const arr = i >= 0
+    ? `<span class="arr">${chain[i].dir === "desc" ? "▼" : "▲"}${chain.length > 1 ? (SUP[i] || "") : ""}</span>`
+    : "";
   return `<th class="sortable" data-sort="${key}">${label}${arr}</th>`;
 }
-function wireSortHeaders(container, sort, rerender){
+function sortIsDefault(chain){ return chain.length === 1 && chain[0].key === "name" && chain[0].dir === "asc"; }
+function sortResetHtml(chain){ return sortIsDefault(chain) ? "" : `<button class="sort-clear" type="button">↺ reset sort</button>`; }
+function wireSortHeaders(container, chain, rerender){
   container.querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
     const k = th.dataset.sort;
-    if(sort.key === k) sort.dir = sort.dir === "asc" ? "desc" : "asc";
-    else { sort.key = k; sort.dir = "asc"; }
+    const i = chain.findIndex(l => l.key === k);
+    if(i >= 0) chain[i].dir = chain[i].dir === "asc" ? "desc" : "asc";
+    else {
+      if(chain.length === 1 && chain[0].key === "name" && chain[0].dir === "asc") chain.length = 0; // leaving default: replace, don't nest under A–Z
+      if(chain.length < 3) chain.push({ key: k, dir: "asc" });
+      else chain[chain.length - 1] = { key: k, dir: "asc" };
+    }
     rerender();
+  }));
+  container.querySelectorAll(".sort-clear").forEach(b => b.addEventListener("click", () => {
+    chain.length = 0; chain.push({ key: "name", dir: "asc" }); rerender();
   }));
 }
 
 /* ---------- list view (whole site as a sortable table) ---------- */
 let viewMode = "map";
 try { viewMode = localStorage.getItem("wpViewMode") === "list" ? "list" : "map"; } catch(e){}
-const lvSort = { key: "name", dir: "asc" };
+const lvSort = [{ key: "name", dir: "asc" }];
 function visibleSchools(){
   return SCHOOLS.filter(s => matchingPrograms(s).length && passesFilters(s));
 }
@@ -748,7 +769,7 @@ function renderListView(){
   }).join("");
   const gTxt = state.gender === "men" ? " with a men's program" : state.gender === "women" ? " with a women's program" : "";
   const gNote = state.gender === "men" ? " Team &amp; recruit tiers reflect the women's program where a school fields both." : "";
-  lv.innerHTML = `<div class="lv-inner"><div class="lv-count"><b>${list.length} schools${gTxt}</b> shown — click a column to sort, a name to open its profile.${gNote}</div>
+  lv.innerHTML = `<div class="lv-inner"><div class="lv-count"><b>${list.length} schools${gTxt}</b> shown — click a column to sort, another to sort within it, a name to open its profile.${gNote}${sortResetHtml(lvSort)}</div>
     <div class="cmp-scroll"><table class="cmp-table"><thead><tr>
       <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
