@@ -367,6 +367,7 @@
       <div class="am-field"><label>Family finances</label>
         <select id="pFin"><option value="">—</option><option value="high">We'd likely qualify for significant need-based aid</option><option value="some">We'd likely qualify for some need-based aid</option><option value="full">We can pay full price</option></select></div>
       <div class="am-actions"><button class="go" id="amSave" type="button">Save profile</button><button class="clear" id="amClear" type="button">Clear</button></div>
+      <div class="am-actions" style="margin-top:8px"><button class="go" id="amBest" type="button" style="background:#b45309">🎯 Save &amp; show: best academics where my polo plays</button></div>
       <div class="am-note">Academic fit compares you to each school's published admitted-class GPA/SAT bands where available (acceptance-rate model otherwise). Schools admitting under 15% count as a Reach for everyone. UC &amp; CSU campuses are test-blind — your SAT doesn't count there. Cost estimates are rough approximations from published aid patterns; real offers depend on your family's finances. Set your state of residence in Filters for accurate public-school figures.</div>
     </div>
   </div>
@@ -768,7 +769,7 @@ function renderCompare(){
     </tr>`;
   }).join("");
   body.innerHTML = `${sortIsDefault(cmpSort) ? "" : `<div class="lv-count" style="padding-top:0">Sorted${cmpSort.map((l,i)=>` ${i?"then ":""}by ${l.key}${l.dir==="desc"?" ▼":""}`).join(",")}.${sortResetHtml(cmpSort)}</div>`}<table class="cmp-table"><thead><tr>
-    ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${PROFILE ? sortableTh("fit","Fit",cmpSort) + sortableTh("youCost","Your $",cmpSort) : ""}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
+    ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${PROFILE ? sortableTh("fitA","🎓 Fit",cmpSort) + sortableTh("fitP","🤽 Fit",cmpSort) + sortableTh("youCost","Your $",cmpSort) : ""}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
   wireSortHeaders(body, cmpSort, renderCompare);
   body.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => {
@@ -896,10 +897,24 @@ function fitBadges(s){
   const b = t => t ? `<span class="fit-b fit-${t}" style="padding:1px 7px;font-size:10.5px">${t[0]}</span>` : "–";
   return `🎓${b(a)} 🤽${b(p)}`;
 }
-function fitCells(s, forTable){
+function fitCells(s){
   if(!PROFILE) return "";
+  const b = t => t ? `<span class="fit-b fit-${t}" style="padding:1px 7px;font-size:10.5px">${t[0]}</span>` : "–";
   const e = estCostYou(s);
-  return `<td style="white-space:nowrap">${fitBadges(s)}</td><td style="white-space:nowrap">${e ? e.replace("/yr","") : "–"}</td>`;
+  return `<td>🎓${b(fitAcad(s))}</td><td>🤽${b(fitPolo(s))}</td><td style="white-space:nowrap">${e ? e.replace("/yr","") : "–"}</td>`;
+}
+/* The flagship recruit query: best academics where my polo makes me recruitable. */
+function bestPlayable(){
+  if(!PROFILE || !PROFILE.polo) return;
+  state.fitP = new Set(["Target", "Safety"]);            // schools where your polo plays
+  FILTERS.filter(f => f.key === "fitA").forEach(f => state.fitA = new Set(f.opts));
+  lvSort.length = 0; lvSort.push({ key: "accept", dir: "asc" }); // best academics first
+  buildFilters();
+  document.getElementById("filterPanel").classList.add("hidden");
+  const am = document.getElementById("aboutWrap");
+  am.classList.add("hidden"); am.setAttribute("aria-hidden","true");
+  setViewMode("list");
+  render();
 }
 
 /* ---------- sorting (shared by My list + list view) ---------- */
@@ -918,7 +933,8 @@ function sortVal(s, key){
     case "where":   return ((s.region || "zz") + (s.setting || "")).toLowerCase();
     case "coach":   return headCoachOf(s).n.toLowerCase();
     case "status":  { const i = STATUS_OPTS.indexOf((FAVS[s.n] || {}).st || ""); return i < 0 ? 0 : i; }
-    case "fit":     { const o = {Reach:0, Target:1, Safety:2}; const a = o[fitAcad(s)] ?? 9, p = o[fitPolo(s)] ?? 9; return a * 10 + p; }
+    case "fitA":    { const o = {Reach:0, Target:1, Safety:2}; return o[fitAcad(s)] ?? 9; }
+    case "fitP":    { const o = {Reach:0, Target:1, Safety:2}; return o[fitPolo(s)] ?? 9; }
     case "youCost": { const v = estCostYouNum(s); return v == null ? 9999 : v; }
   }
   return 0;
@@ -996,7 +1012,7 @@ function renderListView(){
   const gNote = state.gender === "all" ? " Tiers show the women's program where a school fields both — pick Men's or Women's for that team's tiers." : "";
   lv.innerHTML = `<div class="lv-inner"><div class="lv-count"><b>${list.length} schools${gTxt}</b> shown — click a column to sort, another to sort within it, a name to open its profile.${gNote}${sortResetHtml(lvSort)}</div>
     <div class="cmp-scroll"><table class="cmp-table"><thead><tr>
-      <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}${PROFILE ? sortableTh("fit","Fit",lvSort) + sortableTh("youCost","Your $",lvSort) : ""}
+      <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}${PROFILE ? sortableTh("fitA","🎓 Fit",lvSort) + sortableTh("fitP","🤽 Fit",lvSort) + sortableTh("youCost","Your $",lvSort) : ""}
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
   lv.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => openPanel(SCHOOLS[+el.dataset.i])));
   lv.querySelectorAll(".lv-row-star").forEach(el => el.addEventListener("click", e => {
@@ -1097,7 +1113,10 @@ function buildFilters(){
        </div></div>` +
     `<div class="fp-grid">` + FILTERS.filter(f => !f.needsProfile || PROFILE).map(f => `<div class="fp-section"><div class="fp-h">${f.label}</div><div class="fp-pills" data-key="${f.key}">${
       f.opts.map(o => `<span class="fp-pill${state[f.key].has(o) ? " on" : ""}" data-v="${o}">${o}</span>`).join("")
-    }</div></div>`).join("") + `</div>`;
+    }</div></div>`).join("") + `</div>` +
+    (PROFILE && PROFILE.polo ? `<div class="fp-section" style="margin-top:14px"><button id="fpBest" type="button" style="border:1.5px solid #b45309;background:#b45309;color:#fff;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:9px;cursor:pointer;">🎯 Best academics where my polo plays</button><span style="font-size:11px;color:#94a3b8;margin-left:8px;">filters to schools where your polo fit is Target/Safety, sorted by strongest academics</span></div>` : "");
+  const fpBest = document.getElementById("fpBest");
+  if(fpBest) fpBest.addEventListener("click", bestPlayable);
   const aidChk = (id, key, set) => document.getElementById(id).addEventListener("change", e => {
     set(e.target.checked);
     try { localStorage.setItem(key, e.target.checked ? "1" : "0"); } catch(err){}
@@ -1169,6 +1188,12 @@ function initProfileUI(){
     PROFILE = null; try{ localStorage.removeItem("wpProfile"); }catch(e){}
     amWrap.classList.add("hidden"); amWrap.setAttribute("aria-hidden","true");
     refreshAfterProfile();
+  });
+  document.getElementById("amBest").addEventListener("click", () => {
+    const p = { gpa:amVal("pGpa"), rigor:amVal("pRigor"), sat:amVal("pSat"), polo:amVal("pPolo"), fin:amVal("pFin") };
+    if(p.gpa || p.sat || p.polo || p.fin){ PROFILE = p; try{ localStorage.setItem("wpProfile", JSON.stringify(p)); }catch(e){} }
+    refreshAfterProfile();
+    bestPlayable();
   });
   markAboutBtn();
 }
