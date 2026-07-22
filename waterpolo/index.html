@@ -150,8 +150,13 @@
   .cmp-table th .arr{font-size:9px; margin-left:3px;}
 
   /* list view */
-  #listView{position:absolute; inset:0; overflow-y:auto; background:#f6f9fc; padding:14px 14px 40px; z-index:500;}
+  #listView{position:absolute; inset:0; overflow-y:auto; background:#f6f9fc; padding:14px 14px 40px; z-index:1100;}   /* above Leaflet controls (1000), below the school panel (1200) */
   #listView.hidden{display:none;}
+  #listView .cmp-table{min-width:0;}   /* the slim list fits phones; only the My-list compare table needs 980px */
+  @media (max-width:600px){ #listView .cmp-table td, #listView .cmp-table th{padding:7px 6px;} }
+  .lv-conf{display:inline-block; font-size:9.5px; font-weight:700; color:#334155; background:#e2e8f0; border-radius:99px; padding:1px 7px; margin-left:4px; vertical-align:1px; white-space:nowrap;}
+  .lv-gm{margin-left:5px; font-size:10px; color:#64748b; white-space:nowrap;}
+  .lv-you{display:block; color:#047857; font-weight:700; font-size:11px;}
   .lv-inner{max-width:1150px; margin:0 auto; background:#fff; border-radius:14px; box-shadow:0 4px 24px rgba(2,8,23,.08); padding:6px 14px 14px;}
   .lv-row-star{border:0; background:transparent; font-size:16px; cursor:pointer; color:#cbd5e1; padding:2px 4px;}
   .lv-row-star.on{color:#f59e0b;}
@@ -917,12 +922,12 @@ function fitBadges(s){
   const b = t => t ? `<span class="fit-b fit-${t}" style="padding:1px 7px;font-size:10.5px">${t[0]}</span>` : "–";
   return `🎓${b(a)} 🤽${b(p)}`;
 }
-function fitCells(s){
+function fitCells(s, withCost = true){
   if(!PROFILE) return "";
   const b = t => t ? `<span class="fit-b fit-${t}" style="padding:1px 7px;font-size:10.5px">${t[0]}</span>` : "–";
   const e = estCostYou(s);
   const polo = s.recBen === "none" ? `<span title="No admissions benefit for athletes — walk-on only">⚠️W</span>` : b(fitPolo(s));
-  return `<td>🎓${b(fitAcad(s))}</td><td>🤽${polo}</td><td style="white-space:nowrap">${e ? e.replace("/yr","") : "–"}</td>`;
+  return `<td>🎓${b(fitAcad(s))}</td><td>🤽${polo}</td>` + (withCost ? `<td style="white-space:nowrap">${e ? e.replace("/yr","") : "–"}</td>` : "");
 }
 /* The flagship recruit query: best academics where my polo makes me recruitable. */
 function bestPlayable(){
@@ -1014,26 +1019,24 @@ function renderListView(){
   const list = sortSchools(visibleSchools(), lvSort);
   const rows = list.map(s => {
     const i = SCHOOLS.indexOf(s);
-    const progs = state.gender === "men" ? (s.m ? `♂ ${esc(s.m[1])}` : "")
-                : state.gender === "women" ? (s.w ? `♀ ${esc(s.w[1])}` : "")
-                : [s.m ? "♂" : "", s.w ? "♀" : ""].join(" ").trim();
+    const p = state.gender === "men" ? (s.m || s.w) : (s.w || s.m);   // program shown: women's first except on the Men's view
+    const gm = state.gender !== "all" ? "" : (s.m && s.w) ? `<span class="lv-gm">♂♀</span>` : `<span class="lv-gm">${s.m ? "♂ only" : "♀ only"}</span>`;
+    const c = applicableCost(s);
+    const eYou = PROFILE && c && c.num > 0 ? estCostYou(s) : null;
     return `<tr>
       <td><button class="lv-row-star${isFav(s.n) ? " on" : ""}" data-i="${i}" title="Save to my list">${isFav(s.n) ? "★" : "☆"}</button></td>
-      <td><span class="cmp-school" data-i="${i}">${esc(s.n)}</span><span class="cmp-divchip" style="background:${DIV[schoolDiv(s)]}">${schoolDiv(s)}</span></td>
-      <td>${progs}</td>
-      <td>${esc(wpTier(s) || "")}</td>
-      <td>${esc((s.rd || "").split(" · ")[0])}</td>
+      <td><span class="cmp-school" data-i="${i}">${esc(s.n)}</span><span class="cmp-divchip" style="background:${DIV[p[0]]}">${p[0]}</span>${p[1] ? `<span class="lv-conf">${esc(p[1])}</span>` : ""}${gm}</td>
+      <td>${esc((rdShown(s) || "").split(" · ")[0])}</td>
       <td>${esc(acceptShort(s) || "")}</td>
-      <td>${esc((applicableCost(s)||{str:""}).str)}</td>
-      <td>${esc((s.region || "").split(" (")[0])} · ${esc(s.setting || "")}</td>
-      ${fitCells(s)}
+      <td style="white-space:nowrap">${esc(c ? c.str.split(" (")[0] : "")}${eYou ? `<span class="lv-you">→ ${eYou.replace("/yr","")} for you</span>` : ""}</td>
+      ${fitCells(s, false)}
     </tr>`;
   }).join("");
   const gTxt = state.gender === "men" ? " with a men's program" : state.gender === "women" ? " with a women's program" : "";
-  const gNote = state.gender === "all" ? " Tiers show the women's program where a school fields both — pick Men's or Women's for that team's tiers." : "";
+  const gNote = state.gender === "all" ? " Conference & recruit tier show the women's program where a school fields both — pick Men's or Women's for that team's view." : "";
   lv.innerHTML = `<div class="lv-inner"><div class="lv-count"><b>${list.length} schools${gTxt}</b> shown — click a column to sort, another to sort within it, a name to open its profile.${gNote}${sortResetHtml(lvSort)}</div>
     <div class="cmp-scroll"><table class="cmp-table"><thead><tr>
-      <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}${PROFILE ? sortableTh("fitA","🎓 Fit",lvSort) + sortableTh("fitP","🤽 Fit",lvSort) + sortableTh("youCost","Your $",lvSort) : ""}
+      <th></th>${sortableTh("name","School",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh(PROFILE ? "youCost" : "cost","Cost / yr",lvSort)}${PROFILE ? sortableTh("fitA","🎓 Fit",lvSort) + sortableTh("fitP","🤽 Fit",lvSort) : ""}
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
   lv.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => openPanel(SCHOOLS[+el.dataset.i])));
   lv.querySelectorAll(".lv-row-star").forEach(el => el.addEventListener("click", e => {
