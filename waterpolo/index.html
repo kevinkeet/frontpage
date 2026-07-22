@@ -732,7 +732,9 @@ function renderListView(){
   const list = sortSchools(visibleSchools(), lvSort);
   const rows = list.map(s => {
     const i = SCHOOLS.indexOf(s);
-    const progs = [s.m ? "♂" : "", s.w ? "♀" : ""].join(" ").trim();
+    const progs = state.gender === "men" ? (s.m ? `♂ ${esc(s.m[1])}` : "")
+                : state.gender === "women" ? (s.w ? `♀ ${esc(s.w[1])}` : "")
+                : [s.m ? "♂" : "", s.w ? "♀" : ""].join(" ").trim();
     return `<tr>
       <td><button class="lv-row-star${isFav(s.n) ? " on" : ""}" data-i="${i}" title="Save to my list">${isFav(s.n) ? "★" : "☆"}</button></td>
       <td><span class="cmp-school" data-i="${i}">${esc(s.n)}</span><span class="cmp-divchip" style="background:${DIV[schoolDiv(s)]}">${schoolDiv(s)}</span></td>
@@ -744,7 +746,9 @@ function renderListView(){
       <td>${esc((s.region || "").split(" (")[0])} · ${esc(s.setting || "")}</td>
     </tr>`;
   }).join("");
-  lv.innerHTML = `<div class="lv-inner"><div class="lv-count">${list.length} schools shown — click a column to sort, a name to open its profile.</div>
+  const gTxt = state.gender === "men" ? " with a men's program" : state.gender === "women" ? " with a women's program" : "";
+  const gNote = state.gender === "men" ? " Team &amp; recruit tiers reflect the women's program where a school fields both." : "";
+  lv.innerHTML = `<div class="lv-inner"><div class="lv-count"><b>${list.length} schools${gTxt}</b> shown — click a column to sort, a name to open its profile.${gNote}</div>
     <div class="cmp-scroll"><table class="cmp-table"><thead><tr>
       <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
