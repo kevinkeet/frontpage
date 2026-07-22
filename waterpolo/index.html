@@ -140,6 +140,18 @@
   .cmp-coach{white-space:nowrap;}
   .cmp-coach a{color:var(--ocean2); text-decoration:none; font-size:11.5px;}
   .cmp-coach a:hover{text-decoration:underline;}
+  .cmp-table th.sortable{cursor:pointer; user-select:none;}
+  .cmp-table th.sortable:hover{color:var(--ocean2);}
+  .cmp-table th .arr{font-size:9px; margin-left:3px;}
+
+  /* list view */
+  #listView{position:absolute; inset:0; overflow-y:auto; background:#f6f9fc; padding:14px 14px 40px; z-index:500;}
+  #listView.hidden{display:none;}
+  .lv-inner{max-width:1150px; margin:0 auto; background:#fff; border-radius:14px; box-shadow:0 4px 24px rgba(2,8,23,.08); padding:6px 14px 14px;}
+  .lv-row-star{border:0; background:transparent; font-size:16px; cursor:pointer; color:#cbd5e1; padding:2px 4px;}
+  .lv-row-star.on{color:#f59e0b;}
+  .lv-row-star:hover{color:#f59e0b;}
+  .lv-count{font-size:12px; color:var(--muted); padding:10px 4px 6px;}
 
   /* ---------- Stage / Map ---------- */
   #stage{position:relative; flex:1; overflow:hidden;}
@@ -300,12 +312,14 @@
       <span class="count" id="count"></span>
       <button class="fitbtn" id="fit" title="Zoom to fit all visible schools">⤢ Fit</button>
       <button class="fitbtn" id="myListBtn" title="Your saved schools">★ My list<span class="badge" id="myListCount"></span></button>
+      <div class="seg" id="viewSeg"><button data-v="map" class="on">🗺 Map</button><button data-v="list">☰ List</button></div>
     </div>
   </div>
 </header>
 
 <div id="stage">
   <div id="map"></div>
+  <div id="listView" class="hidden"></div>
   <div id="filterPanel" class="hidden"></div>
   <div id="compareWrap" class="hidden" aria-hidden="true">
     <div class="cmp-card">
@@ -567,7 +581,7 @@ function galleryImgErr(img){
   }
 }
 function focusMarker(s){
-  if(!map) return;
+  if(!map || (typeof viewMode !== "undefined" && viewMode === "list")) return;
   const isMobile = window.innerWidth <= 720;
   const size = map.getSize();
   const pt = map.latLngToContainerPoint([s.lat, s.lng]);
@@ -583,6 +597,7 @@ const FAV_KEY = "wpMyList";
 let FAVS = {};
 try { FAVS = JSON.parse(localStorage.getItem(FAV_KEY) || "{}") || {}; } catch(e) { FAVS = {}; }
 const STATUS_OPTS = ["", "Emailed coach", "Replied", "Call / meeting", "Campus visit", "Applied", "Offer", "Committed"];
+const cmpSort = { key: "name", dir: "asc" };
 function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(FAVS)); } catch(e){} }
 function isFav(n){ return Object.prototype.hasOwnProperty.call(FAVS, n); }
 function toggleFav(n){
@@ -602,7 +617,8 @@ function headCoachOf(s){
 }
 function renderCompare(){
   const body = document.getElementById("cmpBody");
-  const favSchools = SCHOOLS.map((s,i)=>({s,i})).filter(x => isFav(x.s.n));
+  const favsRaw = SCHOOLS.filter(s => isFav(s.n));
+  const favSchools = sortSchools(favsRaw, cmpSort).map(s => ({ s, i: SCHOOLS.indexOf(s) }));
   if(!favSchools.length){
     body.innerHTML = `<div class="cmp-empty">Nothing saved yet — open any school on the map and tap “☆ Save to my list”.</div>`;
     return;
@@ -626,8 +642,9 @@ function renderCompare(){
     </tr>`;
   }).join("");
   body.innerHTML = `<table class="cmp-table"><thead><tr>
-    <th>School</th><th>Team tier</th><th>Recruit</th><th>Accept</th><th>Cost / yr</th><th>Where</th><th>Head coach</th><th>Links</th><th>Status</th><th>Notes</th><th></th>
+    ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
+  wireSortHeaders(body, cmpSort, renderCompare);
   body.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => {
     document.getElementById("compareWrap").classList.add("hidden");
     const s = SCHOOLS[+el.dataset.i];
@@ -656,6 +673,96 @@ function exportCsv(){
   a.href = "data:text/csv;charset=utf-8," + encodeURIComponent("﻿" + lines.join("\n"));
   a.download = "my-water-polo-list.csv";
   document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- sorting (shared by My list + list view) ---------- */
+const TIER_ORDER = {"Title contender":0, "NCAA tournament":1, "Contender":2, "Developing":3};
+function costNum(s){
+  if(!s.cost) return 9999;
+  if(/free/i.test(s.cost)) return 0;
+  const m = s.cost.match(/\$\s*([0-9.]+)\s*k/gi);
+  if(!m) return 9999;
+  return Math.max(...m.map(x => parseFloat(x.replace(/[^0-9.]/g, ""))));
+}
+function sortVal(s, key){
+  switch(key){
+    case "name":    return s.n.toLowerCase();
+    case "tier":    return TIER_ORDER[wpBucket(s)] ?? 9;
+    case "recruit": return parseInt((s.rd || "R9").slice(1)) || 9;
+    case "accept":  { const p = acceptPct(s); return p == null ? 999 : p; }
+    case "cost":    return costNum(s);
+    case "where":   return ((s.region || "zz") + (s.setting || "")).toLowerCase();
+    case "coach":   return headCoachOf(s).n.toLowerCase();
+    case "status":  { const i = STATUS_OPTS.indexOf((FAVS[s.n] || {}).st || ""); return i < 0 ? 0 : i; }
+  }
+  return 0;
+}
+function sortSchools(arr, sort){
+  if(!sort || !sort.key) return arr;
+  const dir = sort.dir === "desc" ? -1 : 1;
+  return arr.slice().sort((a, b) => {
+    const va = sortVal(a, sort.key), vb = sortVal(b, sort.key);
+    if(va < vb) return -1 * dir;
+    if(va > vb) return 1 * dir;
+    return a.n.localeCompare(b.n);
+  });
+}
+function sortableTh(key, label, sort){
+  const arr = (sort && sort.key === key) ? `<span class="arr">${sort.dir === "desc" ? "▼" : "▲"}</span>` : "";
+  return `<th class="sortable" data-sort="${key}">${label}${arr}</th>`;
+}
+function wireSortHeaders(container, sort, rerender){
+  container.querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    if(sort.key === k) sort.dir = sort.dir === "asc" ? "desc" : "asc";
+    else { sort.key = k; sort.dir = "asc"; }
+    rerender();
+  }));
+}
+
+/* ---------- list view (whole site as a sortable table) ---------- */
+let viewMode = "map";
+try { viewMode = localStorage.getItem("wpViewMode") === "list" ? "list" : "map"; } catch(e){}
+const lvSort = { key: "name", dir: "asc" };
+function visibleSchools(){
+  return SCHOOLS.filter(s => matchingPrograms(s).length && passesFilters(s));
+}
+function renderListView(){
+  const lv = document.getElementById("listView");
+  const list = sortSchools(visibleSchools(), lvSort);
+  const rows = list.map(s => {
+    const i = SCHOOLS.indexOf(s);
+    const progs = [s.m ? "♂" : "", s.w ? "♀" : ""].join(" ").trim();
+    return `<tr>
+      <td><button class="lv-row-star${isFav(s.n) ? " on" : ""}" data-i="${i}" title="Save to my list">${isFav(s.n) ? "★" : "☆"}</button></td>
+      <td><span class="cmp-school" data-i="${i}">${esc(s.n)}</span><span class="cmp-divchip" style="background:${DIV[schoolDiv(s)]}">${schoolDiv(s)}</span></td>
+      <td>${progs}</td>
+      <td>${esc(wpTier(s) || "")}</td>
+      <td>${esc((s.rd || "").split(" · ")[0])}</td>
+      <td>${esc(acceptShort(s) || "")}</td>
+      <td>${esc(s.cost || "")}</td>
+      <td>${esc((s.region || "").split(" (")[0])} · ${esc(s.setting || "")}</td>
+    </tr>`;
+  }).join("");
+  lv.innerHTML = `<div class="lv-inner"><div class="lv-count">${list.length} schools shown — click a column to sort, a name to open its profile.</div>
+    <div class="cmp-scroll"><table class="cmp-table"><thead><tr>
+      <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}
+    </tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  lv.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => openPanel(SCHOOLS[+el.dataset.i])));
+  lv.querySelectorAll(".lv-row-star").forEach(el => el.addEventListener("click", e => {
+    e.stopPropagation();
+    toggleFav(SCHOOLS[+el.dataset.i].n);
+  }));
+  wireSortHeaders(lv, lvSort, renderListView);
+}
+function setViewMode(mode){
+  viewMode = mode;
+  try { localStorage.setItem("wpViewMode", mode); } catch(e){}
+  document.getElementById("listView").classList.toggle("hidden", mode !== "list");
+  document.getElementById("fit").style.display = mode === "list" ? "none" : "";
+  document.querySelectorAll("#viewSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === mode));
+  if(mode === "list") renderListView();
+  else setTimeout(() => map.invalidateSize(), 60);
 }
 
 /* ---------- render ---------- */
@@ -689,6 +796,7 @@ function render(){
   });
   document.getElementById("count").innerHTML =
     `<b>${schools}</b> ${schools===1?"school":"schools"} · <b>${programs}</b> ${programs===1?"program":"programs"} · <b>${profiled}</b> profiled`;
+  if(typeof viewMode !== "undefined" && viewMode === "list") renderListView();
 }
 function fitVisible(){
   const pts = [];
@@ -803,6 +911,9 @@ function initApp(data){
     w.classList.add("hidden"); w.setAttribute("aria-hidden","true");
   });
   document.getElementById("cmpExport").addEventListener("click", exportCsv);
+  document.querySelectorAll("#viewSeg button").forEach(btn =>
+    btn.addEventListener("click", () => setViewMode(btn.dataset.v)));
+  if(viewMode === "list") setViewMode("list");
   document.getElementById("compareWrap").addEventListener("click", e => {
     if(e.target.id === "compareWrap"){ e.target.classList.add("hidden"); e.target.setAttribute("aria-hidden","true"); }
   });
