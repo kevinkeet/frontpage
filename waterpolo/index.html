@@ -932,7 +932,7 @@ function fitCells(s, withCost = true){
 /* The flagship recruit query: best academics where my polo makes me recruitable. */
 function bestPlayable(){
   if(!PROFILE || !PROFILE.polo) return;
-  state.fitP = new Set(["Target", "Safety"]);            // schools where your polo plays
+  state.fitP = new Set(["Reach", "Target", "Safety"]);   // reaches stay visible; only walk-on-only schools drop out
   FILTERS.filter(f => f.key === "fitA").forEach(f => state.fitA = new Set(f.opts));
   lvSort.length = 0; lvSort.push({ key: "accept", dir: "asc" }); // best academics first
   buildFilters();
@@ -1152,7 +1152,7 @@ function buildFilters(){
     `<div class="fp-grid">` + FILTERS.filter(f => !f.needsProfile || PROFILE).map(f => `<div class="fp-section"><div class="fp-h">${f.label}</div><div class="fp-pills" data-key="${f.key}">${
       f.opts.map(o => `<span class="fp-pill${state[f.key].has(o) ? " on" : ""}" data-v="${o}">${o}</span>`).join("")
     }</div></div>`).join("") + `</div>` +
-    (PROFILE && PROFILE.polo ? `<div class="fp-section" style="margin-top:14px"><button id="fpBest" type="button" style="border:1.5px solid #b45309;background:#b45309;color:#fff;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:9px;cursor:pointer;">🎯 Best academics where my polo plays</button><span style="font-size:11px;color:#94a3b8;margin-left:8px;">filters to schools where your polo fit is Target/Safety, sorted by strongest academics</span></div>` : "");
+    (PROFILE && PROFILE.polo ? `<div class="fp-section" style="margin-top:14px"><button id="fpBest" type="button" style="border:1.5px solid #b45309;background:#b45309;color:#fff;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:9px;cursor:pointer;">🎯 Best academics where my polo plays</button><span style="font-size:11px;color:#94a3b8;margin-left:8px;">strongest academics first, everywhere polo can open the door — 🤽 R marks your reach programs; only walk-on-only schools drop out</span></div>` : "");
   const fpBest = document.getElementById("fpBest");
   if(fpBest) fpBest.addEventListener("click", bestPlayable);
   const aidChk = (id, key, set) => document.getElementById(id).addEventListener("change", e => {
