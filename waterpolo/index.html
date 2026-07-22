@@ -356,6 +356,10 @@
     <div class="cmp-card" style="max-width:430px;">
       <div class="cmp-head"><h2>👤 About me</h2><button id="amClose" type="button" aria-label="Close">✕ Close</button></div>
       <div class="cmp-sub">Rough is fine — this powers each school's Reach / Target / Safety fit and a personalized cost estimate. Saved in this browser only.</div>
+      <div class="am-field"><label>I play</label>
+        <select id="pGender"><option value="">—</option><option value="women">Women's water polo</option><option value="men">Men's water polo</option></select></div>
+      <div class="am-field"><label>State of residence (sets in-state vs out-of-state cost &amp; admit rates)</label>
+        <select id="pState"></select></div>
       <div class="am-field"><label>Unweighted GPA</label>
         <select id="pGpa"><option value="">—</option><option value="5">3.9+</option><option value="4">3.7–3.9</option><option value="3">3.4–3.7</option><option value="2">3.0–3.4</option><option value="1">Below 3.0</option></select></div>
       <div class="am-field"><label>Course rigor</label>
@@ -434,8 +438,9 @@ function matchingPrograms(s){
 /* ---------- residency: the user's state drives which cost & acceptance figures show ---------- */
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
 let homeState = "CA";
-let userNeed = false, userMerit = false;
+let userNeed = false, userMerit = false, userGender = "";
 try { userNeed = localStorage.getItem("wpNeedAid") === "1"; userMerit = localStorage.getItem("wpMeritAid") === "1"; } catch(e){}
+try { const g = localStorage.getItem("wpGender"); if(g === "women" || g === "men") userGender = g; } catch(e){}
 const MERIT_TEXT = {
   none: "None — need-based aid only",
   strong: "Strong merit program",
@@ -1166,11 +1171,21 @@ function buildFilters(){
   document.getElementById("fpClose").addEventListener("click", () => fp.classList.add("hidden"));
   updateFilterCount();
 }
+function setGender(g){
+  state.gender = g;
+  document.querySelectorAll("#genderSeg .seg button").forEach(b => b.classList.toggle("on", b.dataset.g === g));
+}
 /* One-time wiring for elements OUTSIDE the rebuilt filter panel (never re-run — avoids duplicate listeners). */
 function initProfileUI(){
   document.getElementById("filterBtn").addEventListener("click", () => document.getElementById("filterPanel").classList.toggle("hidden"));
+  document.getElementById("pState").innerHTML = US_STATES.map(st => `<option${st === homeState ? " selected" : ""}>${st}</option>`).join("");
   const amWrap = document.getElementById("aboutWrap");
   const amVal = id => document.getElementById(id).value;
+  const applyIdentity = p => {                       // gender → Show toggle, state → residency figures
+    if(p.gender){ userGender = p.gender; try{ localStorage.setItem("wpGender", p.gender); }catch(e){} setGender(p.gender); }
+    const st = amVal("pState");
+    if(st && st !== homeState){ homeState = st; try{ localStorage.setItem("wpHomeState", st); }catch(e){} }
+  };
   const markAboutBtn = () => {
     const b = document.getElementById("aboutMeBtn");
     b.classList.toggle("on", !!PROFILE);
@@ -1189,24 +1204,29 @@ function initProfileUI(){
       const m = { pGpa:"gpa", pRigor:"rigor", pSat:"sat", pPolo:"polo", pFin:"fin" };
       for(const [id, k] of Object.entries(m)) document.getElementById(id).value = PROFILE[k] || "";
     }
+    document.getElementById("pGender").value = (PROFILE && PROFILE.gender) || userGender || "";
+    document.getElementById("pState").value = homeState;
     amWrap.classList.remove("hidden"); amWrap.setAttribute("aria-hidden","false");
   });
   document.getElementById("amClose").addEventListener("click", () => { amWrap.classList.add("hidden"); amWrap.setAttribute("aria-hidden","true"); });
   amWrap.addEventListener("click", e => { if(e.target === amWrap){ amWrap.classList.add("hidden"); amWrap.setAttribute("aria-hidden","true"); } });
   document.getElementById("amSave").addEventListener("click", () => {
-    const p = { gpa:amVal("pGpa"), rigor:amVal("pRigor"), sat:amVal("pSat"), polo:amVal("pPolo"), fin:amVal("pFin") };
+    const p = { gender:amVal("pGender"), gpa:amVal("pGpa"), rigor:amVal("pRigor"), sat:amVal("pSat"), polo:amVal("pPolo"), fin:amVal("pFin") };
+    applyIdentity(p);
     if(!p.gpa && !p.sat && !p.polo && !p.fin){ PROFILE = null; try{ localStorage.removeItem("wpProfile"); }catch(e){} }
     else { PROFILE = p; try{ localStorage.setItem("wpProfile", JSON.stringify(p)); }catch(e){} }
     amWrap.classList.add("hidden"); amWrap.setAttribute("aria-hidden","true");
     refreshAfterProfile();
   });
   document.getElementById("amClear").addEventListener("click", () => {
-    PROFILE = null; try{ localStorage.removeItem("wpProfile"); }catch(e){}
+    PROFILE = null; userGender = "";
+    try{ localStorage.removeItem("wpProfile"); localStorage.removeItem("wpGender"); }catch(e){}
     amWrap.classList.add("hidden"); amWrap.setAttribute("aria-hidden","true");
     refreshAfterProfile();
   });
   document.getElementById("amBest").addEventListener("click", () => {
-    const p = { gpa:amVal("pGpa"), rigor:amVal("pRigor"), sat:amVal("pSat"), polo:amVal("pPolo"), fin:amVal("pFin") };
+    const p = { gender:amVal("pGender"), gpa:amVal("pGpa"), rigor:amVal("pRigor"), sat:amVal("pSat"), polo:amVal("pPolo"), fin:amVal("pFin") };
+    applyIdentity(p);
     if(p.gpa || p.sat || p.polo || p.fin){ PROFILE = p; try{ localStorage.setItem("wpProfile", JSON.stringify(p)); }catch(e){} }
     refreshAfterProfile();
     bestPlayable();
@@ -1235,13 +1255,9 @@ function initApp(data){
   map.on("click", closePanel);
 
   document.querySelectorAll("#genderSeg .seg button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll("#genderSeg .seg button").forEach(b => b.classList.remove("on"));
-      btn.classList.add("on");
-      state.gender = btn.dataset.g;
-      render();
-    });
+    btn.addEventListener("click", () => { setGender(btn.dataset.g); render(); });
   });
+  if(userGender) setGender(userGender);   // profile gender restores the Show toggle across visits
   document.querySelectorAll("#divGroup .pill").forEach(pill => {
     pill.addEventListener("click", () => {
       const d = pill.dataset.d;
