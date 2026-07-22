@@ -405,6 +405,8 @@ const FILTERS = [
   {key:"acad",    label:"Acceptance rate",        opts:["Under 10%","10–30%","30–70%","70%+ / Open"]},
   {key:"wp",      label:"Water polo tier (2023–26 results)", opts:["Title contender","NCAA tournament","Contender","Developing"]},
   {key:"rd",      label:"Recruiting tier (R1 = hardest)", opts:["R1 · National pipeline","R2 · Elite D1","R3 · Strong D1","R4 · Mid-D1 & top D2/D3","R5 · Mid-major & rebuilding D1","R6 · D2 & upper D3","R7 · Developing programs","R8 · JC open door"]},
+  {key:"fitA",    label:"Your academic fit",       opts:["Reach","Target","Safety"], needsProfile:true},
+  {key:"fitP",    label:"Your polo fit",           opts:["Reach","Target","Safety"], needsProfile:true},
   {key:"cost",    label:"Cost / yr (before aid)", opts:["Under $40k","$40k–$65k","$65k–$85k","$85k+","Free"]},
   {key:"size",    label:"School size",            opts:["Small","Medium","Large","Very large"]},
   {key:"type",    label:"Public / private",       opts:["Public","Private"]},
@@ -525,6 +527,8 @@ function valOf(key,s){
     case "acad": return acadTier(s);
     case "wp": return wpBucket(s);
     case "rd": return rdShown(s) || null;
+    case "fitA": return (typeof PROFILE !== "undefined" && PROFILE) ? fitAcad(s) : null;
+    case "fitP": return (typeof PROFILE !== "undefined" && PROFILE) ? fitPolo(s) : null;
     case "size": return sizeCat(s);
     case "type": return typeCat(s);
     case "cost": return costTier(s);
@@ -755,7 +759,7 @@ function renderCompare(){
       <td>${esc(acceptShort(s)||"")}</td>
       <td>${esc((applicableCost(s)||{str:""}).str)}</td>
       <td>${esc((s.region||"").split(" (")[0])} · ${esc(s.setting||"")}</td>
-      ${PROFILE ? `<td style="white-space:nowrap">${fitCell(s)}</td>` : ""}
+      ${fitCells(s)}
       <td class="cmp-coach">${esc(coach.n)}${coach.e?`<br><a href="mailto:${esc(coach.e)}">${esc(coach.e)}</a>`:""}</td>
       <td class="cmp-links">${s.teamW?`<a href="${esc(s.teamW)}" target="_blank" rel="noopener">Team</a>`:""}${s.link?`<a href="${esc(s.link)}" target="_blank" rel="noopener">Questionnaire</a>`:""}${s.niche?`<a href="${esc(s.niche)}" target="_blank" rel="noopener">Niche</a>`:""}</td>
       <td><select class="cmp-status" data-i="${i}">${opts}</select></td>
@@ -764,7 +768,7 @@ function renderCompare(){
     </tr>`;
   }).join("");
   body.innerHTML = `${sortIsDefault(cmpSort) ? "" : `<div class="lv-count" style="padding-top:0">Sorted${cmpSort.map((l,i)=>` ${i?"then ":""}by ${l.key}${l.dir==="desc"?" ▼":""}`).join(",")}.${sortResetHtml(cmpSort)}</div>`}<table class="cmp-table"><thead><tr>
-    ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${PROFILE ? `<th>For you</th>` : ""}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
+    ${sortableTh("name","School",cmpSort)}${sortableTh("tier","Team tier",cmpSort)}${sortableTh("recruit","Recruit",cmpSort)}${sortableTh("accept","Accept",cmpSort)}${sortableTh("cost","Cost / yr",cmpSort)}${sortableTh("where","Where",cmpSort)}${PROFILE ? sortableTh("fit","Fit",cmpSort) + sortableTh("youCost","Your $",cmpSort) : ""}${sortableTh("coach","Head coach",cmpSort)}<th>Links</th>${sortableTh("status","Status",cmpSort)}<th>Notes</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
   wireSortHeaders(body, cmpSort, renderCompare);
   body.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => {
@@ -837,10 +841,10 @@ function fitPolo(s){
   const d = R - typical;
   return d < -0.9 ? "Reach" : d <= 1.1 ? "Target" : "Safety";
 }
-function estCostYou(s){
+function estCostYouNum(s){
   if(!PROFILE || !PROFILE.fin) return null;
   const c = applicableCost(s); if(!c) return null;
-  if(c.num === 0) return "free (academy)";
+  if(c.num === 0) return 0;
   if(c.num >= 9999) return null;
   const NEED = { high:{elite:.2, full:.35, good:.5, average:.65, limited:.85},
                  some:{elite:.5, full:.6,  good:.7, average:.8,  limited:.9},
@@ -849,8 +853,12 @@ function estCostYou(s){
   const A = acadScore(PROFILE) || 0;
   const meritFactor = A >= 4 ? 1 : A >= 3 ? 0.5 : 0;
   const meritCut = ({strong:.3, modest:.12, minimal:.05, none:0}[s.merit] || 0) * meritFactor;
-  const mult = Math.min(needMult, 1 - meritCut);
-  const est = c.num * mult;
+  return c.num * Math.min(needMult, 1 - meritCut);
+}
+function estCostYou(s){
+  const est = estCostYouNum(s); if(est == null) return null;
+  if(est === 0) return "free (academy)";
+  const c = applicableCost(s);
   if(est >= c.num * 0.97) return `~$${Math.round(c.num)}k/yr (near sticker)`;
   const lo = Math.max(1, Math.round(est * 0.8)), hi = Math.round(est * 1.25);
   return hi <= lo ? `~$${lo}k/yr` : `~$${lo}–${hi}k/yr`;
@@ -865,11 +873,16 @@ function fitStripHtml(s){
     (e ? `<span class="fit-est">💵 est. for you: ${e}</span>` : "") +
     `<span class="fit-note">Rough fit from your About-me profile — an approximation, not a prediction.</span></div>`;
 }
-function fitCell(s){
+function fitBadges(s){
   if(!PROFILE) return "";
-  const a = fitAcad(s), p = fitPolo(s), e = estCostYou(s);
+  const a = fitAcad(s), p = fitPolo(s);
   const b = t => t ? `<span class="fit-b fit-${t}" style="padding:1px 7px;font-size:10.5px">${t[0]}</span>` : "–";
-  return `🎓${b(a)} 🤽${b(p)}${e ? ` · ${e.replace("/yr","")}` : ""}`;
+  return `🎓${b(a)} 🤽${b(p)}`;
+}
+function fitCells(s, forTable){
+  if(!PROFILE) return "";
+  const e = estCostYou(s);
+  return `<td style="white-space:nowrap">${fitBadges(s)}</td><td style="white-space:nowrap">${e ? e.replace("/yr","") : "–"}</td>`;
 }
 
 /* ---------- sorting (shared by My list + list view) ---------- */
@@ -888,6 +901,8 @@ function sortVal(s, key){
     case "where":   return ((s.region || "zz") + (s.setting || "")).toLowerCase();
     case "coach":   return headCoachOf(s).n.toLowerCase();
     case "status":  { const i = STATUS_OPTS.indexOf((FAVS[s.n] || {}).st || ""); return i < 0 ? 0 : i; }
+    case "fit":     { const o = {Reach:0, Target:1, Safety:2}; const a = o[fitAcad(s)] ?? 9, p = o[fitPolo(s)] ?? 9; return a * 10 + p; }
+    case "youCost": { const v = estCostYouNum(s); return v == null ? 9999 : v; }
   }
   return 0;
 }
@@ -957,14 +972,14 @@ function renderListView(){
       <td>${esc(acceptShort(s) || "")}</td>
       <td>${esc((applicableCost(s)||{str:""}).str)}</td>
       <td>${esc((s.region || "").split(" (")[0])} · ${esc(s.setting || "")}</td>
-      ${PROFILE ? `<td style="white-space:nowrap">${fitCell(s)}</td>` : ""}
+      ${fitCells(s)}
     </tr>`;
   }).join("");
   const gTxt = state.gender === "men" ? " with a men's program" : state.gender === "women" ? " with a women's program" : "";
   const gNote = state.gender === "all" ? " Tiers show the women's program where a school fields both — pick Men's or Women's for that team's tiers." : "";
   lv.innerHTML = `<div class="lv-inner"><div class="lv-count"><b>${list.length} schools${gTxt}</b> shown — click a column to sort, another to sort within it, a name to open its profile.${gNote}${sortResetHtml(lvSort)}</div>
     <div class="cmp-scroll"><table class="cmp-table"><thead><tr>
-      <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}${PROFILE ? `<th>For you</th>` : ""}
+      <th></th>${sortableTh("name","School",lvSort)}<th>Teams</th>${sortableTh("tier","Team tier",lvSort)}${sortableTh("recruit","Recruit",lvSort)}${sortableTh("accept","Accept",lvSort)}${sortableTh("cost","Cost / yr",lvSort)}${sortableTh("where","Where",lvSort)}${PROFILE ? sortableTh("fit","Fit",lvSort) + sortableTh("youCost","Your $",lvSort) : ""}
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
   lv.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => openPanel(SCHOOLS[+el.dataset.i])));
   lv.querySelectorAll(".lv-row-star").forEach(el => el.addEventListener("click", e => {
@@ -1063,8 +1078,8 @@ function buildFilters(){
          <label style="cursor:pointer"><input type="checkbox" id="needChk"${userNeed?" checked":""}> I'll likely qualify for need-based aid</label>
          <label style="cursor:pointer"><input type="checkbox" id="meritChk"${userMerit?" checked":""}> Strong grades/scores (merit-competitive)</label>
        </div></div>` +
-    `<div class="fp-grid">` + FILTERS.map(f => `<div class="fp-section"><div class="fp-h">${f.label}</div><div class="fp-pills" data-key="${f.key}">${
-      f.opts.map(o => `<span class="fp-pill on" data-v="${o}">${o}</span>`).join("")
+    `<div class="fp-grid">` + FILTERS.filter(f => !f.needsProfile || PROFILE).map(f => `<div class="fp-section"><div class="fp-h">${f.label}</div><div class="fp-pills" data-key="${f.key}">${
+      f.opts.map(o => `<span class="fp-pill${state[f.key].has(o) ? " on" : ""}" data-v="${o}">${o}</span>`).join("")
     }</div></div>`).join("") + `</div>`;
   const aidChk = (id, key, set) => document.getElementById(id).addEventListener("change", e => {
     set(e.target.checked);
@@ -1073,6 +1088,35 @@ function buildFilters(){
   });
   aidChk("needChk", "wpNeedAid", v => userNeed = v);
   aidChk("meritChk", "wpMeritAid", v => userMerit = v);
+  document.getElementById("homeStateSel").addEventListener("change", e => {
+    homeState = e.target.value;
+    try { localStorage.setItem("wpHomeState", homeState); } catch(err){}
+    render();
+    if(curSchool && panel.classList.contains("open")) openPanel(curSchool);
+    if(!document.getElementById("compareWrap").classList.contains("hidden")) renderCompare();
+  });
+  fp.querySelectorAll(".fp-pills").forEach(grp => {
+    const key = grp.dataset.key;
+    grp.querySelectorAll(".fp-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        const v = pill.dataset.v;
+        if(state[key].has(v)){ state[key].delete(v); pill.classList.remove("on"); }
+        else { state[key].add(v); pill.classList.add("on"); }
+        render(); updateFilterCount();
+      });
+    });
+  });
+  document.getElementById("fpReset").addEventListener("click", () => {
+    FILTERS.forEach(f => state[f.key] = new Set(f.opts));
+    fp.querySelectorAll(".fp-pill").forEach(p => p.classList.add("on"));
+    render(); updateFilterCount();
+  });
+  document.getElementById("fpClose").addEventListener("click", () => fp.classList.add("hidden"));
+  updateFilterCount();
+}
+/* One-time wiring for elements OUTSIDE the rebuilt filter panel (never re-run — avoids duplicate listeners). */
+function initProfileUI(){
+  document.getElementById("filterBtn").addEventListener("click", () => document.getElementById("filterPanel").classList.toggle("hidden"));
   const amWrap = document.getElementById("aboutWrap");
   const amVal = id => document.getElementById(id).value;
   const markAboutBtn = () => {
@@ -1081,6 +1125,8 @@ function buildFilters(){
     b.textContent = PROFILE ? "👤 My profile ✓" : "👤 About me";
   };
   const refreshAfterProfile = () => {
+    if(!PROFILE){ FILTERS.filter(f => f.needsProfile).forEach(f => state[f.key] = new Set(f.opts)); }
+    buildFilters();                 // fit filter groups appear/disappear with the profile
     render();
     if(curSchool && panel.classList.contains("open")) openPanel(curSchool);
     if(!document.getElementById("compareWrap").classList.contains("hidden")) renderCompare();
@@ -1108,32 +1154,6 @@ function buildFilters(){
     refreshAfterProfile();
   });
   markAboutBtn();
-  document.getElementById("homeStateSel").addEventListener("change", e => {
-    homeState = e.target.value;
-    try { localStorage.setItem("wpHomeState", homeState); } catch(err){}
-    render();
-    if(curSchool && panel.classList.contains("open")) openPanel(curSchool);
-    if(!document.getElementById("compareWrap").classList.contains("hidden")) renderCompare();
-  });
-  fp.querySelectorAll(".fp-pills").forEach(grp => {
-    const key = grp.dataset.key;
-    grp.querySelectorAll(".fp-pill").forEach(pill => {
-      pill.addEventListener("click", () => {
-        const v = pill.dataset.v;
-        if(state[key].has(v)){ state[key].delete(v); pill.classList.remove("on"); }
-        else { state[key].add(v); pill.classList.add("on"); }
-        render(); updateFilterCount();
-      });
-    });
-  });
-  document.getElementById("fpReset").addEventListener("click", () => {
-    FILTERS.forEach(f => state[f.key] = new Set(f.opts));
-    fp.querySelectorAll(".fp-pill").forEach(p => p.classList.add("on"));
-    render(); updateFilterCount();
-  });
-  document.getElementById("fpClose").addEventListener("click", () => fp.classList.add("hidden"));
-  document.getElementById("filterBtn").addEventListener("click", () => fp.classList.toggle("hidden"));
-  updateFilterCount();
 }
 function updateFilterCount(){
   let n = 0; FILTERS.forEach(f => n += (f.opts.length - state[f.key].size));
@@ -1175,6 +1195,7 @@ function initApp(data){
   document.getElementById("fit").addEventListener("click", fitVisible);
   initSearch();
   buildFilters();
+  initProfileUI();
   updateFavBadge();
   document.getElementById("myListBtn").addEventListener("click", () => {
     const w = document.getElementById("compareWrap");
