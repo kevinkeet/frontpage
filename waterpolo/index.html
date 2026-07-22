@@ -107,6 +107,40 @@
   .fp-pill.on{background:var(--ocean2); border-color:var(--ocean2); color:#fff;}
   .fp-pill:not(.on):hover{border-color:var(--ocean2); color:var(--ink);}
 
+  /* favorites + compare */
+  .fav-btn{display:inline-flex; align-items:center; gap:6px; margin:10px 0 2px; border:1.5px solid #f59e0b; background:#fff; color:#b45309; font-weight:700; font-size:12.5px; padding:6px 12px; border-radius:999px; cursor:pointer; transition:.15s;}
+  .fav-btn.on{background:#f59e0b; color:#fff;}
+  .fav-btn:hover{box-shadow:0 1px 6px rgba(180,83,9,.25);}
+  #myListBtn{position:relative;}
+  #myListBtn .badge{background:#f59e0b; color:#fff; font-size:11px; font-weight:800; min-width:17px; height:17px; padding:0 4px; border-radius:99px; display:none; align-items:center; justify-content:center; margin-left:5px;}
+  #compareWrap{position:fixed; inset:0; z-index:2000; background:rgba(8,20,35,.55); display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; overflow-y:auto;}
+  #compareWrap.hidden{display:none;}
+  .cmp-card{background:#fff; border-radius:16px; box-shadow:0 24px 70px rgba(2,8,23,.45); width:100%; max-width:1150px; padding:18px 20px 20px;}
+  .cmp-head{display:flex; align-items:center; gap:12px; margin-bottom:4px;}
+  .cmp-head h2{margin:0; font-size:18px; color:var(--ink); margin-right:auto;}
+  .cmp-head button{border:1.5px solid var(--line); background:#fff; color:var(--ocean2); font-weight:700; font-size:12.5px; padding:7px 12px; border-radius:8px; cursor:pointer;}
+  .cmp-head button:hover{background:#eff6ff;}
+  #cmpClose{color:var(--muted); font-size:16px;}
+  .cmp-sub{font-size:12px; color:var(--muted); margin-bottom:12px;}
+  .cmp-scroll{overflow-x:auto;}
+  .cmp-table{border-collapse:collapse; width:100%; font-size:12.5px; min-width:980px;}
+  .cmp-table th{position:sticky; top:0; background:#f8fafc; text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:#64748b; padding:8px 9px; border-bottom:2px solid var(--line); white-space:nowrap;}
+  .cmp-table td{padding:9px; border-bottom:1px solid #f1f5f9; vertical-align:top; color:var(--ink);}
+  .cmp-table tr:hover td{background:#fbfdff;}
+  .cmp-school{font-weight:700; cursor:pointer; color:var(--ocean2); white-space:nowrap;}
+  .cmp-school:hover{text-decoration:underline;}
+  .cmp-divchip{display:inline-block; font-size:9.5px; font-weight:800; color:#fff; border-radius:99px; padding:1px 7px; margin-left:5px; vertical-align:1px;}
+  .cmp-links a{text-decoration:none; font-size:12px; margin-right:7px; color:var(--ocean2); white-space:nowrap;}
+  .cmp-links a:hover{text-decoration:underline;}
+  .cmp-status{font-size:12px; padding:4px 6px; border:1px solid var(--line); border-radius:7px; background:#fff; color:var(--ink); max-width:130px;}
+  .cmp-notes{font-size:12px; padding:4px 7px; border:1px solid var(--line); border-radius:7px; width:150px; color:var(--ink);}
+  .cmp-x{border:0; background:transparent; color:#cbd5e1; font-size:15px; cursor:pointer; padding:2px 5px;}
+  .cmp-x:hover{color:#dc2626;}
+  .cmp-empty{padding:26px 10px; text-align:center; color:var(--muted); font-size:13.5px;}
+  .cmp-coach{white-space:nowrap;}
+  .cmp-coach a{color:var(--ocean2); text-decoration:none; font-size:11.5px;}
+  .cmp-coach a:hover{text-decoration:underline;}
+
   /* ---------- Stage / Map ---------- */
   #stage{position:relative; flex:1; overflow:hidden;}
   #map{position:absolute; inset:0; background:#aadaff;}
@@ -265,6 +299,7 @@
       <button class="fbtn" id="filterBtn" type="button">Filters<span class="fbtn-caret">▾</span><span id="filterCount"></span></button>
       <span class="count" id="count"></span>
       <button class="fitbtn" id="fit" title="Zoom to fit all visible schools">⤢ Fit</button>
+      <button class="fitbtn" id="myListBtn" title="Your saved schools">★ My list<span class="badge" id="myListCount"></span></button>
     </div>
   </div>
 </header>
@@ -272,6 +307,17 @@
 <div id="stage">
   <div id="map"></div>
   <div id="filterPanel" class="hidden"></div>
+  <div id="compareWrap" class="hidden" aria-hidden="true">
+    <div class="cmp-card">
+      <div class="cmp-head">
+        <h2>★ My list</h2>
+        <button id="cmpExport" type="button">⬇ Export CSV</button>
+        <button id="cmpClose" type="button" aria-label="Close">✕ Close</button>
+      </div>
+      <div class="cmp-sub">Saved in this browser only (nothing is uploaded). Track your outreach per school — changes save automatically.</div>
+      <div class="cmp-scroll" id="cmpBody"></div>
+    </div>
+  </div>
   <aside id="panel" aria-hidden="true">
     <button class="panel-close" id="panelClose" aria-label="Close">✕</button>
     <div class="panel-body" id="panelBody"></div>
@@ -464,11 +510,19 @@ function openPanel(s){
     <div class="p-pad">
       ${nameInPad}
       <div class="p-loc">${loc}</div>
+      <button class="fav-btn${isFav(s.n)?" on":""}" id="favToggle" type="button">${isFav(s.n)?"★ On my list":"☆ Save to my list"}</button>
       <div class="p-chips">${chips}</div>
       <div class="p-section"><div class="p-h">Programs</div>${prg}</div>
       ${stats}${desc}${recruit}${scene}${coaching}${foot}${empty}${note}
     </div>`;
   panelBody.scrollTop = 0;
+
+  const favBtn = document.getElementById("favToggle");
+  if(favBtn) favBtn.addEventListener("click", () => {
+    toggleFav(s.n);
+    favBtn.classList.toggle("on", isFav(s.n));
+    favBtn.textContent = isFav(s.n) ? "★ On my list" : "☆ Save to my list";
+  });
 
   if(multi){
     const ph = panelBody.querySelector(".p-photo");
@@ -524,6 +578,86 @@ function focusMarker(s){
 }
 document.getElementById("panelClose").addEventListener("click", closePanel);
 
+/* ---------- favorites / my list (saved in localStorage — this browser only) ---------- */
+const FAV_KEY = "wpMyList";
+let FAVS = {};
+try { FAVS = JSON.parse(localStorage.getItem(FAV_KEY) || "{}") || {}; } catch(e) { FAVS = {}; }
+const STATUS_OPTS = ["", "Emailed coach", "Replied", "Call / meeting", "Campus visit", "Applied", "Offer", "Committed"];
+function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(FAVS)); } catch(e){} }
+function isFav(n){ return Object.prototype.hasOwnProperty.call(FAVS, n); }
+function toggleFav(n){
+  if(isFav(n)) delete FAVS[n]; else FAVS[n] = { st: "", no: "" };
+  saveFavs(); updateFavBadge(); render();
+  if(!document.getElementById("compareWrap").classList.contains("hidden")) renderCompare();
+}
+function updateFavBadge(){
+  const k = Object.keys(FAVS).length;
+  const b = document.getElementById("myListCount");
+  b.textContent = k; b.style.display = k ? "inline-flex" : "none";
+}
+function esc(v){ return String(v == null ? "" : v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+function headCoachOf(s){
+  const c = (s.staffW && s.staffW[0]) || (s.staffM && s.staffM[0]) || null;
+  return c ? { n: c.n, e: c.e || "" } : { n: "—", e: "" };
+}
+function renderCompare(){
+  const body = document.getElementById("cmpBody");
+  const favSchools = SCHOOLS.map((s,i)=>({s,i})).filter(x => isFav(x.s.n));
+  if(!favSchools.length){
+    body.innerHTML = `<div class="cmp-empty">Nothing saved yet — open any school on the map and tap “☆ Save to my list”.</div>`;
+    return;
+  }
+  const rows = favSchools.map(({s,i}) => {
+    const f = FAVS[s.n] || { st:"", no:"" };
+    const coach = headCoachOf(s);
+    const opts = STATUS_OPTS.map(o => `<option value="${esc(o)}"${o===f.st?" selected":""}>${o||"—"}</option>`).join("");
+    return `<tr>
+      <td><span class="cmp-school" data-i="${i}">${esc(s.n)}</span><span class="cmp-divchip" style="background:${DIV[schoolDiv(s)]}">${schoolDiv(s)}</span></td>
+      <td>${esc(wpTier(s)||"")}</td>
+      <td>${esc((s.rd||"").split(" · ")[0])}</td>
+      <td>${esc(acceptShort(s)||"")}</td>
+      <td>${esc(s.cost||"")}</td>
+      <td>${esc((s.region||"").split(" (")[0])} · ${esc(s.setting||"")}</td>
+      <td class="cmp-coach">${esc(coach.n)}${coach.e?`<br><a href="mailto:${esc(coach.e)}">${esc(coach.e)}</a>`:""}</td>
+      <td class="cmp-links">${s.teamW?`<a href="${esc(s.teamW)}" target="_blank" rel="noopener">Team</a>`:""}${s.link?`<a href="${esc(s.link)}" target="_blank" rel="noopener">Questionnaire</a>`:""}${s.niche?`<a href="${esc(s.niche)}" target="_blank" rel="noopener">Niche</a>`:""}</td>
+      <td><select class="cmp-status" data-i="${i}">${opts}</select></td>
+      <td><input class="cmp-notes" data-i="${i}" placeholder="notes…" value="${esc(f.no)}"></td>
+      <td><button class="cmp-x" data-i="${i}" title="Remove from list">✕</button></td>
+    </tr>`;
+  }).join("");
+  body.innerHTML = `<table class="cmp-table"><thead><tr>
+    <th>School</th><th>Team tier</th><th>Recruit</th><th>Accept</th><th>Cost / yr</th><th>Where</th><th>Head coach</th><th>Links</th><th>Status</th><th>Notes</th><th></th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+  body.querySelectorAll(".cmp-school").forEach(el => el.addEventListener("click", () => {
+    document.getElementById("compareWrap").classList.add("hidden");
+    const s = SCHOOLS[+el.dataset.i];
+    if(map.getZoom() < 6) map.setView([s.lat, s.lng], 7, {animate:false});
+    openPanel(s);
+  }));
+  body.querySelectorAll(".cmp-status").forEach(el => el.addEventListener("change", () => {
+    const s = SCHOOLS[+el.dataset.i]; if(FAVS[s.n]){ FAVS[s.n].st = el.value; saveFavs(); }
+  }));
+  body.querySelectorAll(".cmp-notes").forEach(el => el.addEventListener("input", () => {
+    const s = SCHOOLS[+el.dataset.i]; if(FAVS[s.n]){ FAVS[s.n].no = el.value; saveFavs(); }
+  }));
+  body.querySelectorAll(".cmp-x").forEach(el => el.addEventListener("click", () => {
+    toggleFav(SCHOOLS[+el.dataset.i].n); renderCompare();
+  }));
+}
+function exportCsv(){
+  const cols = ["School","Division","Team tier","Recruit tier","Acceptance","Cost per year","Region","Setting","Head coach","Coach email","Team page","Questionnaire","Niche","Status","Notes"];
+  const q = v => `"${String(v == null ? "" : v).replace(/"/g,'""')}"`;
+  const lines = [cols.map(q).join(",")];
+  SCHOOLS.filter(s => isFav(s.n)).forEach(s => {
+    const f = FAVS[s.n] || {}; const coach = headCoachOf(s);
+    lines.push([s.n, schoolDiv(s), wpTier(s)||"", s.rd||"", s.accept||"", s.cost||"", (s.region||""), s.setting||"", coach.n, coach.e, s.teamW||"", s.link||"", s.niche||"", f.st||"", f.no||""].map(q).join(","));
+  });
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent("﻿" + lines.join("\n"));
+  a.download = "my-water-polo-list.csv";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
 /* ---------- render ---------- */
 function render(){
   layer.clearLayers();
@@ -535,10 +669,11 @@ function render(){
     const detail = hasProfile(s);
     if(detail) profiled++;
     const color = DIV[schoolDiv(s)];
-    // visible dot (purely visual)
+    // visible dot (purely visual); favorited schools get a gold ring
+    const fav = (typeof isFav === "function") && isFav(s.n);
     L.circleMarker([s.lat, s.lng], {
       radius: detail ? 8 : 6,
-      color:"#fff", weight: detail ? 2 : 1.4,
+      color: fav ? "#f59e0b" : "#fff", weight: fav ? 3 : (detail ? 2 : 1.4),
       fillColor:color, fillOpacity: detail ? .95 : .78,
       interactive:false
     }).addTo(layer);
@@ -658,6 +793,19 @@ function initApp(data){
   document.getElementById("fit").addEventListener("click", fitVisible);
   initSearch();
   buildFilters();
+  updateFavBadge();
+  document.getElementById("myListBtn").addEventListener("click", () => {
+    const w = document.getElementById("compareWrap");
+    renderCompare(); w.classList.remove("hidden"); w.setAttribute("aria-hidden","false");
+  });
+  document.getElementById("cmpClose").addEventListener("click", () => {
+    const w = document.getElementById("compareWrap");
+    w.classList.add("hidden"); w.setAttribute("aria-hidden","true");
+  });
+  document.getElementById("cmpExport").addEventListener("click", exportCsv);
+  document.getElementById("compareWrap").addEventListener("click", e => {
+    if(e.target.id === "compareWrap"){ e.target.classList.add("hidden"); e.target.setAttribute("aria-hidden","true"); }
+  });
 
   render();
   setTimeout(() => map.invalidateSize(), 80);
