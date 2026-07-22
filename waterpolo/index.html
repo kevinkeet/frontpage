@@ -304,9 +304,9 @@
     <div class="group" id="divGroup">
       <span class="lbl">Division</span>
       <span class="pill on" data-d="D1"><span class="swatch" style="background:var(--d1)"></span>D1</span>
-      <span class="pill on" data-d="D2"><span class="swatch" style="background:var(--d2)"></span>D2</span>
+      <span class="pill" data-d="D2"><span class="swatch" style="background:var(--d2)"></span>D2</span>
       <span class="pill on" data-d="D3"><span class="swatch" style="background:var(--d3)"></span>D3</span>
-      <span class="pill on" data-d="JC"><span class="swatch" style="background:var(--jc)"></span>CA JC</span>
+      <span class="pill" data-d="JC"><span class="swatch" style="background:var(--jc)"></span>CA JC</span>
     </div>
 
     <div class="group">
@@ -365,7 +365,7 @@ const FILTERS = [
   {key:"setting", label:"Campus setting",         opts:["Urban","Suburban","Small town","Rural"]},
   {key:"region",  label:"Region",                 opts:["West","Pacific","Midwest","South","Mid-Atlantic","Northeast"]}
 ];
-const state = { gender:"all", divs:new Set(["D1","D2","D3","JC"]) };
+const state = { gender:"all", divs:new Set(["D1","D3"]) }; // D2 + CA JC start off; one tap re-adds them
 FILTERS.forEach(f => state[f.key] = new Set(f.opts));
 
 /* ---------- helpers ---------- */
@@ -381,9 +381,33 @@ function matchingPrograms(s){
   return programsOf(s).filter(p =>
     (state.gender==="all" || state.gender===p.g) && state.divs.has(p.div));
 }
-function acceptPct(s){ if(!s.accept) return null; if(/open/i.test(s.accept)) return 100; const m=s.accept.match(/([0-9.]+)\s*%/); return m?parseFloat(m[1]):null; }
-function acceptShort(s){ if(!s.accept) return null; if(/open/i.test(s.accept)) return "Open"; const m=s.accept.match(/([0-9.]+)\s*%/); return m?Math.round(parseFloat(m[1]))+"%":null; }
+/* ---------- residency: the user's state drives which cost & acceptance figures show ---------- */
+const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+let homeState = "CA";
+try { const h = localStorage.getItem("wpHomeState"); if(h && US_STATES.includes(h)) homeState = h; } catch(e){}
+function isResident(s){ return s.s === homeState; }
+function applicableAccept(s){
+  if(s.acceptIS && s.acceptOS){
+    return isResident(s) ? { v: s.acceptIS, tag: "in-state" } : { v: s.acceptOS, tag: "out-of-state" };
+  }
+  return { v: s.accept, tag: "" };
+}
+function acceptPct(s){ const a = applicableAccept(s).v; if(!a) return null; if(/open/i.test(a)) return 100; const m = String(a).match(/([0-9.]+)\s*%/); return m ? parseFloat(m[1]) : null; }
+function acceptShort(s){ const a = applicableAccept(s).v; if(!a) return null; if(/open/i.test(a)) return "Open"; const m = String(a).match(/([0-9.]+)\s*%/); return m ? Math.round(parseFloat(m[1])) + "%" : null; }
 function acadTier(s){ const p=acceptPct(s); return p==null?null : p<10?"Under 10%" : p<30?"10–30%" : p<70?"30–70%" : "70%+ / Open"; }
+function applicableCost(s){
+  if(!s.cost) return null;
+  if(/free/i.test(s.cost)) return { num: 0, str: s.cost, tag: "", other: "" };
+  const nums = (s.cost.match(/\$\s*([0-9]+(?:\.[0-9]+)?)\s*k/gi) || []).map(x => parseFloat(x.replace(/[^0-9.]/g, "")));
+  if(!nums.length) return { num: 9999, str: s.cost, tag: "", other: "" };
+  if(nums.length >= 2){
+    const fmt = v => "~$" + (v % 1 ? v.toFixed(1) : v) + "k";
+    return isResident(s)
+      ? { num: nums[0], str: fmt(nums[0]), tag: "in-state, " + homeState, other: "out-of-state " + fmt(nums[1]) }
+      : { num: nums[1], str: fmt(nums[1]), tag: "out-of-state", other: "in-state " + fmt(nums[0]) };
+  }
+  return { num: nums[0], str: s.cost, tag: "", other: "" };
+}
 function wpTier(s){
   // Display label: explicit results-based tier (wpt), with D3/JC scope prefix kept for the tile.
   if(s.wpt) return s.wpt;
@@ -401,11 +425,10 @@ function wpBucket(s){
 function sizeCat(s){ if(!s.size) return null; return s.size.indexOf("Very large")===0 ? "Very large" : s.size.split(" ")[0]; }
 function typeCat(s){ if(!s.type) return null; return s.type.indexOf("Public")===0 ? "Public" : "Private"; }
 function costTier(s){
-  if(!s.cost) return null;
-  if(/free/i.test(s.cost)) return "Free";
-  const nums = (s.cost.match(/\$\s*([0-9]+(?:\.[0-9]+)?)k/gi) || []).map(x => parseFloat(x.replace(/[^0-9.]/g,"")));
-  if(!nums.length) return null;
-  const v = Math.max(...nums); // out-of-state / sticker
+  const c = applicableCost(s); if(!c) return null;
+  if(c.num === 0) return "Free";
+  if(c.num >= 9999) return null;
+  const v = c.num; // the figure that applies to the user's residency
   return v < 40 ? "Under $40k" : v < 65 ? "$40k–$65k" : v < 85 ? "$65k–$85k" : "$85k+";
 }
 function regionCat(s){ return s.region ? s.region.split(" (")[0].trim() : null; }
@@ -434,6 +457,7 @@ const panel = document.getElementById("panel");
 const panelBody = document.getElementById("panelBody");
 function closePanel(){ panel.classList.remove("open"); panel.setAttribute("aria-hidden","true"); }
 function openPanel(s){
+  curSchool = s;
   const div = schoolDiv(s);
   let chips = `<span class="chip chip-div" style="background:${DIV[div]}">${DIV_NAME[div]}</span>`;
   if(s.type) chips += `<span class="chip">${s.type}</span>`;
@@ -452,7 +476,7 @@ function openPanel(s){
   let stats = "";
   if(acceptShort(s) || s.wp != null){
     stats = `<div class="p-stats">
-      ${acceptShort(s)?`<div class="stat"><div class="stat-v">${acceptShort(s)}</div><div class="stat-l">Acceptance rate</div></div>`:""}
+      ${acceptShort(s)?`<div class="stat"><div class="stat-v">${acceptShort(s)}</div><div class="stat-l">Acceptance rate${applicableAccept(s).tag?` · ${applicableAccept(s).tag}`:""}</div></div>`:""}
       ${wpTier(s)?`<div class="stat"><div class="stat-v">${wpTier(s)}</div><div class="stat-l">Water polo</div></div>`:""}
       ${s.rd?`<div class="stat"><div class="stat-v">${s.rd.split(" · ")[0]}</div><div class="stat-l">Recruit tier · ${s.rd.split(" · ")[1]||""}</div></div>`:""}
     </div>`;
@@ -465,7 +489,8 @@ function openPanel(s){
   if(s.accolades && s.accolades !== "(men's program only)") rows.push(["Program", s.accolades]);
   if(!s.w && schoolDiv(s) !== "JC") rows.push(["Women's water polo", "Not offered (men's program only)"]);
   if(s.pool) rows.push(["Home pool", s.pool]);
-  if(s.cost) rows.push(["Est. cost / yr", s.cost]);
+  const ac = applicableCost(s);
+  if(ac) rows.push(["Est. cost / yr", ac.tag ? `<b>${ac.str}</b> (${ac.tag}) · ${ac.other}` : ac.str]);
   if(s.aid) rows.push(["Scholarships", s.aid]);
   if(s.setting) rows.push(["Setting", s.setting]);
   const recruit = rows.length
@@ -552,6 +577,7 @@ function openPanel(s){
   focusMarker(s);
 }
 let gal = { urls: [], idx: 0 };
+let curSchool = null;
 function renderGallery(){
   const img = document.getElementById("pPhotoImg");
   if(!img) return;
@@ -634,7 +660,7 @@ function renderCompare(){
       <td>${esc(wpTier(s)||"")}</td>
       <td>${esc((s.rd||"").split(" · ")[0])}</td>
       <td>${esc(acceptShort(s)||"")}</td>
-      <td>${esc(s.cost||"")}</td>
+      <td>${esc((applicableCost(s)||{str:""}).str)}</td>
       <td>${esc((s.region||"").split(" (")[0])} · ${esc(s.setting||"")}</td>
       <td class="cmp-coach">${esc(coach.n)}${coach.e?`<br><a href="mailto:${esc(coach.e)}">${esc(coach.e)}</a>`:""}</td>
       <td class="cmp-links">${s.teamW?`<a href="${esc(s.teamW)}" target="_blank" rel="noopener">Team</a>`:""}${s.link?`<a href="${esc(s.link)}" target="_blank" rel="noopener">Questionnaire</a>`:""}${s.niche?`<a href="${esc(s.niche)}" target="_blank" rel="noopener">Niche</a>`:""}</td>
@@ -680,11 +706,8 @@ function exportCsv(){
 /* ---------- sorting (shared by My list + list view) ---------- */
 const TIER_ORDER = {"Title contender":0, "NCAA tournament":1, "Contender":2, "Developing":3};
 function costNum(s){
-  if(!s.cost) return 9999;
-  if(/free/i.test(s.cost)) return 0;
-  const m = s.cost.match(/\$\s*([0-9.]+)\s*k/gi);
-  if(!m) return 9999;
-  return Math.max(...m.map(x => parseFloat(x.replace(/[^0-9.]/g, ""))));
+  const c = applicableCost(s);
+  return c ? c.num : 9999;
 }
 function sortVal(s, key){
   switch(key){
@@ -763,7 +786,7 @@ function renderListView(){
       <td>${esc(wpTier(s) || "")}</td>
       <td>${esc((s.rd || "").split(" · ")[0])}</td>
       <td>${esc(acceptShort(s) || "")}</td>
-      <td>${esc(s.cost || "")}</td>
+      <td>${esc((applicableCost(s)||{str:""}).str)}</td>
       <td>${esc((s.region || "").split(" (")[0])} · ${esc(s.setting || "")}</td>
     </tr>`;
   }).join("");
@@ -863,9 +886,19 @@ function buildFilters(){
   const fp = document.getElementById("filterPanel");
   fp.innerHTML =
     `<div class="fp-head"><span>Filters</span><button id="fpReset" type="button">Reset</button><button id="fpClose" type="button" aria-label="Close">✕</button></div>` +
+    `<div class="fp-section"><div class="fp-h">Your state of residence</div>
+       <select id="homeStateSel" class="cmp-status">${US_STATES.map(st => `<option${st===homeState?" selected":""}>${st}</option>`).join("")}</select>
+       <span style="font-size:11px;color:#94a3b8;margin-left:6px;">sets which cost &amp; acceptance figures you see everywhere (in-state vs out-of-state)</span></div>` +
     `<div class="fp-grid">` + FILTERS.map(f => `<div class="fp-section"><div class="fp-h">${f.label}</div><div class="fp-pills" data-key="${f.key}">${
       f.opts.map(o => `<span class="fp-pill on" data-v="${o}">${o}</span>`).join("")
     }</div></div>`).join("") + `</div>`;
+  document.getElementById("homeStateSel").addEventListener("change", e => {
+    homeState = e.target.value;
+    try { localStorage.setItem("wpHomeState", homeState); } catch(err){}
+    render();
+    if(curSchool && panel.classList.contains("open")) openPanel(curSchool);
+    if(!document.getElementById("compareWrap").classList.contains("hidden")) renderCompare();
+  });
   fp.querySelectorAll(".fp-pills").forEach(grp => {
     const key = grp.dataset.key;
     grp.querySelectorAll(".fp-pill").forEach(pill => {
