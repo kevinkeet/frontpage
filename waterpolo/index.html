@@ -182,6 +182,8 @@
   .p-note{margin-top:16px; font-size:11.5px; color:#94a3b8; line-height:1.45;}
   .p-empty{margin-top:18px; font-size:13px; color:var(--muted); background:#f8fafc; border:1px dashed var(--line); border-radius:10px; padding:14px; line-height:1.5;}
   .p-scene{font-size:13px; line-height:1.55; color:#334155; background:#f0f7fc; border-left:3px solid var(--ocean2); padding:10px 13px; border-radius:0 10px 10px 0;}
+  .ai-tag{display:inline-block; margin-left:7px; font-size:9.5px; font-weight:800; letter-spacing:.4px; color:#64748b; background:#e2e8f0; border-radius:999px; padding:2px 8px; vertical-align:middle; text-transform:uppercase;}
+  .p-scene-foot{margin-top:7px; font-size:11px; color:#8aa3b8;}
 
   /* ---------- Lock screen ---------- */
   #lock{
@@ -411,7 +413,7 @@ function openPanel(s){
 
   // "The scene" — current state of the (women's) program
   const scene = s.scene
-    ? `<div class="p-section"><div class="p-h">The water polo scene</div><div class="p-scene">${s.scene}</div></div>`
+    ? `<div class="p-section"><div class="p-h">The water polo scene<span class="ai-tag">AI-generated</span></div><div class="p-scene">${s.scene}<div class="p-scene-foot">AI-researched summary (July 2026) from public sources — may contain errors; verify with the program.</div></div></div>`
     : "";
 
   // Coaching staff (women's and/or men's), with emails
