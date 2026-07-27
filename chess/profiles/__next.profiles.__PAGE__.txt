@@ -2,5 +2,5 @@
 2:I[16523,["/chess/_next/static/chunks/1891brms7aod-.js","/chess/_next/static/chunks/0y48zonto-_31.js","/chess/_next/static/chunks/41rdgncegt9c3.js","/chess/_next/static/chunks/2maj0-7a6ibi7.js"],"default"]
 3:I[82698,["/chess/_next/static/chunks/1891brms7aod-.js","/chess/_next/static/chunks/0y48zonto-_31.js","/chess/_next/static/chunks/41rdgncegt9c3.js"],"OutletBoundary"]
 4:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/chess/_next/static/chunks/2maj0-7a6ibi7.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"6HYgzKmoSz9Olj90wUz95"}
+0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/chess/_next/static/chunks/2maj0-7a6ibi7.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"4yzvmiShZtvlgraIoJG0j"}
 5:null
