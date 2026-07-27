@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kevin Keet | Visual Resume</title>
-    <meta name="description" content="Kevin Keet, MD — Hospitalist & Associate Program Director at Stanford Medicine. AI in medical education: PI of a $200K Macy Foundation RCT, BMJ author. Explore the room, talk to the dog.">
+    <meta name="description" content="Kevin Keet, MD — Hospitalist & Associate Program Director at Stanford Medicine. AI in medical education: PI of a Macy Foundation RCT, BMJ author. Explore the room, talk to the dog.">
     <meta property="og:title" content="Kevin Keet | Visual Resume">
     <meta property="og:description" content="Stanford hospitalist & med-ed leader. AI in medical education, bedside medicine, and a bloodhound named Frankenstein who answers questions.">
     <meta property="og:image" content="https://kevinkeet.com/background.jpg">
@@ -807,7 +807,7 @@
     <header class="header">
         <div class="header-left">
             <h1>Kevin Keet</h1>
-            <p>Hospitalist &amp; Associate Program Director · <span>Stanford Medicine</span> · AI in Medical Education</p>
+            <p>Hospitalist &amp; Associate Program Director</p>
         </div>
         <div class="header-right">
             <div class="header-links">
@@ -1097,10 +1097,10 @@
             title: 'Research & Grants',
             intro: '',
             bullets: [
-                'PI: $200K Josiah Macy Jr. Foundation / ARISE multi-center RCT on generative AI in medical education (2025–)',
+                'PI: Josiah Macy Jr. Foundation / ARISE multi-center RCT on generative AI in medical education (2025–)',
                 '"From iPatient to AI-Patient" — BMJ editorial (2026)',
                 'GPT-4 vs authentic residency personal statements — J Gen Intern Med (2024)',
-                '$25K Stanford ICDP grant · MedVAL preprint (2025)'
+                'Stanford ICDP curriculum grant · MedVAL preprint (2025)'
             ],
             tags: ['Macy Foundation PI*', 'BMJ'],
             isDog: false
@@ -1374,8 +1374,8 @@ RECENT TALKS:
 - Invited panelist on AI in education, Stanford Dept of Medicine Leadership Retreat (Oct 2025)
 
 GRANTS & FUNDED RESEARCH:
-- Josiah Macy Jr. Foundation / ARISE grant, $200,000 — Principal Investigator on a multi-center RCT of generative AI in medical education (2025-)
-- Stanford Innovations in Curriculum Development and Pedagogy (ICDP) grant, $25,000 — AI curriculum for IM residents (2025)
+- Josiah Macy Jr. Foundation / ARISE grant — Principal Investigator on a multi-center RCT of generative AI in medical education (2025-)
+- Stanford Innovations in Curriculum Development and Pedagogy (ICDP) grant — AI curriculum for IM residents (2025)
 - IRB submitted for a "de-skilling" RCT; member of the ARISE network
 
 RESEARCH & PUBLICATIONS:
@@ -1549,7 +1549,7 @@ Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occa
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
                         max_tokens: 300,
-                        system: RESUME_CONTEXT + "\n\nRESPONSE LENGTH: Keep every reply short and conversational - ideally 1-2 sentences, and never more than 3. Be warm but brief; don't dump everything you know. If they want more, they can ask a follow-up.",
+                        system: RESUME_CONTEXT + "\n\nRESPONSE LENGTH: Keep every reply short and conversational - ideally 1-2 sentences, and never more than 3. Be warm but brief; don't dump everything you know. If they want more, they can ask a follow-up.\n\nNEVER mention money: do not state dollar amounts, grant sums, salaries, or any funding figures, even if they appear in your context. Refer to grants and awards by name only, without their monetary value.",
                         messages: [{ role: 'user', content: message }]
                     })
                 });
