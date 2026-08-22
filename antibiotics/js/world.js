@@ -85,7 +85,16 @@ export class Room {
     for (let y = 0; y < ROOM_H; y++) { const r = []; for (let x = 0; x < ROOM_W; x++) r.push(Math.floor(rng() * 4)); this.variants.push(r); }
     this.dirty = true;
   }
-  tileAt(tx, ty) { if (tx < 0 || ty < 0 || tx >= ROOM_W || ty >= ROOM_H) return T.WALL; return this.tiles[ty][tx]; }
+  tileAt(tx, ty) {
+    if (tx < 0 || ty < 0 || tx >= ROOM_W || ty >= ROOM_H) {
+      // Just outside the room: passable only straight through an open exit (whose border tile is floor),
+      // so the player can walk off-screen to trigger the room transition.
+      const bx = tx < 0 ? 0 : tx >= ROOM_W ? ROOM_W - 1 : tx, by = ty < 0 ? 0 : ty >= ROOM_H ? ROOM_H - 1 : ty;
+      const bt = this.tiles[by]?.[bx];
+      return bt === T.FLOOR ? T.FLOOR : T.WALL;
+    }
+    return this.tiles[ty][tx];
+  }
   setTile(tx, ty, t) { if (tx < 0 || ty < 0 || tx >= ROOM_W || ty >= ROOM_H) return; this.tiles[ty][tx] = t; this.dirty = true; }
   typeAtPx(px, py) { return this.tileAt(Math.floor(px / TILE), Math.floor(py / TILE)); }
   solidAt(px, py, opts = {}) {

@@ -564,7 +564,7 @@ Bosses defeated: <b>${this.stats.bossesBeaten}</b> · Deaths: <b>${this.stats.de
       give: (id) => this.acquireDrug(id), giveAll: () => { for (const d of DRUGS) { if (!this.inv.drugs.includes(d.id)) { this.inv.drugs.push(d.id); if (d.flags?.doses) this.inv.doses[d.id] = d.flags.doses; this.discovered.drugs.add(d.id); } } this.inv.current = this.inv.drugs[0]; this.inv.tools = { scalpel: true, lens: true, culture: true, clavulanate: true, soap: true, vaccine: true }; this.lensOn = true; },
       god: () => { this.godMode = !this.godMode; return this.godMode; }, flags: () => this.flags, all: () => { this.debugAll = true; }, kill: () => { for (const e of this.enemies) e.die(true); }, heal: () => { this.maxHp = 10; this.hp = 10; }, pearls: (n) => { this.inv.pearls += n; }, keys: (n) => { this.inv.keys[this.areaId] = n; this.inv.bossKeys[this.areaId] = true; },
       spawn: (bugId, x, y, o) => { const e = new Enemy(this, bugId, x, y, o || {}); this.enemies.push(e); return e; },
-      sim: (n) => { for (let i = 0; i < n; i++) { this.input.poll(); this.frame++; if (this.ui.open) { this.ui.update(); this.input.endFrame(); continue; } if (this.state === 'play') this.updateWorld(); this.tickFx(); this.input.endFrame(); } },
+      sim: (n) => { for (let i = 0; i < n; i++) this.update(); },
       hold: (action, n) => { this.input.down.add(action); window.__abq.sim(n); this.input.down.delete(action); },
       press: (action) => { this.input.pressedSet.add(action); this.input.down.add(action); window.__abq.sim(1); this.input.down.delete(action); },
       texts: () => this.texts.map((t) => t.str),
