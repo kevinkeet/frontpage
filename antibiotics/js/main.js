@@ -55,7 +55,7 @@ class Game {
     const w = window.innerWidth, h = window.innerHeight;
     let s = Math.min(w / VIEW_W, h / VIEW_H);
     if (s >= 1) s = Math.floor(s * 2) / 2; // half-integer steps keep pixels mostly crisp
-    if (this.touch) s = Math.min(s, (h - 40) / VIEW_H);
+    if (this.touch) s = Math.min(w / VIEW_W, (h - 40) / VIEW_H); // phones: fill the width, leave room for buttons
     this.scale = Math.max(0.5, s);
     this.stage.style.transform = `scale(${this.scale})`;
     this.stage.style.marginLeft = `${-VIEW_W / 2 * this.scale + 0}px`; // handled by flex center: use translate instead
@@ -506,9 +506,11 @@ Bosses defeated: <b>${this.stats.bossesBeaten}</b> · Deaths: <b>${this.stats.de
     const d = this.currentDrug();
     if (d) {
       drawItemIcon(c, 'drug', wx + 10, wy + 12, 0, { color: d.color });
+      c.save(); c.beginPath(); c.rect(wx + 1, wy + 1, ww - 2, wh - 2); c.clip();
       text(c, d.short, wx + 20, wy + 4, { size: 7, color: d.color });
       text(c, d.name.split(' / ')[0].slice(0, 17), wx + 20, wy + 13, { size: 5, color: '#fff' });
-      text(c, d.clsName.slice(0, 24), wx + 20, wy + 20, { size: 4, color: '#a9a6c9' });
+      text(c, d.clsName, wx + 20, wy + 20, { size: 4, color: '#a9a6c9' });
+      c.restore();
       drawTargetIcon(c, d.target, wx + 10, wy + 30, TARGETS[d.target]?.color || '#fff');
       text(c, d.kill === 'cidal' ? 'CIDAL' : 'STATIC', wx + 20, wy + 28, { size: 5, color: d.kill === 'cidal' ? '#ff758f' : '#90e0ef' });
       for (let i = 0; i < 4; i++) { c.fillStyle = i < d.tier ? ['#52b788', '#ffd166', '#f8961e', '#e63946'][d.tier - 1] : '#333'; c.fillRect(wx + 56 + i * 6, wy + 30, 5, 4); }
@@ -547,13 +549,13 @@ Bosses defeated: <b>${this.stats.bossesBeaten}</b> · Deaths: <b>${this.stats.de
     const t = this.frame;
     const grd = c.createRadialGradient(160, 110, 10, 160, 110, 200); grd.addColorStop(0, '#1d1d47'); grd.addColorStop(1, '#07071a'); c.fillStyle = grd; c.fillRect(0, 0, VIEW_W, VIEW_H);
     if (!this.titleBugs) { this.titleBugs = []; const ids = ['gas', 'ecoli', 'mssa', 'pneumo', 'pseudomonas', 'mycoplasma', 'klebsiella', 'cdiff', 'borrelia', 'vre', 'hflu', 'candida']; for (let i = 0; i < 14; i++) this.titleBugs.push({ id: ids[i % ids.length], x: rand(0, VIEW_W), y: rand(0, VIEW_H), a: rand(0, TAU), s: rand(0.2, 0.5) }); }
-    for (const b of this.titleBugs) { b.x += Math.cos(b.a) * b.s; b.y += Math.sin(b.a) * b.s; b.a += Math.sin(t * 0.01 + b.x) * 0.02; if (b.x < -20) b.x = VIEW_W + 20; if (b.x > VIEW_W + 20) b.x = -20; if (b.y < -20) b.y = VIEW_H + 20; if (b.y > VIEW_H + 20) b.y = -20; const bug = BUG_BY_ID[b.id]; c.globalAlpha = 0.55; import('./gfx.js').then?.(() => {}); this._drawBug ||= null; }
+    for (const b of this.titleBugs) { b.x += Math.cos(b.a) * b.s; b.y += Math.sin(b.a) * b.s; b.a += Math.sin(t * 0.01 + b.x) * 0.02; if (b.x < -20) b.x = VIEW_W + 20; if (b.x > VIEW_W + 20) b.x = -20; if (b.y < -20) b.y = VIEW_H + 20; if (b.y > VIEW_H + 20) b.y = -20; }
     c.globalAlpha = 1;
     // We draw bugs via entities' drawBug import
     for (const b of this.titleBugs) { const bug = BUG_BY_ID[b.id]; c.globalAlpha = 0.5; drawBugTitle(c, bug, b.x, b.y, t, b.a); c.globalAlpha = 1; }
-    // hero in the middle bottom
-    const { HERO } = heroRef; c.drawImage(HERO[0][Math.floor(t / 12) % 4], 152, 150);
+    // darken the menu band, then the hero on top of it (walking in place)
     c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(0, 150, VIEW_W, 90);
+    const { HERO } = heroRef; c.fillStyle = 'rgba(0,0,0,0.25)'; c.beginPath(); c.ellipse(160, 172, 7, 2.5, 0, 0, TAU); c.fill(); c.drawImage(HERO[0][Math.floor(t / 10) % 4], 152, 154);
   }
   // ---------------- debug ----------------
   debugApi() {
