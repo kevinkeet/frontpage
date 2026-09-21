@@ -8,6 +8,10 @@
 </head>
 <body>
 <title>Hold'em Coach</title>
+<script>
+/* Shared AI coach server (poker/worker). Leave empty to use personal API keys with no password screen. */
+window.__COACH_SERVER = '';
+</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 :root{
@@ -211,6 +215,9 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
 .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 24px rgba(0,0,0,.25);max-height:78%;overflow-y:auto;z-index:20}
 .sheet .handle{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:19}
+.gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.gate .box{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+.gate input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px;margin:12px 0}
 .toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:13px;z-index:30;box-shadow:var(--shadow)}
 @media (prefers-reduced-motion:no-preference){
   .seat.acting .box{animation:pulse 1.2s ease-in-out infinite}
@@ -221,6 +228,15 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
   .table{max-height:60vh}
 }
 </style>
+<div class="gate" id="gate" hidden>
+  <form class="box" id="gate-form">
+    <div class="brand" style="font-family:var(--display);font-size:22px;font-weight:700"><span style="color:var(--red)">♠<b style="color:var(--ink)">♥</b>♣<b style="color:var(--ink)">♦</b></span> Hold'em Coach</div>
+    <p class="muted" style="margin-top:8px">This table is private. Enter the password to sit down.</p>
+    <input id="gate-pass" type="password" placeholder="Table password" autocomplete="current-password" autofocus>
+    <button class="btn primary block" type="submit" id="gate-btn">Enter</button>
+    <p class="muted" id="gate-msg" style="font-size:13px;margin-top:10px;min-height:1.4em"></p>
+  </form>
+</div>
 <div id="app">
   <header class="topbar">
     <div class="brand"><span class="suits">♠<b>♥</b>♣<b>♦</b></span> Hold'em Coach</div>
@@ -248,8 +264,9 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
         <div class="opt"><span>Coach note after every decision</span><input type="checkbox" id="opt-coach-live" checked></div>
         <div class="opt"><span>Bot speed</span>
           <span class="seg" id="opt-speed"><button type="button" data-v="fast">Fast</button><button type="button" data-v="normal" class="active">Normal</button><button type="button" data-v="slow">Slow</button></span></div>
-        <div class="opt"><span>AI review after every hand (needs a key)</span><input type="checkbox" id="opt-ai-review" checked></div>
-        <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>AI coach: Anthropic API key</span><input id="opt-api-key" type="password" placeholder="sk-ant-…" autocomplete="off" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted" style="font-size:12px" id="opt-api-note">Stored only in this browser. Enables "Ask the coach" on any hand: a conversation with Claude about what happened and why, a few cents per question. Get a key at console.anthropic.com.</span></div>
+        <div class="opt" id="opt-table-row" hidden><span>Table password</span><span class="row"><span class="muted" id="opt-table-state">saved</span><button class="btn sm ghost" id="btn-table-forget" type="button">Forget</button></span></div>
+        <div class="opt"><span>AI review after every hand</span><input type="checkbox" id="opt-ai-review" checked></div>
+        <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>AI coach: Anthropic API key</span><input id="opt-api-key" type="password" placeholder="sk-ant-…" autocomplete="off" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted" style="font-size:12px" id="opt-api-note">Stored only in this browser. Enables "Ask the coach" on any hand: a conversation with Claude about what happened and why, a few cents per question. Get a key at console.anthropic.com. Not needed when this site has a shared coach server and you have entered the table password.</span></div>
         <div class="opt" style="border:0"><span>Reset all progress</span><button class="btn sm danger" id="btn-reset" type="button">Reset</button></div>
       </div>
       <p class="muted" style="font-size:12px;margin-top:14px">Progress is saved in this browser only. Strategy follows a solid, tight-aggressive 6-max cash-game baseline with 100 big-blind stacks. Real play has more nuance, but this baseline beats most small-stakes games.</p>
@@ -767,6 +784,21 @@ function applyTheme(){const t=S.settings.theme;if(t)document.documentElement.set
 applyTheme();
 $('#btn-theme').addEventListener('click',()=>{const dark=matchMedia('(prefers-color-scheme: dark)').matches;const cur=S.settings.theme||(dark?'dark':'light');S.settings.theme=cur==='dark'?'light':'dark';save();applyTheme();});
 
+/* ---------- table password gate (only when a shared coach server is configured) ---------- */
+const SERVER=(window.__COACH_SERVER||'').replace(/\/$/,'');
+function tablePass(){try{return localStorage.getItem('holdem-coach-pass')||'';}catch(e){return '';}}
+function checkGate(){const g=$('#gate');if(!SERVER||tablePass()){g.hidden=true;return;}g.hidden=false;setTimeout(()=>{const i=$('#gate-pass');if(i)i.focus();},50);}
+$('#gate-form').addEventListener('submit',async e=>{e.preventDefault();const pw=$('#gate-pass').value;const msg=$('#gate-msg'),btn=$('#gate-btn');if(!pw)return;btn.disabled=true;msg.textContent='Checking…';
+  try{const r=await fetch(SERVER+'/auth',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:pw})});
+    if(r.status===204){try{localStorage.setItem('holdem-coach-pass',pw);}catch(e2){}msg.textContent='';$('#gate').hidden=true;renderHome();toast('Welcome to the table');}
+    else if(r.status===401)msg.textContent='Wrong password.';
+    else msg.textContent='The coach server answered '+r.status+'. Try again in a moment.';}
+  catch(err){msg.textContent='Could not reach the coach server. Check your connection.';}
+  btn.disabled=false;});
+$('#btn-table-forget').addEventListener('click',()=>{try{localStorage.removeItem('holdem-coach-pass');}catch(e){}checkGate();renderHome();});
+window.HC.checkGate=checkGate;window.HC.SERVER=SERVER;window.HC.tablePass=tablePass;
+checkGate();
+
 /* ---------- navigation ---------- */
 function go(name){$$('.screen').forEach(s=>s.hidden=s.id!=='screen-'+name);$$('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));$('#main').scrollTop=0;if(name==='home')renderHome();if(name==='play'&&window.Play)window.Play.onShow();try{localStorage.setItem(KEY+':tab',name);}catch(e){}}
 $$('nav.tabs button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.screen)));
@@ -804,6 +836,7 @@ function renderHome(){
   $('#leaks').innerHTML=leakReport();
   $('#curriculum').innerHTML=STEPS.map((s,i)=>{const d=s.done();const isNext=s===next;const pr=s.progress?s.progress():0;return `<div class="step ${d?'done':''} ${isNext?'next':''}" data-i="${i}"><div class="dot">${d?'✓':i+1}</div><div class="t">${s.title}<small>${s.sub}</small>${!d&&s.progress&&pr>0?`<div class="bar"><i style="width:${Math.round(pr*100)}%"></i></div>`:''}</div><button class="btn sm ${isNext?'primary':''}" type="button">${d?'Again':'Go'}</button></div>`;}).join('');
   $$('#curriculum .step button').forEach(b=>b.addEventListener('click',()=>STEPS[+b.closest('.step').dataset.i].go()));
+  $('#opt-table-row').hidden=!(SERVER&&tablePass());
   $('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;
   $$('#opt-speed button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.settings.speed));
 }
@@ -1503,7 +1536,8 @@ function handContext(full){
   if(full&&G.finished)lines.push(`Result: ${G.resultText}`);
   return lines.join('\n');
 }
-function aiAvailable(){const onArtifact=/claude\.ai$/.test(location.hostname);return !!apiKey()&&!onArtifact;}
+function useServer(){return !!(HC.SERVER&&HC.tablePass());}
+function aiAvailable(){const onArtifact=/claude\.ai$/.test(location.hostname);return !onArtifact&&(useServer()||!!apiKey());}
 function md(t){const esc=x=>x.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));const lines=esc(t).split('\n');let h='',inList=false;
   for(let l of lines){l=l.trim();if(!l){if(inList){h+='</ul>';inList=false;}continue;}
     const bold=x=>x.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
@@ -1528,10 +1562,10 @@ function openChat(full,liveCoach){
   const onArtifact=/claude\.ai$/.test(location.hostname)||location.hostname.endsWith('.claude.ai');
   let html=`<div class="handle"></div><div class="row" style="justify-content:space-between"><h2 style="margin:0">Ask the coach</h2><button class="btn sm ghost" type="button" id="chat-close">Close</button></div>`;
   if(onArtifact)html+=`<p class="muted">The AI coach can only call the Claude API from the kevinkeet.com version of this app, not from this preview link.</p>`;
-  else if(!key)html+=`<p class="muted">Add your Anthropic API key on the Home tab (Settings) to enable the AI coach. Each question costs a few cents.</p>`;
+  else if(!key&&!useServer())html+=`<p class="muted">${HC.SERVER?'Enter the table password (Home tab, Settings) to enable the AI coach.':'Add your Anthropic API key on the Home tab (Settings) to enable the AI coach. Each question costs a few cents.'}</p>`;
   else html+=`<p class="muted" style="font-size:12.5px">${full?'The coach sees every player\'s cards and the whole hand.':'During the hand the coach sees only what you can see.'}</p><div id="chat-thread" class="stack" style="margin:8px 0"></div><div class="row" id="chat-quick"><button class="btn sm" type="button" data-q="Why was the baseline better than what I did?">Why was the baseline better?</button><button class="btn sm" type="button" data-q="How would a strong player have played my hand from start to finish, and why?">How would a strong player play it?</button><button class="btn sm" type="button" data-q="What is each opponent probably holding and thinking, and what could I have inferred from their actions?">What are the others thinking?</button></div><div class="row" style="margin-top:8px"><input id="chat-input" type="text" placeholder="Ask anything about this hand" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><button class="btn primary" type="button" id="chat-send">Send</button></div>`;
   openSheet(html);$('#chat-close').onclick=closeSheet;
-  if(onArtifact||!key)return;
+  if(onArtifact||(!key&&!useServer()))return;
   const thread=$('#chat-thread');const renderThread=()=>{thread.innerHTML=G.chat.map(m=>`<div class="grade ${m.role==='user'?'':'ok'}" style="border-left-color:${m.role==='user'?'var(--line)':'var(--accent)'}"><div class="eyebrow">${m.role==='user'?'You':'Coach'}</div><div class="why" style="white-space:pre-wrap">${m.content.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div></div>`).join('')+(G.chatBusy?'<div class="muted">Thinking…</div>':'');thread.scrollTop=thread.scrollHeight;};
   renderThread();
   const send=async q=>{if(!q||G.chatBusy)return;G.chat.push({role:'user',content:q});G.chatBusy=true;renderThread();$('#chat-input').value='';
@@ -1548,9 +1582,14 @@ ${full?'The hand is over and all hole cards are known.':'The hand is still in pr
 
 HAND
 ${handContext(full)}`;
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':apiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','anthropic-beta':'server-side-fallback-2026-07-01'},
-    body:JSON.stringify({model:'claude-opus-5',max_tokens:1500,output_config:{effort:'medium'},fallbacks:'default',system,messages:G.chat.map(m=>({role:m.role,content:m.content}))})});
-  if(!res.ok){let msg=`HTTP ${res.status}`;try{const j=await res.json();msg=j.error&&j.error.message||msg;}catch(e){}throw new Error(res.status===401?'Invalid API key (check Settings on the Home tab).':msg);}
+  const body=JSON.stringify({model:'claude-opus-5',max_tokens:1500,output_config:{effort:'medium'},fallbacks:'default',system,messages:G.chat.map(m=>({role:m.role,content:m.content}))});
+  const viaServer=useServer();
+  const res=viaServer
+    ?await fetch(HC.SERVER+'/v1/messages',{method:'POST',headers:{'content-type':'application/json','X-Poker-Pass':HC.tablePass(),'anthropic-beta':'server-side-fallback-2026-07-01'},body})
+    :await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':apiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','anthropic-beta':'server-side-fallback-2026-07-01'},body});
+  if(!res.ok){let msg=`HTTP ${res.status}`;try{const j=await res.json();msg=j.error&&j.error.message||msg;}catch(e){}
+    if(res.status===401&&viaServer){try{localStorage.removeItem('holdem-coach-pass');}catch(e){}HC.checkGate();throw new Error('The table password was refused. Enter it again.');}
+    throw new Error(res.status===401?'Invalid API key (check Settings on the Home tab).':res.status===429?'The coach is busy (rate limit). Try again in a minute.':msg);}
   const j=await res.json();if(j.stop_reason==='refusal')return 'The model declined to answer this one.';
   return j.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim()||'(no answer)';
 }
@@ -1613,7 +1652,7 @@ function showSummary(net,tEnd){
   const sc=$('#sum-close');if(sc)sc.onclick=()=>{closeSheet();$('#coach-area').hidden=false;$('#coach-area').innerHTML=`<div class="row"><button class="btn primary" type="button" id="deal-again" style="flex:1">Next hand</button><button class="btn ghost" type="button" id="review-again">Review</button></div>`;$('#deal-again').onclick=()=>startHand();$('#review-again').onclick=()=>showSummary(net,tEnd);};
 }
 function renderAiReview(){const el=$('#ai-review');if(!el)return;
-  if(!aiAvailable()){el.innerHTML=/claude\.ai$/.test(location.hostname)?'':`<p class="muted" style="font-size:12.5px">Add an API key in Settings for an AI review of every hand.</p>`;return;}
+  if(!aiAvailable()){el.innerHTML=/claude\.ai$/.test(location.hostname)?'':`<p class="muted" style="font-size:12.5px">${HC.SERVER?'Enter the table password in Settings for an AI review of every hand.':'Add an API key in Settings for an AI review of every hand.'}</p>`;return;}
   const show=txt=>{el.innerHTML=`<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Claude, with all cards known</span></div><div class="why">${md(txt)}</div></div>`;};
   if(G.aiReview){show(G.aiReview);return;}
   const run=async()=>{el.innerHTML='<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Reviewing the hand…</span></div></div>';try{show(await aiReview());}catch(e){el.innerHTML=`<p class="muted">AI review failed: ${e.message||e}</p>`;}};

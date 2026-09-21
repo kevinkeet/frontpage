@@ -1,0 +1,10 @@
+name = "holdem-coach-api"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+# Secrets (set with `npx wrangler secret put <NAME>`):
+#   ANTHROPIC_API_KEY  – the shared Anthropic key
+#   SITE_PASSWORD      – the table password friends type into the app
+
+[vars]
+ALLOWED_ORIGINS = "https://kevinkeet.com,https://www.kevinkeet.com,http://localhost:8080,http://127.0.0.1:8080"
