@@ -248,6 +248,7 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
         <div class="opt"><span>Coach note after every decision</span><input type="checkbox" id="opt-coach-live" checked></div>
         <div class="opt"><span>Bot speed</span>
           <span class="seg" id="opt-speed"><button type="button" data-v="fast">Fast</button><button type="button" data-v="normal" class="active">Normal</button><button type="button" data-v="slow">Slow</button></span></div>
+        <div class="opt"><span>AI review after every hand (needs a key)</span><input type="checkbox" id="opt-ai-review" checked></div>
         <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>AI coach: Anthropic API key</span><input id="opt-api-key" type="password" placeholder="sk-ant-…" autocomplete="off" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted" style="font-size:12px" id="opt-api-note">Stored only in this browser. Enables "Ask the coach" on any hand: a conversation with Claude about what happened and why, a few cents per question. Get a key at console.anthropic.com.</span></div>
         <div class="opt" style="border:0"><span>Reset all progress</span><button class="btn sm danger" id="btn-reset" type="button">Reset</button></div>
       </div>
@@ -730,7 +731,18 @@ function chartFor(s){const pos=s.pos,nR=s.raisers.length,stack=s.heroStack||100;
   if(nR===2&&s.heroOpened){const ip=s.raisers[1].pos==='SB'||s.raisers[1].pos==='BB';const t=ip?VS_3BET.ip:VS_3BET.oop;return {title:`You opened, facing a 3-bet (${ip?'in position':'out of position'})`,raise:parseRange(t.fourbet),call:parseRange(t.call),ok:parseRange(t.ok),labels:['4-bet','Call','Borderline']};}
   if(nR===2)return {title:'Facing a raise and a 3-bet',raise:parseRange(COLD_3BET.raise),call:new Set(),ok:parseRange(COLD_3BET.ok),labels:['4-bet or call','','Borderline']};
   return {title:'Facing a 4-bet',raise:parseRange(VS_4BET.jam),call:parseRange(VS_4BET.call),ok:parseRange(VS_4BET.ok),labels:['All in','Call','Borderline']};}
-window.Poker={chartFor,quickStrong,quickStrength,PUSH,OPEN_HU,JAM_VS_RAISE,RANKS,SUITS,SUIT_SYM,POSITIONS,POS_LONG,makeDeck,shuffle,cardStr,parseCard,rankName,handClass,classCards,cardHTML,cardsHTML,evaluate,category,CAT_NAMES,parseRange,union,minus,rangePct,OPEN,OPEN_STR,OPEN_BORDER,VS_RAISE,VS_RAISE_MULTI,VS_3BET,VS_4BET,COLD_3BET,OVERLIMP_OK,BB_VS_LIMP_RAISE,REQ_EQ,posGroup,heroGroup,equity,describeHand,boardTexture,preflopBaseline,postflopBaseline,gradeAction,fmt};
+/* fraction of a modeled range (Set or {range,filter,keep}) that has a pair or a draw on this board */
+function rangeFit(spec,exclude,board,n){n=n||250;const known=new Set(exclude.concat(board).map(cardStr));const deck=makeDeck().filter(c=>!known.has(cardStr(c)));let hit=0;
+  for(let i=0;i<n;i++){const used=new Array(deck.length).fill(0);const h=sampleFromRange(spec,deck,used,board);if(quickStrength(h,board))hit++;}return hit/n;}
+function describeRange(set){if(!set||!set.size)return 'almost any two cards';const has=c=>set.has(c);const parts=[];
+  let mp=0;for(let r=2;r<=14;r++){if(has(RANKS[r-2]+RANKS[r-2])){mp=r;break;}}if(mp)parts.push(mp===2?'any pair':`pairs ${RANKS[mp-2]}${RANKS[mp-2]}+`);
+  let as=0;for(let r=2;r<=13;r++){if(has('A'+RANKS[r-2]+'s')){as=r;break;}}if(as)parts.push(as===2?'any suited ace':`A${RANKS[as-2]}s+`);
+  let ao=0;for(let r=2;r<=13;r++){if(has('A'+RANKS[r-2]+'o')){ao=r;break;}}if(ao)parts.push(ao===2?'any offsuit ace':`A${RANKS[ao-2]}o+`);
+  let ks=0;for(let r=2;r<=12;r++){if(has('K'+RANKS[r-2]+'s')){ks=r;break;}}if(ks)parts.push(`K${RANKS[ks-2]}s+`);
+  if(has('KQo'))parts.push(has('KTo')?'KTo+':has('KJo')?'KJo+':'KQo');
+  let sc=0;for(let r=3;r<=10;r++){if(has(RANKS[r-1]+RANKS[r-2]+'s')){sc=r;break;}}if(sc)parts.push(`suited connectors ${RANKS[sc-1]}${RANKS[sc-2]}s+`);
+  return parts.length?parts.join(', '):'a narrow set of premium hands';}
+window.Poker={rangeFit,describeRange,chartFor,quickStrong,quickStrength,PUSH,OPEN_HU,JAM_VS_RAISE,RANKS,SUITS,SUIT_SYM,POSITIONS,POS_LONG,makeDeck,shuffle,cardStr,parseCard,rankName,handClass,classCards,cardHTML,cardsHTML,evaluate,category,CAT_NAMES,parseRange,union,minus,rangePct,OPEN,OPEN_STR,OPEN_BORDER,VS_RAISE,VS_RAISE_MULTI,VS_3BET,VS_4BET,COLD_3BET,OVERLIMP_OK,BB_VS_LIMP_RAISE,REQ_EQ,posGroup,heroGroup,equity,describeHand,boardTexture,preflopBaseline,postflopBaseline,gradeAction,fmt};
 })();
 </script>
 <script>
@@ -792,10 +804,11 @@ function renderHome(){
   $('#leaks').innerHTML=leakReport();
   $('#curriculum').innerHTML=STEPS.map((s,i)=>{const d=s.done();const isNext=s===next;const pr=s.progress?s.progress():0;return `<div class="step ${d?'done':''} ${isNext?'next':''}" data-i="${i}"><div class="dot">${d?'✓':i+1}</div><div class="t">${s.title}<small>${s.sub}</small>${!d&&s.progress&&pr>0?`<div class="bar"><i style="width:${Math.round(pr*100)}%"></i></div>`:''}</div><button class="btn sm ${isNext?'primary':''}" type="button">${d?'Again':'Go'}</button></div>`;}).join('');
   $$('#curriculum .step button').forEach(b=>b.addEventListener('click',()=>STEPS[+b.closest('.step').dataset.i].go()));
-  $('#opt-coach-live').checked=!!S.settings.coachLive;
+  $('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;
   $$('#opt-speed button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.settings.speed));
 }
 $('#opt-coach-live').addEventListener('change',e=>{S.settings.coachLive=e.target.checked;save();});
+$('#opt-ai-review').addEventListener('change',e=>{S.settings.aiReview=e.target.checked;save();});
 (function(){const inp=$('#opt-api-key');try{inp.value=localStorage.getItem('holdem-coach-api-key')||'';}catch(e){}
   inp.addEventListener('change',()=>{try{if(inp.value.trim())localStorage.setItem('holdem-coach-api-key',inp.value.trim());else localStorage.removeItem('holdem-coach-api-key');toast(inp.value.trim()?'API key saved':'API key removed');}catch(e){}});
   if(/claude\.ai$/.test(location.hostname)){$('#opt-api-note').textContent='The AI coach works on the kevinkeet.com version of this app; this preview cannot reach the Claude API.';inp.disabled=true;}})();
@@ -1427,6 +1440,32 @@ function showCoach(c,check){return new Promise(resolve=>{const el=$('#coach-area
   $('#coach-ask').onclick=()=>openChat(false,c);
   el.scrollIntoView({block:'nearest',behavior:'smooth'});});}
 
+/* ---------- reads: what an opponent is probably thinking, from public information only ---------- */
+function readOf(q,heroCards){
+  const acts=G.history.filter(h=>h.seat===q.seat);const post=acts.filter(h=>h.street!=='preflop');const st=q.style||'normal';
+  const styleWord={station:'a calling station',nit:'a nit',maniac:'a maniac',normal:'a straightforward player'}[st];
+  let pf='';const pct=q.range?P.rangePct(q.range):null;
+  if(q.pfAction==='open')pf=`opened from the ${q.pos}, so about the top ${pct}% of hands: ${P.describeRange(q.range)}`;
+  else if(q.pfAction==='call')pf=`called a raise rather than re-raising: ${st==='station'?'could be almost anything, stations call with junk':st==='nit'?'a real hand, nits do not call light':'pairs, suited broadways and suited connectors, rarely a premium'}`;
+  else if(q.pfAction==='3bet')pf=st==='maniac'?'re-raised, but as a maniac that could be a wide range including bluffs':'re-raised: mostly QQ+ and AK, sometimes a suited ace as a bluff';
+  else if(q.pfAction==='4bet+')pf='re-raised again: almost always QQ+ or AK';
+  else if(q.pfAction==='limp')pf='limped in: a weak or speculative hand, rarely strong';
+  else if(q.folded&&q.foldedOn==='preflop')pf='folded preflop without putting money in: nothing to read';
+  else pf=q.pos==='BB'||q.pos==='SB'?'has shown no strength yet: a random-ish hand from the blinds':'has not acted yet';
+  if(q.folded&&q.foldedOn!=='preflop'&&q.pfAction)pf+=`, then folded on the ${q.foldedOn}`;
+  const bets=post.filter(h=>/bets|raises/.test(h.text)).length,calls=post.filter(h=>/calls/.test(h.text)).length,checks=post.filter(h=>/checks/.test(h.text)).length;
+  let pp='';
+  if(q.raisedPost)pp=st==='maniac'?'raised after the flop, which from a maniac is a strong hand, a draw or pure air':'raised after the flop: two pair or better, a strong top pair, or a big draw';
+  else if(bets)pp=st==='maniac'?`bet ${bets>1?bets+' streets':'once'}, which means little from a maniac`:st==='nit'?`bet ${bets>1?bets+' streets':'once'}: a nit only bets a strong hand`:`bet ${bets>1?bets+' streets':'once'}: usually a pair or a draw${bets>1?', and two barrels is usually a real hand':''}`;
+  else if(calls)pp=st==='station'?'called along, which from a station could be anything from a draw to bottom pair':'called along: a pair or a draw that is not strong enough to raise';
+  else if(checks)pp='has only checked: no strong hand, or slowplaying (rare)';
+  let fit='';if(G.board.length>=3&&!q.folded){const f=P.rangeFit(oppSpec(q),heroCards||[],G.board,200);fit=`About ${Math.round(f*100)}% of that range has a pair or a draw on this board.`;}
+  const stackNote=q.stack<=10?`With ${P.fmt(q.stack)}bb they can only shove or fold.`:q.stack<=20?`Short stack (${P.fmt(q.stack)}bb): any re-raise from them is all in.`:'';
+  return `<b>${q.name}</b> (${q.pos}, ${P.fmt(q.stack+q.bet)}bb, ${styleWord}) ${pf}. ${pp?pp+'. ':''}${fit} ${stackNote}`.replace(/\s+/g,' ').trim();
+}
+function readsHTML(heroCards,full){const opps=G.players.filter(q=>!q.isHero&&(full||!q.folded));if(!opps.length)return '';
+  return `<h3>What the others are probably thinking</h3><p class="muted" style="font-size:12px">Reads from public information only: seat, player type, stack and actions so far.</p>${opps.map(q=>`<p style="font-size:13.5px">${readOf(q,heroCards)}${full?`<br><span class="muted">Actually had: ${q.cards.map(P.cardStr).join(' ')} (${P.handClass(q.cards[0],q.cards[1])}${G.board.length>=3?', '+P.describeHand(q.cards,G.board).desc:''}).</span>`:''}</p>`).join('')}`;}
+
 /* ---------- hint sheet ---------- */
 function openHint(p,toCall,pot){
   G.hint=true;const cls=P.handClass(p.cards[0],p.cards[1]);const opps=alive().filter(q=>q!==p);
@@ -1441,9 +1480,11 @@ function openHint(p,toCall,pot){
     <h3>Price to call</h3><div class="twrap"><table class="t"><tr><th>They bet</th><th>You need</th></tr>${P.REQ_EQ.map(([f,e])=>`<tr><td>${f===1?'the pot':f<1?Math.round(f*100)+'% of the pot':f+'x the pot'}</td><td class="mono">${e}</td></tr>`).join('')}</table></div>
     <h3>Outs</h3><div class="twrap"><table class="t"><tr><th>Draw</th><th>Outs</th><th>Flop→river</th><th>Turn→river</th></tr><tr><td>Flush draw</td><td class="mono">9</td><td class="mono">36%</td><td class="mono">18%</td></tr><tr><td>Open-ender</td><td class="mono">8</td><td class="mono">32%</td><td class="mono">16%</td></tr><tr><td>Flush + open-ender</td><td class="mono">15</td><td class="mono">54%</td><td class="mono">30%</td></tr><tr><td>Gutshot</td><td class="mono">4</td><td class="mono">16%</td><td class="mono">8%</td></tr><tr><td>Two overcards</td><td class="mono">6</td><td class="mono">24%</td><td class="mono">12%</td></tr><tr><td>Set draw</td><td class="mono">2</td><td class="mono">8%</td><td class="mono">4%</td></tr></table></div>
     <h3>Sizing</h3><ul style="font-size:13.5px"><li>Continuation bet ⅓ pot on dry boards, ⅔ on wet boards.</li><li>Value bet ½ pot; ⅔–¾ on wet boards or with big hands.</li><li>Raise to 2.5–3x the bet. With a stack near the pot size, just move in.</li></ul>`;}
-  const html=`<div class="handle"></div><div class="row" style="justify-content:space-between"><h2 style="margin:0">Hint</h2><button class="btn sm ghost" type="button" id="hint-close">Close</button></div>${spot}${body}
-  <div id="hint-reveal-area"><button class="btn block" type="button" id="hint-reveal">Reveal the coach's advice (marks this decision as hinted)</button></div>`;
+  const html=`<div class="handle"></div><div class="row" style="justify-content:space-between"><h2 style="margin:0">Hint</h2><button class="btn sm ghost" type="button" id="hint-close">Close</button></div>${spot}${body}${readsHTML(p.cards,false)}
+  <div id="hint-ai-area">${aiAvailable()?'<button class="btn block ghost" type="button" id="hint-ai">AI read of the table (Claude)</button>':''}</div>
+  <div id="hint-reveal-area" style="margin-top:8px"><button class="btn block" type="button" id="hint-reveal">Reveal the coach's advice (marks this decision as hinted)</button></div>`;
   openSheet(html);$('#hint-close').onclick=closeSheet;
+  const ai=$('#hint-ai');if(ai)ai.onclick=async()=>{ai.disabled=true;ai.textContent='Thinking…';try{const txt=await askClaudeOnce(false,null,'Based only on what the student can see, what is each opponent probably holding and thinking right now, and what does that mean for the decision the student faces? Give reads, not a direct instruction. Under 160 words.');$('#hint-ai-area').innerHTML=`<div class="grade ok"><div class="head"><span class="chip ok">AI read</span></div><div class="why">${md(txt)}</div></div>`;}catch(e){$('#hint-ai-area').innerHTML=`<p class="muted">${e.message||e}</p>`;}};
   $('#hint-reveal').onclick=()=>{G.hintRevealed=true;const base=G.street==='preflop'?P.preflopBaseline(preflopSituation(p)):P.postflopBaseline(postflopSituation(p,toCall,pot));
     const bestWord=base.best==='raise'?(base.label?base.label.raise:'Raise'):base.best==='bet'?(base.allIn?'Bet all in':`Bet ~${Math.round(base.sizeFrac*100)}% pot`):base.best==='call'?(base.label?base.label.call:'Call'):base.best==='check'?'Check':'Fold';
     $('#hint-reveal-area').innerHTML=`<div class="grade ok"><div class="head"><span class="chip ok">Coach</span><span class="best">${bestWord}${base.ok&&base.ok.length?` <span class="muted" style="font-weight:400">(also fine: ${base.ok.join(', ')})</span>`:''}</span></div><div class="why">${base.why}</div></div>`;};
@@ -1462,13 +1503,33 @@ function handContext(full){
   if(full&&G.finished)lines.push(`Result: ${G.resultText}`);
   return lines.join('\n');
 }
+function aiAvailable(){const onArtifact=/claude\.ai$/.test(location.hostname);return !!apiKey()&&!onArtifact;}
+function md(t){const esc=x=>x.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));const lines=esc(t).split('\n');let h='',inList=false;
+  for(let l of lines){l=l.trim();if(!l){if(inList){h+='</ul>';inList=false;}continue;}
+    const bold=x=>x.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+    if(/^[-•*] /.test(l)){if(!inList){h+='<ul style="margin:2px 0 6px">';inList=true;}h+=`<li>${bold(l.slice(2))}</li>`;continue;}
+    if(inList){h+='</ul>';inList=false;}
+    const m=l.match(/^(#+\s*)?(Well done|To improve|Reading the table|Lesson)\s*[:—-]?\s*(.*)$/i);
+    if(m){h+=`<div class="eyebrow" style="margin-top:8px">${m[2]}</div>${m[3]?`<p style="margin:2px 0 4px">${bold(m[3])}</p>`:''}`;continue;}
+    h+=`<p style="margin:2px 0 6px">${bold(l.replace(/^#+\s*/,''))}</p>`;}
+  if(inList)h+='</ul>';return h;}
+async function askClaudeOnce(full,liveCoach,question){const saved=G.chat;G.chat=[{role:'user',content:question}];try{return await askClaude(full,liveCoach);}finally{G.chat=saved;}}
+async function aiReview(){
+  if(G.aiReview)return G.aiReview;
+  const q=`Write a post-hand review for the student with exactly these four sections, each as a heading line followed by one to three short sentences or up to three short bullets:
+Well done: what the student did right, specifically (if nothing, say so in one line).
+To improve: the one or two most costly mistakes, the better line, and a number (pot odds, equity, sizing) where it helps.
+Reading the table: for each opponent who mattered, what the student could reasonably have inferred about their hand from position, player type and actions at the key moment, and what they actually had.
+Lesson: one sentence to remember.
+Under 260 words total. Plain text, no markdown headers other than the section names.`;
+  const txt=await askClaudeOnce(true,null,q);G.aiReview=txt;return txt;}
 function openChat(full,liveCoach){
   const key=apiKey();
   const onArtifact=/claude\.ai$/.test(location.hostname)||location.hostname.endsWith('.claude.ai');
   let html=`<div class="handle"></div><div class="row" style="justify-content:space-between"><h2 style="margin:0">Ask the coach</h2><button class="btn sm ghost" type="button" id="chat-close">Close</button></div>`;
   if(onArtifact)html+=`<p class="muted">The AI coach can only call the Claude API from the kevinkeet.com version of this app, not from this preview link.</p>`;
   else if(!key)html+=`<p class="muted">Add your Anthropic API key on the Home tab (Settings) to enable the AI coach. Each question costs a few cents.</p>`;
-  else html+=`<p class="muted" style="font-size:12.5px">${full?'The coach sees every player\'s cards and the whole hand.':'During the hand the coach sees only what you can see.'}</p><div id="chat-thread" class="stack" style="margin:8px 0"></div><div class="row" id="chat-quick"><button class="btn sm" type="button" data-q="Why was the baseline better than what I did?">Why was the baseline better?</button><button class="btn sm" type="button" data-q="How would a strong player have played my hand from start to finish, and why?">How would a strong player play it?</button><button class="btn sm" type="button" data-q="What should I have read from my opponents' actions?">What should I have read?</button></div><div class="row" style="margin-top:8px"><input id="chat-input" type="text" placeholder="Ask anything about this hand" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><button class="btn primary" type="button" id="chat-send">Send</button></div>`;
+  else html+=`<p class="muted" style="font-size:12.5px">${full?'The coach sees every player\'s cards and the whole hand.':'During the hand the coach sees only what you can see.'}</p><div id="chat-thread" class="stack" style="margin:8px 0"></div><div class="row" id="chat-quick"><button class="btn sm" type="button" data-q="Why was the baseline better than what I did?">Why was the baseline better?</button><button class="btn sm" type="button" data-q="How would a strong player have played my hand from start to finish, and why?">How would a strong player play it?</button><button class="btn sm" type="button" data-q="What is each opponent probably holding and thinking, and what could I have inferred from their actions?">What are the others thinking?</button></div><div class="row" style="margin-top:8px"><input id="chat-input" type="text" placeholder="Ask anything about this hand" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><button class="btn primary" type="button" id="chat-send">Send</button></div>`;
   openSheet(html);$('#chat-close').onclick=closeSheet;
   if(onArtifact||!key)return;
   const thread=$('#chat-thread');const renderThread=()=>{thread.innerHTML=G.chat.map(m=>`<div class="grade ${m.role==='user'?'':'ok'}" style="border-left-color:${m.role==='user'?'var(--line)':'var(--accent)'}"><div class="eyebrow">${m.role==='user'?'You':'Coach'}</div><div class="why" style="white-space:pre-wrap">${m.content.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div></div>`).join('')+(G.chatBusy?'<div class="muted">Thinking…</div>':'');thread.scrollTop=thread.scrollHeight;};
@@ -1539,16 +1600,25 @@ function showSummary(net,tEnd){
   const html=`<div class="handle"></div><div class="row" style="justify-content:space-between">${top}<span class="muted" style="font-size:13px">${g} good · ${o} okay · ${b} mistakes</span></div>
   <p style="margin-top:6px">${outcome} ${live.length>1&&!h.folded?live.filter(p=>!p.isHero).map(p=>`${p.name}: ${P.handClass(p.cards[0],p.cards[1])} (${P.describeHand(p.cards,G.board).desc})`).join('. ')+'.':''}${busted.length?` <b>${busted.join(' and ')} ${busted.length>1?'are':'is'} out.</b>`:''}${G.offBusts?` ${G.offBusts} player${G.offBusts>1?'s':''} busted at other tables.`:''}</p>
   <div class="summary">${decs.length?decs.map(d=>`<div class="d"><span class="chip ${d.grade}">${{good:'Good',ok:'Okay',bad:'Miss'}[d.grade]}</span><div><b>${d.label}</b>${d.hinted?' <span class="muted">(hint)</span>':''} · you: ${d.you}; baseline: ${d.best}${HC.S.settings.coachLive?'':'<div class="muted" style="font-size:12.5px;margin-top:2px">'+d.why+'</div>'}</div></div>`).join(''):'<p class="muted">No decisions this hand.</p>'}</div>
+  <div id="ai-review" style="margin-top:10px"></div>
   <div class="row" style="margin-top:10px"><button class="btn sm" type="button" id="sum-ask">Ask the coach about this hand</button><span class="muted" style="font-size:12px">Replay from:</span>${streets.map(s=>`<button class="btn sm ghost" type="button" data-replay="${s}">${s}</button>`).join('')}</div>
   ${reviewHTML()}
   <p class="muted" style="font-size:12.5px;margin-top:8px">Grade decisions, not results. A good decision that loses is still good; a mistake that wins is still a mistake.</p>
   <div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="sum-next" style="flex:1">${tEnd?'Back to Play':G.practice?'Back to the game':'Next hand'}</button>${tEnd?'':'<button class="btn ghost" type="button" id="sum-close">Look at the table</button>'}</div>`;
   openSheet(html);
+  renderAiReview();
   $('#sum-next').onclick=()=>{closeSheet();if(tEnd){token++;G=null;$('#play-table').hidden=true;$('#play-intro').hidden=false;renderIntro();}else startHand();};
   $('#sum-ask').onclick=()=>openChat(true,null);
   $$('#sheet [data-replay]').forEach(btn=>btn.onclick=()=>replayFrom(btn.dataset.replay));
   const sc=$('#sum-close');if(sc)sc.onclick=()=>{closeSheet();$('#coach-area').hidden=false;$('#coach-area').innerHTML=`<div class="row"><button class="btn primary" type="button" id="deal-again" style="flex:1">Next hand</button><button class="btn ghost" type="button" id="review-again">Review</button></div>`;$('#deal-again').onclick=()=>startHand();$('#review-again').onclick=()=>showSummary(net,tEnd);};
 }
+function renderAiReview(){const el=$('#ai-review');if(!el)return;
+  if(!aiAvailable()){el.innerHTML=/claude\.ai$/.test(location.hostname)?'':`<p class="muted" style="font-size:12.5px">Add an API key in Settings for an AI review of every hand.</p>`;return;}
+  const show=txt=>{el.innerHTML=`<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Claude, with all cards known</span></div><div class="why">${md(txt)}</div></div>`;};
+  if(G.aiReview){show(G.aiReview);return;}
+  const run=async()=>{el.innerHTML='<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Reviewing the hand…</span></div></div>';try{show(await aiReview());}catch(e){el.innerHTML=`<p class="muted">AI review failed: ${e.message||e}</p>`;}};
+  if(HC.S.settings.aiReview!==false&&!G.practice&&G.decisions.length)run();
+  else{el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-review-btn">AI review of this hand</button>`;$('#ai-review-btn').onclick=run;}}
 function reviewHTML(){
   const board=G.board;const winners=new Set(G.winners||[]);
   const everyone=G.players.map(p=>{const cls=P.handClass(p.cards[0],p.cards[1]);const openable=P.OPEN.BTN.has(cls)?(P.OPEN.UTG.has(cls)?'premium-ish, playable anywhere':'playable in late position'):'junk';
@@ -1559,7 +1629,7 @@ function reviewHTML(){
   for(const st of streets){const items=G.history.filter(h=>h.street===st);if(!items.length)continue;
     const b=items[0].board;rows+=`<div style="margin:10px 0 4px" class="row"><span class="eyebrow">${st}</span>${b.length?`<span class="cards">${b.map(c=>P.cardHTML(c,'sm')).join('')}</span>`:''}</div>`;
     rows+=items.map(h=>{const p=G.players[h.seat];const c=h.coach;return `<div class="d" style="padding:5px 0"><span class="cards" style="flex:none">${p.cards.map(x=>P.cardHTML(x,'sm')).join('')}</span><div><b>${h.name}</b> ${h.text}${c?` <span class="chip ${c.grade}" style="font-size:11px">${{good:'Good',ok:'Okay',bad:'Miss'}[c.grade]}</span>`:''}<div class="muted" style="font-size:12.5px">${c?`Coach: ${c.why.length>220?c.why.slice(0,220)+'…':c.why}`:h.reason?`Thinking: ${h.reason}`:''}</div></div></div>`;}).join('');}
-  return `<details class="lesson" style="margin-top:12px"><summary style="font-size:15px">Hand review: what everyone had and was thinking</summary><div class="body"><div class="eyebrow" style="margin-bottom:4px">Hole cards</div><div class="summary">${everyone}</div><div class="summary">${rows}</div><p class="muted" style="font-size:12px;margin-top:8px">Bots reason from the same charts you are learning, plus their equity against random hands. Stations, nits and maniacs deviate from the chart in the direction of their label.</p></div></details>`;}
+  return `<details class="lesson" style="margin-top:12px"><summary style="font-size:15px">Hand review: what everyone had and was thinking</summary><div class="body"><div class="eyebrow" style="margin-bottom:4px">Hole cards</div><div class="summary">${everyone}</div>${readsHTML(hero().cards,true)}<div class="eyebrow" style="margin:10px 0 4px">Action</div><div class="summary">${rows}</div><p class="muted" style="font-size:12px;margin-top:8px">Bots reason from the same charts you are learning, plus their equity against random hands. Stations, nits and maniacs deviate from the chart in the direction of their label.</p></div></details>`;}
 function openSheet(html){closeSheet();const ov=document.createElement('div');ov.className='overlay';ov.id='overlay';const sh=document.createElement('div');sh.className='sheet';sh.id='sheet';sh.innerHTML=html;document.body.appendChild(ov);document.body.appendChild(sh);ov.onclick=()=>{if(G&&G.finished&&!$('#sum-next'))closeSheet();};}
 function closeSheet(){const a=$('#overlay'),b=$('#sheet');if(a)a.remove();if(b)b.remove();}
 window.Play={onShow,startHand,startTournament,replayFrom};
