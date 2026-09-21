@@ -433,17 +433,29 @@ function posGroup(p){return (p==='UTG'||p==='HJ')?'early':'late';}
 function heroGroup(p){return p==='SB'?'sb':p==='BB'?'bb':'ip';}
 
 /* ---------- equity (Monte Carlo) ---------- */
-function sampleFromRange(range,deck,used){
-  if(!range){let a,b;do{a=Math.floor(Math.random()*deck.length);}while(used[a]);used[a]=1;do{b=Math.floor(Math.random()*deck.length);}while(used[b]);used[b]=1;return[deck[a],deck[b]];}
-  for(let t=0;t<300;t++){const a=Math.floor(Math.random()*deck.length),b=Math.floor(Math.random()*deck.length);if(a===b||used[a]||used[b])continue;if(range.has(handClass(deck[a],deck[b]))){used[a]=1;used[b]=1;return[deck[a],deck[b]];}}
-  return sampleFromRange(null,deck,used);
+function sampleFromRange(spec,deck,used,board){
+  const range=spec&&spec.range!==undefined?spec.range:spec;const filter=spec&&spec.filter;const keep=spec&&spec.keep!==undefined?spec.keep:0.15;
+  for(let t=0;t<400;t++){const a=Math.floor(Math.random()*deck.length),b=Math.floor(Math.random()*deck.length);if(a===b||used[a]||used[b])continue;
+    if(range&&!range.has(handClass(deck[a],deck[b])))continue;
+    if(filter&&t<300&&!filter([deck[a],deck[b]],board)&&Math.random()>keep)continue;
+    used[a]=1;used[b]=1;return[deck[a],deck[b]];}
+  let a,b;do{a=Math.floor(Math.random()*deck.length);}while(used[a]);used[a]=1;do{b=Math.floor(Math.random()*deck.length);}while(used[b]);used[b]=1;return[deck[a],deck[b]];
+}
+/* cheap strength test used to narrow a range after a bet or call: made pair or better, or a real draw */
+function quickStrength(cards,board){
+  const all=cards.concat(board);const sc=evaluate(all);if(category(sc)>=1){const bc=board.length>=3?category(evaluate(board)):0;if(category(sc)>bc)return true;}
+  if(board.length>=5)return false;
+  const sc4=[0,0,0,0];for(const c of all)sc4[c.s]++;for(let x=0;x<4;x++)if(sc4[x]===4&&cards.some(c=>c.s===x))return true;
+  let mask=0,bmask=0;for(const c of all)mask|=1<<c.r;for(const c of board)bmask|=1<<c.r;let outs=0;
+  for(let r=2;r<=14;r++){if(mask&(1<<r))continue;if(straightHigh(mask|(1<<r))&&!straightHigh(bmask|(1<<r)))outs++;}
+  return outs>=4;
 }
 function equity(hero,board,oppRanges,iters){
   iters=iters||400;const known=new Set([...hero,...board].map(cardStr));const deck=makeDeck().filter(c=>!known.has(cardStr(c)));
   let won=0;const n=oppRanges.length;
   for(let i=0;i<iters;i++){
     const used=new Array(deck.length).fill(0);const opps=[];
-    for(let o=0;o<n;o++)opps.push(sampleFromRange(oppRanges[o],deck,used));
+    for(let o=0;o<n;o++)opps.push(sampleFromRange(oppRanges[o],deck,used,board));
     const b=board.slice();while(b.length<5){let k;do{k=Math.floor(Math.random()*deck.length);}while(used[k]);used[k]=1;b.push(deck[k]);}
     const hs=evaluate(hero.concat(b));let best=hs,ties=1,lost=false;
     for(const oc of opps){const os=evaluate(oc.concat(b));if(os>best){lost=true;break;}if(os===best)ties++;}
@@ -519,7 +531,7 @@ function preflopBaseline(s){
     const openSet=hu?OPEN_HU:OPEN[pos];const border=hu?new Set():OPEN_BORDER[pos];const open=has(openSet);const sz=short?2.2:pos==='SB'?3:2.5;out.size={to:sz};out.label.raise=`Raise to ${sz}bb`;out.label.call='Limp';
     const shortNote=short?` With ${fmt(stack)}bb, keep the raise small (about 2.2bb) and be ready to get all in if re-raised.`:'';
     if(open){out.best='raise';out.why=hu?`Heads-up, the button should raise about ${rangePct(OPEN_HU)}% of hands: the big blind has a random hand and you have position. ${hand}qualifies. Raise to ${sz}bb.${shortNote}`:`${hand}is in the opening range from the ${pos} (${rangePct(openSet)}% of hands). Nobody has entered the pot, so raise, never limp: a raise can win the blinds outright and builds a pot when you have the best hand. Standard size is ${sz}bb.${shortNote}`;}
-    else if(border){out.best='fold';out.ok=['raise'];out.why=`${hand}is just outside the ${pos} opening range. Folding is the baseline; raising is defensible if the players behind you are passive. Limping is the one option to avoid.`;}
+    else if(has(border)){out.best='fold';out.ok=['raise'];out.why=`${hand}is just outside the ${pos} opening range. Folding is the baseline; raising is defensible if the players behind you are passive. Limping is the one option to avoid.`;}
     else{out.best='fold';out.why=`${hand}is too weak to open from the ${pos}. ${pos==='UTG'||pos==='HJ'?'With several players still to act behind you, weak hands get punished: someone often has you dominated and you play the hand out of position.':pos==='SB'?'The small blind is the worst seat postflop, so open only hands that play well or can win preflop.':'Even in late position this hand is a money loser over time.'} Fold.`;}
     return out;
   }
@@ -607,15 +619,24 @@ function postflopBaseline(s){
   const streetsLeft=s.street==='flop'?2:s.street==='turn'?1:0;
   const ruleEst=info.outs?Math.min(95,info.outs*(streetsLeft===2?4:2)):0;
   const out={best:'check',ok:[],sizeFrac:0.5,why:'',info,eq,potOdds:0,ruleEst};
-  const oppWord=s.nOpp===1?'your opponent':`${s.nOpp} opponents`;
+  const oppWord=s.nOpp===1?"your opponent's":`${s.nOpp} opponents'`;
+  const narrowed=(s.oppRanges||[]).some(r=>r&&r.filter);
   let lead=`You have ${info.desc}${info.draws.length?' with '+info.draws.join(' and '):''}. `;
-  lead+=`Against ${oppWord}' likely range you win about ${eqPct}% of the time${info.outs&&streetsLeft?` (rule of ${streetsLeft===2?4:2}: ${info.outs} outs ≈ ${ruleEst}%)`:''}. `;
+  lead+=`Against ${oppWord} likely range${narrowed?' (their betting narrows them to pairs and draws)':''} you win about ${eqPct}% of the time${info.outs&&streetsLeft?` (rule of ${streetsLeft===2?4:2}: ${info.outs} outs ≈ ${ruleEst}%)`:''}. `;
   const strong=info.tier>=3,monster=info.tier>=4,drawing=info.outs>=8&&streetsLeft>0;
+  const spr=s.heroStack/Math.max(0.5,s.pot);
+  if(spr<=1.2&&(monster||(strong&&eq>=0.6)||(drawing&&eq>=0.45&&s.heroIsPFR))&&s.heroStack>0){
+    out.best=s.toCall>0?'raise':'bet';out.ok=s.toCall>0?['call']:[];out.sizeFrac=spr;out.allIn=true;out.potOdds=s.toCall>0?s.toCall/(s.pot+s.toCall):0;
+    out.why=lead+`Your stack (${fmt(s.heroStack)}bb) is about the size of the pot, so there is no room for a small bet and a later decision: ${monster||strong?'with a hand this good, put it all in now and let worse hands call.':'shoving gives you two ways to win: they fold, or you hit.'}`;return out;}
   if(s.toCall>0){
     const potOdds=s.toCall/(s.pot+s.toCall);out.potOdds=potOdds;const po=Math.round(potOdds*100);
     const price=`The pot is ${fmt(s.pot)}bb and it costs ${fmt(s.toCall)}bb to call, so you need about ${po}% equity to call. `;
-    const allInCall=s.toCall>=s.heroStack;
-    if(monster||(strong&&eq>=0.7&&s.street!=='river')){out.best='raise';out.ok=['call'];out.sizeFrac=1;out.why=lead+price+`With a hand this strong, raise for value: about 2.5–3x the bet. Calling is acceptable to keep bluffs in, but do not fold.`;}
+    const allInCall=s.toCall>=s.heroStack;const raisedOnMe=s.heroBetThisStreet>0;
+    if(raisedOnMe&&!monster){const raised=`You bet and got raised. A raise from ${s.nOpp===1?'this opponent':'a player'} who only called or checked before means real strength far more often than a bluff. `;
+      if(eq>=0.65){out.best='call';out.ok=['raise'];out.why=lead+price+raised+`You are probably still ahead, so do not fold, but re-raising with one pair only gets action from hands that beat you. Call, and re-evaluate on the next card. Re-raising is fine against a loose player.`;}
+      else if(eq>=potOdds+0.06){out.best='call';out.why=lead+price+raised+`Your hand is still good enough to call at this price, but slow down: do not put more money in without improving.`;}
+      else{out.best='fold';out.ok=eq>=potOdds-0.04?['call']:[];out.why=lead+price+raised+`Let it go. Folding a decent hand to a raise is one of the most profitable things a beginner can learn.`;}}
+    else if(monster||(strong&&eq>=0.7&&s.street!=='river')){out.best='raise';out.ok=['call'];out.sizeFrac=1;out.why=lead+price+`With a hand this strong, raise for value: about 2.5–3x the bet. Calling is acceptable to keep bluffs in, but do not fold.`;}
     else if(eq>=potOdds+0.06){out.best='call';out.ok=eq>=0.6?['raise']:[];out.why=lead+price+(drawing?`Your draw has the right price: ${eqPct}% equity beats the ${po}% you need. Call, and plan to bet or raise when it comes in.`:`Your ${eqPct}% clears the ${po}% you need. Call. Raising would fold out worse hands and only get called by better.`);}
     else if(eq>=potOdds-0.04){out.best='call';out.ok=['fold'];out.why=lead+price+`This is close: ${eqPct}% against a ${po}% price. Calling is a small edge${s.nOpp===1?'':' but be careful multiway'}; folding is not a big mistake.`;}
     else{out.best='fold';out.ok=(drawing&&s.toCall<=s.pot*0.6&&streetsLeft>0)?['call']:[];out.why=lead+price+`${eqPct}% is short of the ${po}% you need, so calling loses money over time. Fold.${out.ok.length?' (A call is defensible for implied odds: if your draw hits you can win a lot more.)':''}${allInCall?' Do not talk yourself into a call because the pot is big.':''}`;}
@@ -623,7 +644,7 @@ function postflopBaseline(s){
     const n=s.nOpp;
     if(s.street==='river'){
       if(eq>=0.65||strong){out.best='bet';out.ok=n===1&&info.tier<4?['check']:['check'];out.sizeFrac=0.66;out.why=lead+`On the river, bet when worse hands will call. ${info.desc} is a value hand here: bet about 60–75% of the pot. Checking gives up value.`;}
-      else if(eq>=0.45){out.best='check';out.ok=['bet'];out.sizeFrac=0.4;out.why=lead+`A medium hand on the river: check. It is not strong enough to get called by worse often, but it can win at showdown. If checked to and facing a bet, decide with pot odds.`;}
+      else if(eq>=0.45){out.best='check';out.ok=n===1?['bet']:[];out.sizeFrac=0.4;out.why=lead+`A medium hand on the river: check. It is not strong enough to get called by worse often, but it can win at showdown${n===1?'. Against one opponent a small bet can be fine, but checking keeps the pot small':''}. If checked to and facing a bet, decide with pot odds.`;}
       else{out.best='check';out.ok=[];out.sizeFrac=0.66;out.why=lead+`You have little showdown value. The baseline is to check and give up. Bluffing is an advanced tool: only do it against one opponent on boards where your line makes sense.`;}
     }else{
       const cbetFrac=tex.wet?0.66:0.33;
@@ -651,7 +672,7 @@ function gradeAction(base,action,ctx){
       if(ctx.stack&&to>=ctx.stack*0.98&&target<ctx.stack*0.5){grade='ok';note=` Sizing: shoving all-in here is far too big. The baseline is ${target}bb: big enough to charge callers, small enough to fold when re-raised.`;}
       else if(to<target*0.75){grade='ok';note=` Sizing: ${to}bb is too small. Aim for about ${target}bb.`;}
       else if(to>target*1.6){grade='ok';note=` Sizing: ${to}bb is bigger than it needs to be. About ${target}bb is standard.`;}
-    }else if(!ctx.preflop&&ctx.pot){
+    }else if(!ctx.preflop&&ctx.pot&&!base.allIn){
       if(action.type==='bet'){const f=action.amount/ctx.pot;
         if(ctx.stack&&action.amount>=ctx.stack*0.98&&f>1.5){grade='ok';note=` Sizing: an all-in overbet is rarely right here. ${Math.round(base.sizeFrac*100)}% of the pot does the job.`;}
         else if(f<0.22){grade='ok';note=` Sizing: ${Math.round(f*100)}% of the pot is too small to do much. Aim for about ${Math.round(base.sizeFrac*100)}%.`;}
@@ -665,7 +686,19 @@ function gradeAction(base,action,ctx){
   return {grade,note};
 }
 
-window.Poker={PUSH,OPEN_HU,JAM_VS_RAISE,RANKS,SUITS,SUIT_SYM,POSITIONS,POS_LONG,makeDeck,shuffle,cardStr,parseCard,rankName,handClass,classCards,cardHTML,cardsHTML,evaluate,category,CAT_NAMES,parseRange,union,minus,rangePct,OPEN,OPEN_STR,OPEN_BORDER,VS_RAISE,VS_RAISE_MULTI,VS_3BET,VS_4BET,COLD_3BET,OVERLIMP_OK,BB_VS_LIMP_RAISE,REQ_EQ,posGroup,heroGroup,equity,describeHand,boardTexture,preflopBaseline,postflopBaseline,gradeAction,fmt};
+/* what a postflop raise represents: two pair or better, top pair or an overpair, or a strong draw */
+function quickStrong(cards,board){
+  const all=cards.concat(board);const sc=evaluate(all),cat=category(sc);const bcat=board.length>=3?category(evaluate(board)):0;
+  if(cat>=2&&cat>bcat)return true;
+  const bmax=Math.max(...board.map(c=>c.r));
+  if(cat===1&&bcat===0){if(cards[0].r===cards[1].r)return cards[0].r>bmax;return cards.some(c=>c.r===bmax);}
+  if(board.length>=5)return false;
+  const sc4=[0,0,0,0];for(const c of all)sc4[c.s]++;for(let x=0;x<4;x++)if(sc4[x]===4&&cards.some(c=>c.s===x))return true;
+  let mask=0,bmask=0;for(const c of all)mask|=1<<c.r;for(const c of board)bmask|=1<<c.r;let outs=0;
+  for(let r=2;r<=14;r++){if(mask&(1<<r))continue;if(straightHigh(mask|(1<<r))&&!straightHigh(bmask|(1<<r)))outs++;}
+  return outs>=8;
+}
+window.Poker={quickStrong,quickStrength,PUSH,OPEN_HU,JAM_VS_RAISE,RANKS,SUITS,SUIT_SYM,POSITIONS,POS_LONG,makeDeck,shuffle,cardStr,parseCard,rankName,handClass,classCards,cardHTML,cardsHTML,evaluate,category,CAT_NAMES,parseRange,union,minus,rangePct,OPEN,OPEN_STR,OPEN_BORDER,VS_RAISE,VS_RAISE_MULTI,VS_3BET,VS_4BET,COLD_3BET,OVERLIMP_OK,BB_VS_LIMP_RAISE,REQ_EQ,posGroup,heroGroup,equity,describeHand,boardTexture,preflopBaseline,postflopBaseline,gradeAction,fmt};
 })();
 </script>
 <script>
@@ -820,6 +853,8 @@ const LESSONS=[
 <p><b>Wet</b> board: J♥T♥8♠. Flush draws, straight draws, everyone connects. Bet bigger with good hands so draws pay, and respect raises.</p>
 <h3>The continuation bet</h3>
 <p>You raised preflop and one player called. On the flop, they check. Betting about ⅓ of the pot wins immediately a large share of the time, because most hands miss most flops. Do this on dry boards heads-up, whatever you hold. Do not do it against two or more opponents with nothing.</p>
+<h3>When your bet gets raised</h3>
+<p>Most players, and all of the bots here, raise after the flop only with two pair or better, a strong top pair, or a big draw. With one pair, call once and slow down; fold to further pressure unless you improve. Re-raise only with two pair or better. With a monster, re-raise for value.</p>
 <h3>Number of opponents</h3>
 <p>Heads-up, one pair is often good. Against three players, one pair is a medium hand and bluffing barely works. Tighten up as more players see the flop.</p>`},
 {id:'l7',title:'7 · Beginner leaks (in order of cost)',html:()=>`
@@ -1042,8 +1077,8 @@ function newGame(){
     dealer=(di+1)%roster.length;T.dealerName=roster[dealer].name;
   }else{roster=[{name:'You',isHero:true,style:'hero',stack:100}].concat(BOTS.map(b=>({name:b.n,style:b.style,isHero:false,stack:100})));dealer=(dealer+1)%6;}
   const n=roster.length;const deck=P.shuffle(P.makeDeck());
-  roster.forEach((p,i)=>{p.seat=i;p.bet=0;p.total=0;p.folded=false;p.allIn=false;p.cards=[deck.pop(),deck.pop()];p.range=null;p.pfAction='';p.pos=POS_BY_N[n][(i-dealer+n)%n];p.show=false;p.startStack=p.stack;});
-  G={players:roster,n,deck,board:[],pot:0,street:'preflop',currentBet:0,minRaise:1,pf:{raises:[],callers:0,limpers:0},pfr:null,decisions:[],log:[],msg:'',acting:-1,winners:[]};
+  roster.forEach((p,i)=>{p.seat=i;p.bet=0;p.total=0;p.folded=false;p.allIn=false;p.cards=[deck.pop(),deck.pop()];p.range=null;p.pfAction='';p.pos=POS_BY_N[n][(i-dealer+n)%n];p.show=false;p.startStack=p.stack;p.agg=false;p.calledPost=false;p.raisedPost=false;p.foldedOn='';});
+  G={players:roster,n,deck,board:[],pot:0,street:'preflop',currentBet:0,minRaise:1,pf:{raises:[],callers:0,limpers:0},pfr:null,decisions:[],log:[],msg:'',acting:-1,winners:[],history:[]};
   const sbIdx=n===2?dealer:(dealer+1)%n,bbIdx=(sbIdx+1)%n;G.sbIdx=sbIdx;G.bbIdx=bbIdx;
   post(roster[sbIdx],0.5);post(roster[bbIdx],1);G.currentBet=1;G.minRaise=1;
 }
@@ -1118,20 +1153,24 @@ async function bettingRound(street,startIdx,check){
   }
 }
 function apply(p,act){
-  const toCall=r1(G.currentBet-p.bet);
-  if(act.type==='fold'){p.folded=true;log(`${p.name} ${v(p,'fold')}`);G.msg=`${p.name} ${v(p,'fold')}`;}
-  else if(act.type==='check'){log(`${p.name} ${v(p,'check')}`);G.msg=`${p.name} ${v(p,'check')}`;}
-  else if(act.type==='call'){const amt=Math.min(toCall,p.stack);post(p,amt);log(`${p.name} ${v(p,'call')} ${money(amt)}${p.allIn?' (all in)':''}`);G.msg=`${p.name} ${v(p,'call')}`;
-    if(G.street==='preflop'){if(G.pf.raises.length===0){G.pf.limpers++;p.pfAction='limp';}else{G.pf.callers++;p.pfAction='call';}}}
+  const toCall=r1(G.currentBet-p.bet);let text='';
+  if(act.type==='fold'){p.folded=true;p.foldedOn=G.street;text=v(p,'fold');}
+  else if(act.type==='check'){text=v(p,'check');}
+  else if(act.type==='call'){const amt=Math.min(toCall,p.stack);post(p,amt);text=`${v(p,'call')} ${money(amt)}${p.allIn?' (all in)':''}`;
+    if(G.street==='preflop'){if(G.pf.raises.length===0){G.pf.limpers++;p.pfAction='limp';}else{G.pf.callers++;p.pfAction='call';}}else p.calledPost=true;}
   else{
     let to=Math.min(act.to,r1(p.bet+p.stack));const amt=r1(to-p.bet);const prev=G.currentBet;post(p,amt);
     if(p.bet>prev){const inc=r1(p.bet-prev);if(inc>=G.minRaise||p.allIn)G.minRaise=Math.max(G.minRaise,inc);G.currentBet=p.bet;}
-    const word=prev===0?v(p,'bet'):v(p,'raise to');log(`${p.name} ${word} ${money(p.bet)}${p.allIn?' (all in)':''}`);G.msg=`${p.name} ${word} ${money(p.bet)}`;
+    const word=prev===0?v(p,'bet'):v(p,'raise to');text=`${word} ${money(p.bet)}${p.allIn?' (all in)':''}`;
     if(G.street==='preflop'){G.pf.raises.push({seat:p.seat,pos:p.pos,to:p.bet});G.pf.callers=0;p.pfAction=G.pf.raises.length===1?'open':G.pf.raises.length===2?'3bet':'4bet+';G.pfr=p.seat;}
-    else G.lastAggressor=p.seat;
+    else{G.lastAggressor=p.seat;p.agg=true;if(prev>0)p.raisedPost=true;}
   }
+  log(`${p.name} ${text}`);G.msg=`${p.name} ${text}`;
+  G.history.push({street:G.street,seat:p.seat,name:p.name,isHero:p.isHero,text,reason:act.reason||'',coach:act.coach||null,board:G.board.slice()});
   if(G.street==='preflop')assignRange(p);
 }
+/* how the coach models an opponent: preflop range, narrowed if they bet, raised or called after the flop */
+function oppSpec(q){if(q.raisedPost)return {range:q.range,filter:P.quickStrong,keep:0.06};if(!q.agg&&!q.calledPost)return q.range;return {range:q.range,filter:P.quickStrength,keep:q.agg?0.12:0.35};}
 function assignRange(p){if(p.isHero)return;const pos=p.pos;const hu=G.n===2;
   if(p.pfAction==='open'){const base=hu&&pos==='BTN'?P.OPEN_HU:(P.OPEN[pos]||P.OPEN.BTN);p.range=p.style==='loose'?P.union(base,P.OPEN.BTN):base;if(p.startStack<=10)p.range=P.PUSH[pos]||P.PUSH.BTN;}
   else if(p.pfAction==='call'&&G.pf.raises.length){const key=vsKey(pos,G.pf.raises[0].pos);const t=P.VS_RAISE[key];p.range=P.union(P.parseRange(t.call),P.parseRange(t.ok||''));if(p.style==='loose')p.range=P.union(p.range,P.OPEN.BTN);}
@@ -1155,24 +1194,32 @@ async function botAct(p,check){
     if(a==='call'&&toCall===0)a='check';if(a==='check'&&toCall>0)a='call';
     if(a==='fold'&&toCall===0)a='check';
     if(a==='call'&&toCall>=p.stack&&!short&&Math.random()<0.5&&!P.parseRange('TT+ AQs+ AKo').has(cls))a='fold';
-    if(a==='raise'){let to=base.size?base.size.to:G.currentBet*3;if(base.scenario==='open'&&p.style==='loose'&&!short)to=2.5;to=Math.max(to,r1(G.currentBet+G.minRaise));if(to>=p.stack+p.bet-2)to=r1(p.stack+p.bet);return {type:'raise',to};}
-    return {type:a};
+    const deviated=a!==base.best&&!(a==='check'&&base.best==='call')&&!(a==='call'&&base.best==='check');
+    const sc={open:'first in',vslimp:'over limpers',vsraise:'facing a raise',vsraise_call:'facing a raise and a call','vsraise+call':'facing a raise and a call',vs3bet:'facing a 3-bet',cold3bet:'facing a raise and a 3-bet',vs4bet:'facing a 4-bet',committed:'committed',walk:'walk'}[base.scenario]||base.scenario;
+    let reason=`${cls} from the ${p.pos}, ${sc}${short?`, ${P.fmt(s.heroStack)}bb`:''}: `;
+    if(!deviated)reason+={raise:base.size&&base.size.to>=s.heroStack-0.5?'in the shoving range':base.scenario==='open'?'in the opening range, raise':base.scenario==='vslimp'?'strong enough to isolate the limpers':'strong enough to re-raise',call:base.scenario==='vslimp'?'limping along with a speculative hand':'good enough to call, not to re-raise',check:'free look',fold:'not in range, fold'}[a]||a;
+    else reason+=p.style==='loose'?`the chart says ${base.best}, but a loose player plays this anyway`:p.style==='tight'?`the chart says ${base.best}, but a tight player wants a premium here`:`the chart says ${base.best}; taking the borderline alternative`;
+    if(a==='raise'){let to=base.size?base.size.to:G.currentBet*3;if(base.scenario==='open'&&p.style==='loose'&&!short)to=2.5;to=Math.max(to,r1(G.currentBet+G.minRaise));if(to>=p.stack+p.bet-2)to=r1(p.stack+p.bet);return {type:'raise',to,reason};}
+    return {type:a,reason};
   }
   const opps=alive().filter(q=>q!==p);const eq=P.equity(p.cards,G.board,opps.map(()=>null),220);const pot=totalPot();
   const info=P.describeHand(p.cards,G.board);const isPFR=G.pfr===p.seat;const st=p.style;
-  if(toCall>0){const po=toCall/(pot+toCall);const margin=st==='loose'?-0.08:st==='tight'?0.06:0.01;
-    if((eq>=0.8||info.tier>=4)&&Math.random()<0.65&&toCall<p.stack)return {type:'raise',to:Math.min(r1(p.bet+p.stack),r1(Math.max(G.currentBet+G.minRaise,G.currentBet*2.7)))};
-    if(eq>=po+margin||(st==='loose'&&info.tier>=1&&Math.random()<0.5))return {type:'call'};
-    if(info.outs>=8&&G.street!=='river'&&toCall<=pot*0.75)return {type:'call'};
-    return {type:'fold'};}
-  const betTo=f=>{const amt=Math.max(1,r1(pot*f));return {type:'bet',to:Math.min(r1(p.bet+p.stack),r1(p.bet+amt))};};
-  if(p.stack<=pot*1.2&&(info.tier>=3||eq>=0.6))return {type:'bet',to:r1(p.bet+p.stack)};
-  if(info.tier>=4||eq>=0.72)return Math.random()<0.85?betTo(rnd([0.6,0.7])):{type:'check'};
-  if(info.tier===3)return Math.random()<0.75?betTo(0.5):{type:'check'};
-  if(G.street==='flop'&&isPFR&&opps.length===1&&Math.random()<(st==='tight'?0.45:0.7))return betTo(P.boardTexture(G.board).wet?0.6:0.35);
-  if(info.outs>=8&&G.street!=='river'&&Math.random()<0.4)return betTo(0.5);
-  if(st==='loose'&&Math.random()<0.2&&G.street!=='river')return betTo(0.5);
-  return {type:'check'};
+  const hand=`${info.desc}${info.draws.length?' with '+info.draws.join(' and '):''}, ~${Math.round(eq*100)}% vs random hands`;
+  const R=(t,extra,why)=>Object.assign({type:t,reason:`${hand}: ${why}`},extra||{});
+  if(toCall>0){const po=toCall/(pot+toCall);const margin=st==='loose'?-0.08:st==='tight'?0.06:0.01;const price=`needs ${Math.round(po*100)}%`;
+    if((eq>=0.8||info.tier>=4)&&Math.random()<0.65&&toCall<p.stack)return R('raise',{to:Math.min(r1(p.bet+p.stack),r1(Math.max(G.currentBet+G.minRaise,G.currentBet*2.7)))},'raising for value');
+    if(eq>=po+margin)return R('call',null,`${price}, calling on pot odds`);
+    if(st==='loose'&&info.tier>=1&&Math.random()<0.5)return R('call',null,`${price}, but a loose player does not fold a pair`);
+    if(info.outs>=8&&G.street!=='river'&&toCall<=pot*0.75)return R('call',null,`${price}, chasing the draw (${info.outs} outs)`);
+    return R('fold',null,`${price}, not enough equity, fold`);}
+  const betTo=(f,why)=>{const amt=Math.max(1,r1(pot*f));return R('bet',{to:Math.min(r1(p.bet+p.stack),r1(p.bet+amt))},why);};
+  if(p.stack<=pot*1.2&&(info.tier>=3||eq>=0.6))return R('bet',{to:r1(p.bet+p.stack)},'stack is about the pot size, shoving');
+  if(info.tier>=4||eq>=0.72)return Math.random()<0.85?betTo(rnd([0.6,0.7]),'betting big for value'):R('check',null,'slowplaying a big hand');
+  if(info.tier===3)return Math.random()<0.75?betTo(0.5,'betting for value'):R('check',null,'checking a good hand to control the pot');
+  if(G.street==='flop'&&isPFR&&opps.length===1&&Math.random()<(st==='tight'?0.45:0.7))return betTo(P.boardTexture(G.board).wet?0.6:0.35,'continuation bet as the preflop raiser');
+  if(info.outs>=8&&G.street!=='river'&&Math.random()<0.4)return betTo(0.5,'semi-bluff with a draw');
+  if(st==='loose'&&Math.random()<0.2&&G.street!=='river')return betTo(0.5,'loose stab at the pot');
+  return R('check',null,info.tier>=1?'checking a marginal hand':'nothing, checking');
 }
 
 /* ---------- hero ---------- */
@@ -1212,7 +1259,7 @@ function decorate(p,act,toCall,pot){
   const action={type:act.type,amount:act.to?r1(act.to):0};
   if(G.street==='preflop'){const s=preflopSituation(p);base=P.preflopBaseline(s);
     grade=P.gradeAction(base,action,{preflop:true,stack:r1(p.stack+p.bet)});label=`${p.pos} preflop, ${s.cls}${mode==='tourney'?`, ${P.fmt(s.heroStack)}bb`:''}`;}
-  else{const s={street:G.street,pot,toCall,heroIsPFR:G.pfr===0,nOpp:opps.length,board:G.board,hero:p.cards,oppRanges:opps.map(q=>q.range),heroStack:p.stack,lastBet:G.currentBet};
+  else{const s={street:G.street,pot,toCall,heroIsPFR:G.pfr===0,nOpp:opps.length,board:G.board,hero:p.cards,oppRanges:opps.map(oppSpec),heroStack:p.stack,lastBet:G.currentBet,heroBetThisStreet:p.bet};
     base=P.postflopBaseline(s);const a2=Object.assign({},action);if(a2.type==='bet')a2.amount=r1(act.to-p.bet);if(a2.type==='raise')a2.amount=r1(act.to);
     grade=P.gradeAction(base,a2,{preflop:false,pot,stack:p.stack,lastBet:G.currentBet});label=`${G.street[0].toUpperCase()+G.street.slice(1)}: ${base.info.desc}`;}
   const bestWord=base.best==='raise'?(G.street==='preflop'&&base.label?base.label.raise:'Raise'):base.best==='bet'?`Bet ~${Math.round(base.sizeFrac*100)}% pot`:base.best==='call'?(G.street==='preflop'&&base.label?base.label.call:'Call'):base.best==='check'?'Check':'Fold';
@@ -1270,12 +1317,24 @@ function showSummary(net,tEnd){
   const html=`<div class="handle"></div><div class="row" style="justify-content:space-between">${top}<span class="muted" style="font-size:13px">${g} good · ${o} okay · ${b} mistakes</span></div>
   <p style="margin-top:6px">${outcome} ${live.length>1&&!h.folded?live.filter(p=>!p.isHero).map(p=>`${p.name}: ${P.handClass(p.cards[0],p.cards[1])} (${P.describeHand(p.cards,G.board).desc})`).join('. ')+'.':''}${busted.length?` <b>${busted.join(' and ')} ${busted.length>1?'are':'is'} out.</b>`:''}</p>
   <div class="summary">${decs.length?decs.map(d=>`<div class="d"><span class="chip ${d.grade}">${{good:'Good',ok:'Okay',bad:'Miss'}[d.grade]}</span><div><b>${d.label}</b> · you: ${d.you}; baseline: ${d.best}${HC.S.settings.coachLive?'':'<div class="muted" style="font-size:12.5px;margin-top:2px">'+d.why+'</div>'}</div></div>`).join(''):'<p class="muted">No decisions this hand.</p>'}</div>
+  ${reviewHTML()}
   <p class="muted" style="font-size:12.5px;margin-top:8px">Grade decisions, not results. A good decision that loses is still good; a mistake that wins is still a mistake.</p>
   <div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="sum-next" style="flex:1">${tEnd?'Back to Play':'Next hand'}</button>${tEnd?'':'<button class="btn ghost" type="button" id="sum-close">Look at the table</button>'}</div>`;
   openSheet(html);
   $('#sum-next').onclick=()=>{closeSheet();if(tEnd){token++;G=null;$('#play-table').hidden=true;$('#play-intro').hidden=false;renderIntro();}else startHand();};
   const sc=$('#sum-close');if(sc)sc.onclick=()=>{closeSheet();$('#coach-area').hidden=false;$('#coach-area').innerHTML=`<button class="btn primary block" type="button" id="deal-again">Next hand</button>`;$('#deal-again').onclick=()=>startHand();};
 }
+function reviewHTML(){
+  const board=G.board;const winners=new Set(G.winners||[]);
+  const everyone=G.players.map(p=>{const cls=P.handClass(p.cards[0],p.cards[1]);const openable=P.OPEN.BTN.has(cls)?(P.OPEN.UTG.has(cls)?'premium-ish, playable anywhere':'playable in late position'):'junk';
+    const fate=winners.has(p.seat)?'<b>won</b>':p.folded?`folded ${p.foldedOn==='preflop'?'preflop':'on the '+p.foldedOn}`:'lost at showdown';
+    const final=board.length>=3&&!p.folded?P.describeHand(p.cards,board).desc:board.length>=3?`would have had ${P.describeHand(p.cards,board).desc}`:'';
+    return `<div class="d" style="align-items:center"><span class="cards">${p.cards.map(c=>P.cardHTML(c,'sm')).join('')}</span><div><b>${p.name}</b> <span class="chip pos" style="font-size:11px">${p.pos}</span> ${cls} <span class="muted">(${openable})</span><div class="muted" style="font-size:12.5px">${fate}${final?' · '+final:''}</div></div></div>`;}).join('');
+  const streets=['preflop','flop','turn','river'];let rows='';
+  for(const st of streets){const items=G.history.filter(h=>h.street===st);if(!items.length)continue;
+    const b=items[0].board;rows+=`<div style="margin:10px 0 4px" class="row"><span class="eyebrow">${st}</span>${b.length?`<span class="cards">${b.map(c=>P.cardHTML(c,'sm')).join('')}</span>`:''}</div>`;
+    rows+=items.map(h=>{const p=G.players[h.seat];const c=h.coach;return `<div class="d ${h.isHero?'':''}" style="padding:5px 0"><span class="cards" style="flex:none">${p.cards.map(x=>P.cardHTML(x,'sm')).join('')}</span><div><b>${h.name}</b> ${h.text}${c?` <span class="chip ${c.grade}" style="font-size:11px">${{good:'Good',ok:'Okay',bad:'Miss'}[c.grade]}</span>`:''}<div class="muted" style="font-size:12.5px">${c?`Coach: ${c.why.length>220?c.why.slice(0,220)+'…':c.why}`:h.reason?`Thinking: ${h.reason}`:''}</div></div></div>`;}).join('');}
+  return `<details class="lesson" style="margin-top:12px"><summary style="font-size:15px">Hand review: what everyone had and was thinking</summary><div class="body"><div class="eyebrow" style="margin-bottom:4px">Hole cards</div><div class="summary">${everyone}</div><div class="summary">${rows}</div><p class="muted" style="font-size:12px;margin-top:8px">Bots reason from the same charts you are learning, plus their equity against random hands. Loose and tight players deviate from the chart in the direction of their label.</p></div></details>`;}
 function openSheet(html){closeSheet();const ov=document.createElement('div');ov.className='overlay';ov.id='overlay';const sh=document.createElement('div');sh.className='sheet';sh.id='sheet';sh.innerHTML=html;document.body.appendChild(ov);document.body.appendChild(sh);}
 function closeSheet(){const a=$('#overlay'),b=$('#sheet');if(a)a.remove();if(b)b.remove();}
 window.Play={onShow,startHand,startTournament};
