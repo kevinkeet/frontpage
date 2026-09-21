@@ -5,7 +5,24 @@ the AI coach at kevinkeet.com/poker without their own keys. The app asks for a
 **table password** once; every AI request carries it, the worker checks it, and
 forwards the request to Claude. The key never reaches a browser.
 
-## Deploy (once)
+## Deploy without a terminal (recommended)
+
+A GitHub Action (`.github/workflows/deploy-worker.yml`) deploys this worker, sets
+its secrets and writes the worker URL into `poker/index.html`. Add four secrets at
+**github.com/kevinkeet/frontpage → Settings → Secrets and variables → Actions**:
+
+| Secret | Where to get it |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | dash.cloudflare.com → profile → API Tokens → Create Token → "Edit Cloudflare Workers" template |
+| `CLOUDFLARE_ACCOUNT_ID` | dash.cloudflare.com → Workers & Pages → right-hand sidebar |
+| `ANTHROPIC_API_KEY` | console.anthropic.com |
+| `SITE_PASSWORD` | the password you will give friends |
+
+Then open the repo's **Actions** tab → "Deploy Hold'em Coach worker" → **Run workflow**.
+About a minute later the site has its password screen. To change the password or
+key later, update the secret and run the workflow again.
+
+## Deploy from a terminal (alternative)
 
 Run these from a local clone of this repo (the `frontpage` repository), in order.
 The worker must exist before secrets can be attached to it, so deploy first.
