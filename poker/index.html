@@ -11,6 +11,8 @@
 <script>
 /* Shared AI coach server (poker/worker). Leave empty to use personal API keys with no password screen. */
 window.__COACH_SERVER = 'https://holdem-coach-api.kevinkeet.workers.dev';
+/* local development only: point at `wrangler dev` with localStorage['holdem-coach-dev-server'] */
+if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){try{var devServer=localStorage.getItem('holdem-coach-dev-server');if(devServer)window.__COACH_SERVER=devServer;}catch(e){}}
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
@@ -67,7 +69,7 @@ li{margin:2px 0}
 .topbar .brand .suits b{color:var(--ink)}
 .iconbtn{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:5px 10px;font:inherit;font-size:13px}
 /* bottom nav */
-nav.tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav.tabs button{background:none;border:0;padding:9px 4px 8px;font:inherit;font-size:11.5px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.02em}
 nav.tabs button .glyph{font-size:19px;line-height:1;font-family:var(--display)}
 nav.tabs button.active{color:var(--accent)}
@@ -198,6 +200,15 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
 .seat .chips.bl{right:6px}
 .seat.folded .chips{opacity:.7}
 .chipdot{vertical-align:-1.5px;margin-right:3px}
+.field{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;margin-top:6px}
+.tchat .tchat-list{max-height:132px;overflow-y:auto;font-size:13.5px;line-height:1.4;margin:4px 0 8px}
+.tchat .tc{padding:2px 0;overflow-wrap:anywhere}
+.tchat .tc b{color:var(--accent);font-weight:600;margin-right:2px}
+.tchat .tc.me b{color:var(--gold)}
+.seat .bubble{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:3px 8px;font-size:11.5px;line-height:1.25;width:max-content;max-width:150px;overflow-wrap:anywhere;box-shadow:var(--shadow);z-index:3;text-align:left}
+.seat .bubble.bl{left:0;transform:none}
+.seat .bubble.br{left:auto;right:0;transform:none}
+.seat .away{font-size:9px;color:var(--bad)}
 .av-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;font-size:13px}
 .av-sw{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .av-sw button{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);padding:0;cursor:pointer}
@@ -310,10 +321,44 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
           <span class="seg" id="opt-speed"><button type="button" data-v="fast">Fast</button><button type="button" data-v="normal" class="active">Normal</button><button type="button" data-v="slow">Slow</button></span></div>
         <div class="opt" id="opt-table-row" hidden><span>Table password</span><span class="row"><span class="muted" id="opt-table-state">saved</span><button class="btn sm ghost" id="btn-table-forget" type="button">Forget</button></span></div>
         <div class="opt"><span>AI review after every hand</span><input type="checkbox" id="opt-ai-review" checked></div>
+        <div class="opt"><span>…also when I am a guest at a home game</span><input type="checkbox" id="opt-ai-review-home"></div>
         <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>AI coach: Anthropic API key</span><input id="opt-api-key" type="password" placeholder="sk-ant-…" autocomplete="off" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted" style="font-size:12px" id="opt-api-note">Stored only in this browser. Enables "Ask the coach" on any hand: a conversation with Claude about what happened and why, a few cents per question. Get a key at console.anthropic.com. Not needed when this site has a shared coach server and you have entered the table password.</span></div>
         <div class="opt" style="border:0"><span>Reset all progress</span><button class="btn sm danger" id="btn-reset" type="button">Reset</button></div>
       </div>
       <p class="muted" style="font-size:12px;margin-top:14px">Progress is saved in this browser only. Strategy follows a solid, tight-aggressive 6-max cash-game baseline with 100 big-blind stacks. Real play has more nuance, but this baseline beats most small-stakes games.</p>
+    </section>
+
+    <!-- FRIENDS / HOME GAME -->
+    <section class="screen" id="screen-friends" hidden>
+      <div id="hg-entry">
+        <h1>Home game</h1>
+        <p class="muted">Play at a private table with friends, wherever they are. Empty seats are filled by bots, everyone sees only their own cards, and each player gets their own private coaching.</p>
+        <p class="muted" id="hg-unavailable" hidden>Home games need the shared table server, which is not set up on this copy of the app.</p>
+        <div id="hg-forms">
+          <div class="panel" style="margin-bottom:10px">
+            <label for="hg-name" class="eyebrow">Your name at the table</label>
+            <input id="hg-name" class="field" type="text" maxlength="12" autocomplete="nickname" placeholder="e.g. Kevin">
+          </div>
+          <div class="panel" style="margin-bottom:10px">
+            <h3 style="margin-top:0">Start a table</h3>
+            <span class="seg" id="hg-fmt"><button type="button" data-v="cash" class="active">Cash game</button><button type="button" data-v="sng">Sit &amp; go</button></span>
+            <p class="muted" id="hg-fmt-desc" style="font-size:13px;margin:8px 0">Cash game: 100 big blinds each, stacks carry over from hand to hand, and friends can join or leave at any time.</p>
+            <button class="btn primary block" id="hg-create" type="button">Create a table</button>
+          </div>
+          <div class="panel" style="margin-bottom:10px">
+            <h3 style="margin-top:0">Join a table</h3>
+            <div class="row" style="flex-wrap:nowrap"><input id="hg-code" class="field" type="text" maxlength="5" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Table code" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.12em;margin:0"><button class="btn" id="hg-join" type="button">Join</button></div>
+            <button class="btn ghost block" id="hg-rejoin" type="button" style="margin-top:8px" hidden>Rejoin</button>
+          </div>
+        </div>
+      </div>
+      <div id="hg-lobby" hidden>
+        <div id="hg-room"></div>
+        <h2>Table chat</h2>
+        <div class="panel tight tchat"><div class="tchat-list"></div><form class="tchat-form row" style="flex-wrap:nowrap"><input class="field" type="text" maxlength="200" placeholder="Message the table" autocomplete="off" style="margin:0"><button class="btn" type="submit">Send</button></form></div>
+        <button class="btn ghost block" id="hg-leave" type="button" style="margin-top:12px">Leave the table</button>
+      </div>
+      <p id="hg-status" class="muted" style="margin-top:10px" role="status"></p>
     </section>
 
     <!-- LEARN -->
@@ -380,6 +425,7 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
           <div class="stack" style="gap:6px"><button class="btn sm gold" id="btn-hint" type="button">Hint</button><button class="btn sm ghost" id="btn-leave" type="button">Leave</button></div>
         </div>
         <div id="action-area" class="stack" hidden>
+          <div id="turn-timer" class="muted" style="font-family:var(--mono);font-size:12.5px;text-align:center" hidden></div>
           <div class="actions">
             <button class="btn danger" id="act-fold" type="button">Fold</button>
             <button class="btn" id="act-check" type="button">Check</button>
@@ -393,6 +439,7 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
         </div>
         <div id="coach-area" hidden></div>
         <div class="log" id="log"></div>
+        <div class="panel tight tchat" id="tchat" hidden><div class="eyebrow">Table chat</div><div class="tchat-list"></div><form class="tchat-form row" style="flex-wrap:nowrap"><input class="field" type="text" maxlength="200" placeholder="Message the table" autocomplete="off" style="margin:0"><button class="btn sm" type="submit">Send</button></form></div>
       </div>
     </section>
   </main>
@@ -402,6 +449,7 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
     <button type="button" data-screen="learn"><span class="glyph">♥</span>Learn</button>
     <button type="button" data-screen="drill"><span class="glyph">♣</span>Drill</button>
     <button type="button" data-screen="play"><span class="glyph">♦</span>Play</button>
+    <button type="button" data-screen="friends"><span class="glyph">★</span>Friends</button>
   </nav>
 </div>
 <script>
@@ -805,6 +853,98 @@ function describeRange(set){if(!set||!set.size)return 'almost any two cards';con
   return parts.length?parts.join(', '):'a narrow set of premium hands';}
 window.Poker={rangeFit,describeRange,chartFor,quickStrong,quickStrength,PUSH,OPEN_HU,JAM_VS_RAISE,RANKS,SUITS,SUIT_SYM,POSITIONS,POS_LONG,makeDeck,shuffle,cardStr,parseCard,rankName,handClass,classCards,cardHTML,cardsHTML,evaluate,category,CAT_NAMES,parseRange,union,minus,rangePct,OPEN,OPEN_STR,OPEN_BORDER,VS_RAISE,VS_RAISE_MULTI,VS_3BET,VS_4BET,COLD_3BET,OVERLIMP_OK,BB_VS_LIMP_RAISE,REQ_EQ,posGroup,heroGroup,equity,describeHand,boardTexture,preflopBaseline,postflopBaseline,gradeAction,fmt};
 })();
+
+/* =====================================================================
+   Table logic shared by the app and the home-game server (poker/worker):
+   opponent ranges, the preflop situation, and the bots' decisions.
+   Everything here is a pure function of the hand state G.
+   ===================================================================== */
+(function(){
+'use strict';
+const P=window.Poker;const r1=x=>Math.round(x*10)/10;
+function totalPot(G){return r1(G.pot+G.players.reduce((a,p)=>a+p.bet,0));}
+/* how the coach models an opponent: preflop range, narrowed by postflop action and by player type */
+function oppSpec(q){const st=q.style||'normal';
+  if(q.raisedPost)return {range:q.range,filter:st==='maniac'?P.quickStrength:P.quickStrong,keep:{maniac:0.45,station:0.04,nit:0.02,normal:0.06}[st]||0.06};
+  if(q.agg)return {range:q.range,filter:st==='nit'?P.quickStrong:P.quickStrength,keep:{maniac:0.5,station:0.15,nit:0.1,normal:0.12}[st]||0.12};
+  if(q.calledPost)return {range:q.range,filter:P.quickStrength,keep:{maniac:0.4,station:0.7,nit:0.15,normal:0.35}[st]||0.35};
+  return q.range;}
+function assignRange(G,p){if(p.isHero)return;const pos=p.pos;const hu=G.n===2;const st=p.style;
+  if(p.pfAction==='open'){const base=hu&&pos==='BTN'?P.OPEN_HU:(P.OPEN[pos]||P.OPEN.BTN);p.range=st==='maniac'?P.OPEN_HU:st==='nit'?P.OPEN.UTG:base;if(p.startStack<=10)p.range=P.PUSH[pos]||P.PUSH.BTN;}
+  else if(p.pfAction==='call'&&G.pf.raises.length){const key=vsKey(pos,G.pf.raises[0].pos);const t=P.VS_RAISE[key];p.range=P.union(P.parseRange(t.call),P.parseRange(t.ok||''));if(st==='station'||st==='maniac')p.range=P.union(p.range,P.OPEN.BTN);if(st==='nit')p.range=P.parseRange('77+ ATs+ AJo+ KQs');}
+  else if(p.pfAction==='3bet'){const key=vsKey(pos,G.pf.raises[0].pos);p.range=P.parseRange(P.VS_RAISE[key].threebet);if(st==='maniac')p.range=P.union(p.range,P.parseRange('22+ A2s+ K9s+ QTs+ JTs T9s 98s ATo+ KJo+'));if(st==='nit'||st==='station')p.range=P.parseRange('QQ+ AKs AKo');if(p.startStack<=15)p.range=P.union(p.range,P.parseRange(P.JAM_VS_RAISE.late));}
+  else if(p.pfAction==='4bet+')p.range=st==='maniac'?P.parseRange('99+ AJs+ AQo+ A5s A4s'):P.parseRange('QQ+ AKs AKo');
+  else if(p.pfAction==='limp')p.range=P.union(P.OPEN.BTN,P.parseRange(P.OVERLIMP_OK));
+  else p.range=null;}
+function vsKey(pos,raiserPos){const hg=P.heroGroup(pos),rg=P.posGroup(raiserPos);return hg==='ip'?(rg==='early'?'ipEarly':'ipLate'):hg==='sb'?(rg==='early'?'sbEarly':'sbLate'):(rg==='early'?'bbEarly':'bbLate');}
+function preflopSituation(G,p){const opened=G.pf.raises.length&&G.pf.raises[0].seat===p.seat;const threeBet=G.pf.raises.length>=2&&G.pf.raises[1].seat===p.seat;
+  return {pos:p.pos,cls:P.handClass(p.cards[0],p.cards[1]),raisers:G.pf.raises.map(r=>({pos:r.pos})),callers:G.pf.callers,limpers:G.pf.limpers,heroOpened:!!opened,heroThreeBet:threeBet,lastRaiseTo:G.pf.raises.length?G.pf.raises[G.pf.raises.length-1].to:1,heroInvested:p.bet,heroStack:r1(p.stack+p.bet),toCall:r1(G.currentBet-p.bet),pot:totalPot(G),nPlayers:G.n};}
+
+/* a bot's decision: the baseline chart, bent in the direction of the bot's style */
+function botDecide(G,p,rr){
+  const rnd=a=>a[Math.floor(rr()*a.length)];const alive=()=>G.players.filter(q=>!q.folded);
+  const toCall=r1(G.currentBet-p.bet);const st=p.style;
+  if(G.street==='preflop'){
+    const s=preflopSituation(G,p);const base=P.preflopBaseline(s);let a=base.best;const cls=s.cls;const short=s.heroStack<=15;const prem=P.parseRange('QQ+ AKs AKo').has(cls);
+    let note='';
+    if(st==='station'){if(a==='fold'&&!short&&(P.OPEN.BTN.has(cls)||P.parseRange(P.OVERLIMP_OK).has(cls))&&G.pf.raises.length<=1&&rr()<0.75){a='call';note='a calling station sees a flop with this';}
+      else if(a==='raise'&&!prem&&base.scenario==='open'&&!short&&rr()<0.5){a='call';note='a calling station limps instead of raising';}
+      else if(a==='raise'&&!prem&&base.scenario!=='open'&&!short){a=P.parseRange(P.VS_RAISE.ipLate.call).has(cls)||P.OPEN.CO.has(cls)?'call':'fold';note='a calling station calls rather than re-raises';}}
+    else if(st==='nit'){if(base.scenario==='open'&&!short&&!P.OPEN.UTG.has(cls)){a='fold';note='a nit opens only premium hands';}
+      else if(a==='call'&&!short&&!P.parseRange('77+ ATs+ AJo+ KQs').has(cls)){a='fold';note='a nit does not call raises with this';}
+      else if(a==='raise'&&base.scenario!=='open'&&!short&&!prem){a=P.parseRange('JJ TT AQs AQo').has(cls)?'call':'fold';note='a nit re-raises only with QQ+ and AK';}}
+    else if(st==='maniac'){if(a==='fold'&&!short&&base.scenario==='open'&&P.OPEN_HU.has(cls)){a='raise';note='a maniac raises almost anything';}
+      else if(a==='fold'&&!short&&(base.scenario==='vsraise'||base.scenario==='vslimp')&&P.OPEN.BTN.has(cls)){a=rr()<0.45?'raise':'call';note=a==='raise'?'a maniac re-raises light':'a maniac never folds a playable hand';}
+      else if(a==='call'&&!short&&rr()<0.35){a='raise';note='a maniac turns a call into a raise';}
+      else if(a==='fold'&&base.scenario==='vs3bet'&&!short&&rr()<0.25){a='raise';note='a maniac 4-bet bluff';}}
+    else{if(base.ok.length&&rr()<0.2){a=base.ok[0];note='taking the borderline alternative';}}
+    if(a==='call'&&toCall===0)a='check';if(a==='check'&&toCall>0)a='call';
+    if(a==='fold'&&toCall===0)a='check';
+    if(a==='call'&&toCall>=p.stack&&!short&&rr()<0.5&&!prem&&st!=='station'&&st!=='maniac'){a='fold';note='not calling off the whole stack with this';}
+    const sc={open:'first in',vslimp:'over limpers',vsraise:'facing a raise','vsraise+call':'facing a raise and a call',vs3bet:'facing a 3-bet',cold3bet:'facing a raise and a 3-bet',vs4bet:'facing a 4-bet',committed:'committed',walk:'walk'}[base.scenario]||base.scenario;
+    let reason=`${cls} from the ${p.pos}, ${sc}${short?`, ${P.fmt(s.heroStack)}bb`:''}: `;
+    if(note)reason+=`the chart says ${base.best}, but ${note}`;
+    else reason+={raise:base.size&&base.size.to>=s.heroStack-0.5?'in the shoving range':base.scenario==='open'?'in the opening range, raise':base.scenario==='vslimp'?'strong enough to isolate the limpers':'strong enough to re-raise',call:base.scenario==='vslimp'?'limping along with a speculative hand':'good enough to call, not to re-raise',check:'free look',fold:'not in range, fold'}[a]||a;
+    if(a==='raise'){let to=base.size?base.size.to:G.currentBet*3;if(base.scenario==='open'&&!short&&(st==='maniac'||note))to=p.pos==='SB'&&G.n>2?3:2.5;if(base.best!=='raise')to=Math.max(to,G.pf.raises.length?r1(G.pf.raises[G.pf.raises.length-1].to*3):2.5);to=Math.max(to,r1(G.currentBet+G.minRaise));if(to>=p.stack+p.bet-2)to=r1(p.stack+p.bet);return {type:'raise',to,reason};}
+    return {type:a,reason};
+  }
+  const opps=alive().filter(q=>q!==p);const eq=P.equity(p.cards,G.board,opps.map(()=>null),220);const pot=totalPot(G);
+  const info=P.describeHand(p.cards,G.board);const isPFR=G.pfr===p.seat;
+  const hand=`${info.desc}${info.draws.length?' with '+info.draws.join(' and '):''}, ~${Math.round(eq*100)}% vs random hands`;
+  const R=(t,extra,why)=>Object.assign({type:t,reason:`${hand}: ${why}`},extra||{});
+  const raiseTo=()=>Math.min(r1(p.bet+p.stack),r1(Math.max(G.currentBet+G.minRaise,G.currentBet*2.7)));
+  const betTo=(f,why)=>{const amt=Math.max(1,r1(pot*f));return R('bet',{to:Math.min(r1(p.bet+p.stack),r1(p.bet+amt))},why);};
+  if(toCall>0){const po=toCall/(pot+toCall);const price=`needs ${Math.round(po*100)}%`;
+    if(st==='station'){if(info.tier>=4)return rr()<0.5?R('raise',{to:raiseTo()},'even a station raises a monster'):R('call',null,'calling with a monster');
+      if(info.tier>=1||info.outs>=4)return (toCall>=pot*1.5&&info.tier<=1&&info.outs<8)?R('fold',null,'even a station folds bottom pair to a huge bet'):R('call',null,`${price}, but a calling station never folds a pair or a draw`);
+      return eq>=po+0.05?R('call',null,`${price}, calling`):R('fold',null,'nothing at all, fold');}
+    if(st==='nit'){if(info.tier>=4)return R('raise',{to:raiseTo()},'a nit raises only with a monster: this is one');
+      if(info.tier>=3&&eq>=po+0.1)return R('call',null,'a strong hand, calling carefully');
+      if(info.outs>=8&&G.street!=='river'&&eq>=po)return R('call',null,`${price}, a strong draw at a fair price`);
+      return R('fold',null,'a nit folds anything short of a strong hand');}
+    if(st==='maniac'){if(eq>=0.7||info.tier>=3)return rr()<0.7?R('raise',{to:raiseTo()},'raising for value'):R('call',null,'calling to trap');
+      if((info.tier<=1||info.outs>=4)&&rr()<0.25&&toCall<p.stack*0.5)return R('raise',{to:raiseTo()},'a maniac bluff-raise');
+      if(eq>=po-0.1||info.tier>=1||info.outs>=4)return R('call',null,`${price}, a maniac does not fold`);
+      return R('fold',null,'even a maniac gives up sometimes');}
+    const margin=0.01;
+    if((eq>=0.8||info.tier>=4)&&rr()<0.65&&toCall<p.stack)return R('raise',{to:raiseTo()},'raising for value');
+    if(eq>=po+margin)return R('call',null,`${price}, calling on pot odds`);
+    if(info.outs>=8&&G.street!=='river'&&toCall<=pot*0.75)return R('call',null,`${price}, chasing the draw (${info.outs} outs)`);
+    return R('fold',null,`${price}, not enough equity, fold`);}
+  if(p.stack<=pot*1.2&&(info.tier>=3||eq>=0.6))return R('bet',{to:r1(p.bet+p.stack)},'stack is about the pot size, shoving');
+  if(st==='station'){if(info.tier>=3&&rr()<0.5)return betTo(0.5,'betting a good hand');return R('check',null,'a calling station mostly checks');}
+  if(st==='nit'){if(info.tier>=3)return betTo(0.6,'betting a strong hand for value');return R('check',null,'a nit does not bet without a strong hand');}
+  if(st==='maniac'){const f=rnd([0.5,0.66,0.8,1]);if(info.tier>=3||eq>=0.65)return betTo(f,'betting big for value');
+    const bluffP=G.street==='flop'?0.85:G.street==='turn'?0.6:0.45;if(rr()<bluffP)return betTo(f,isPFR&&G.street==='flop'?'a maniac fires the flop with anything':'a maniac barrels again');return R('check',null,'even a maniac checks sometimes');}
+  if(info.tier>=4||eq>=0.72)return rr()<0.85?betTo(rnd([0.6,0.7]),'betting big for value'):R('check',null,'slowplaying a big hand');
+  if(info.tier===3)return rr()<0.75?betTo(0.5,'betting for value'):R('check',null,'checking a good hand to control the pot');
+  if(G.street==='flop'&&isPFR&&opps.length===1&&rr()<0.7)return betTo(P.boardTexture(G.board).wet?0.6:0.35,'continuation bet as the preflop raiser');
+  if(info.outs>=8&&G.street!=='river'&&rr()<0.4)return betTo(0.5,'semi-bluff with a draw');
+  return R('check',null,info.tier>=1?'checking a marginal hand':'nothing, checking');
+}
+
+Object.assign(P,{oppSpec,assignRange,vsKey,preflopSituation,botDecide,totalPot});
+})();
 </script>
 <script>
 /* =====================================================================
@@ -844,7 +984,7 @@ window.HC.checkGate=checkGate;window.HC.SERVER=SERVER;window.HC.tablePass=tableP
 checkGate();
 
 /* ---------- navigation ---------- */
-function go(name){$$('.screen').forEach(s=>s.hidden=s.id!=='screen-'+name);$$('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));$('#main').scrollTop=0;if(name==='home')renderHome();if(name==='play'&&window.Play)window.Play.onShow();try{localStorage.setItem(KEY+':tab',name);}catch(e){}}
+function go(name){$$('.screen').forEach(s=>s.hidden=s.id!=='screen-'+name);$$('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));$('#main').scrollTop=0;if(name==='home')renderHome();if(name==='play'&&window.Play)window.Play.onShow();if(name==='friends'&&window.Play)window.Play.onShowFriends();try{localStorage.setItem(KEY+':tab',name);}catch(e){}}
 $$('nav.tabs button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.screen)));
 $('#home-play').addEventListener('click',()=>go('play'));$('#home-drill').addEventListener('click',()=>go('drill'));
 
@@ -882,12 +1022,13 @@ function renderHome(){
   $('#curriculum').innerHTML=STEPS.map((s,i)=>{const d=s.done();const isNext=s===next;const pr=s.progress?s.progress():0;return `<div class="step ${d?'done':''} ${isNext?'next':''}" data-i="${i}"><div class="dot">${d?'✓':i+1}</div><div class="t">${s.title}<small>${s.sub}</small>${!d&&s.progress&&pr>0?`<div class="bar"><i style="width:${Math.round(pr*100)}%"></i></div>`:''}</div><button class="btn sm ${isNext?'primary':''}" type="button">${d?'Again':'Go'}</button></div>`;}).join('');
   $$('#curriculum .step button').forEach(b=>b.addEventListener('click',()=>STEPS[+b.closest('.step').dataset.i].go()));
   $('#opt-table-row').hidden=!(SERVER&&tablePass());
-  $('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;
+  $('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;$('#opt-ai-review-home').checked=!!S.settings.aiReviewHome;
   $$('#opt-speed button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.settings.speed));
   renderAvatarSettings();
 }
 $('#opt-coach-live').addEventListener('change',e=>{S.settings.coachLive=e.target.checked;save();});
 $('#opt-ai-review').addEventListener('change',e=>{S.settings.aiReview=e.target.checked;save();});
+$('#opt-ai-review-home').addEventListener('change',e=>{S.settings.aiReviewHome=e.target.checked;save();});
 (function(){const inp=$('#opt-api-key');try{inp.value=localStorage.getItem('holdem-coach-api-key')||'';}catch(e){}
   inp.addEventListener('change',()=>{try{if(inp.value.trim())localStorage.setItem('holdem-coach-api-key',inp.value.trim());else localStorage.removeItem('holdem-coach-api-key');toast(inp.value.trim()?'API key saved':'API key removed');}catch(e){}});
   if(/claude\.ai$/.test(location.hostname)){$('#opt-api-note').textContent='The AI coach works on the kevinkeet.com version of this app; this preview cannot reach the Claude API.';inp.disabled=true;}})();
@@ -1219,6 +1360,8 @@ const AV_PRESETS=[
 function avHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function botAvatar(name,style){if(AV_BOTS[name])return AV_BOTS[name];const t=AV_STYLE[style]||AV_STYLE.normal;let h=avHash(name);const pick=a=>{const v=a[h%a.length];h=Math.floor(h/7)+13;return v;};
   return {bg:pick(t.bg),skin:pick(AV.skin),hair:pick(AV.hair.slice(0,6)),hc:pick(AV.hc),acc:pick(t.acc),eyes:t.eyes,mouth:pick(t.mouth),shirt:pick(AV.shirt)};}
+function cleanAvatar(a){a=a&&typeof a==='object'?a:{};const hex=(v,d)=>typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v)?v:d;const pick=(v,l)=>l.includes(v)?v:l[0];
+  return {bg:hex(a.bg,'#b98a2a'),skin:hex(a.skin,'#eebf98'),hc:hex(a.hc,'#4a2f1d'),shirt:hex(a.shirt,'#2e6b4e'),hair:pick(a.hair,AV.hair),acc:pick(a.acc,AV.acc),eyes:pick(a.eyes,['open','happy','narrow']),mouth:pick(a.mouth,AV.mouth)};}
 function heroAvatar(){return Object.assign({},AV_PRESETS[0],S.settings.avatar||{});}
 function shade(hex,f){const n=parseInt(hex.slice(1),16);const c=[n>>16,n>>8&255,n&255].map(v=>Math.max(0,Math.min(255,Math.round(v*f))));return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join('');}
 let avUid=0;
@@ -1274,12 +1417,13 @@ function renderAvatarSettings(){const a=heroAvatar();$('#opt-avatar-preview').in
   ed.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{S.settings.avatar=Object.assign({},AV_PRESETS[+b.dataset.preset]);save();renderAvatarSettings();}));
   ed.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{S.settings.avatar=Object.assign(heroAvatar(),{[b.dataset.k]:b.dataset.v});save();renderAvatarSettings();}));}
 $('#btn-avatar').addEventListener('click',()=>{const ed=$('#avatar-editor');ed.hidden=!ed.hidden;$('#btn-avatar').textContent=ed.hidden?'Change':'Done';renderAvatarSettings();});
-Object.assign(window.HC,{avatarSVG,botAvatar,heroAvatar,chipStackSVG,chipDot});
+Object.assign(window.HC,{avatarSVG,botAvatar,heroAvatar,cleanAvatar,chipStackSVG,chipDot});
 
 /* ---------- boot ---------- */
 renderLessons();renderHome();
 let startTab='home';try{startTab=localStorage.getItem(KEY+':tab')||'home';}catch(e){}
-if(!['home','learn','drill','play'].includes(startTab))startTab='home';
+if(!['home','learn','drill','play','friends'].includes(startTab))startTab='home';
+if(/^#[A-Za-z0-9]{5}$/.test(location.hash||''))startTab='friends'; /* an invite link */
 go(startTab);
 window.HC.gridHTML=gridHTML;window.HC.startDrill=startDrill;window.HC.setFocus=setFocus;window.HC.renderMiniTable=renderMiniTable;window.HC.renderHome=renderHome;
 })();
@@ -1294,13 +1438,13 @@ window.HC.gridHTML=gridHTML;window.HC.startDrill=startDrill;window.HC.setFocus=s
 const P=window.Poker,HC=window.HC;const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
 const BOTS=[{n:'Maya',style:'normal'},{n:'Dev',style:'station'},{n:'Rosa',style:'nit'},{n:'Ken',style:'normal'},{n:'Lou',style:'maniac'}];
 const EXTRA_NAMES=['Ana','Bo','Cyd','Eli','Fay','Gus','Ivy','Jo','Kai','Lia','Max','Nia','Oli','Pia','Raj','Sol'];
-const STYLE_DESC={normal:'plays a straightforward chart',station:'a calling station: calls far too much, rarely raises, almost never bluffs',nit:'a nit: plays only premium hands, so a raise means strength',maniac:'a maniac: raises and bluffs far too often'};
+const STYLE_DESC={human:'a real person, a friend at the table',normal:'plays a straightforward chart',station:'a calling station: calls far too much, rarely raises, almost never bluffs',nit:'a nit: plays only premium hands, so a raise means strength',maniac:'a maniac: raises and bluffs far too often'};
 const LAYOUT={
-  6:{seat:[[50,90],[12,77],[16,33],[50,17],[84,33],[88,77]],bet:[[50,73],[32,68],[37,35],[50,32],[63,35],[68,68]]},
-  5:{seat:[[50,90],[12,77],[22,25],[78,25],[88,77]],bet:[[50,73],[32,68],[26,42],[74,42],[68,68]]},
-  4:{seat:[[50,90],[12,77],[50,17],[88,77]],bet:[[50,73],[32,68],[50,33],[68,68]]},
-  3:{seat:[[50,90],[16,34],[84,34]],bet:[[50,73],[37,36],[63,36]]},
-  2:{seat:[[50,90],[50,17]],bet:[[50,73],[50,33]]}};
+  6:{seat:[[50,90],[12,77],[16,33],[50,17],[84,33],[88,77]],bet:[[50,68],[32,68],[37,35],[50,32],[63,35],[68,68]]},
+  5:{seat:[[50,90],[12,77],[22,25],[78,25],[88,77]],bet:[[50,68],[32,68],[26,42],[74,42],[68,68]]},
+  4:{seat:[[50,90],[12,77],[50,17],[88,77]],bet:[[50,68],[32,68],[50,33],[68,68]]},
+  3:{seat:[[50,90],[16,34],[84,34]],bet:[[50,68],[37,36],[63,36]]},
+  2:{seat:[[50,90],[50,17]],bet:[[50,68],[50,33]]}};
 const POS_BY_N={6:['BTN','SB','BB','UTG','HJ','CO'],5:['BTN','SB','BB','HJ','CO'],4:['BTN','SB','BB','CO'],3:['BTN','SB','BB'],2:['BTN','BB']};
 const LEVELS=[[10,20,0],[15,30,0],[20,40,0],[30,60,0],[50,100,10],[75,150,15],[100,200,25],[150,300,30],[200,400,50],[300,600,75],[400,800,100],[500,1000,125],[700,1400,175],[1000,2000,250],[1500,3000,400],[2000,4000,500],[3000,6000,750]];
 const FORMATS={sng:{name:'Sit & go',players:6,chips:1500,handsPerLevel:8,buyin:20,payouts:[60,36,24],desc:'Six players, 1,500 chips, blinds up every 8 hands, top 3 paid ($60 / $36 / $24).'},
@@ -1333,14 +1477,15 @@ $$('#fmt-seg button').forEach(b=>b.addEventListener('click',()=>{if(tstats().act
 $('#btn-deal').addEventListener('click',()=>{mode='cash';startHand();});
 $('#btn-tourney').addEventListener('click',()=>{mode='tourney';startTournament();});
 $('#btn-tourney-abandon').addEventListener('click',()=>{if(confirm('Abandon this tournament? The buy-in is not refunded.')){const t=tstats();t.active=null;t.played++;HC.save();renderIntro();}});
-$('#btn-leave').addEventListener('click',()=>{token++;G=null;closeSheet();$('#play-table').hidden=true;$('#play-intro').hidden=false;renderIntro();});
+$('#btn-leave').addEventListener('click',()=>{if(R.active){hgLeave();return;}token++;G=null;closeSheet();$('#play-table').hidden=true;$('#play-intro').hidden=false;renderIntro();});
 
 /* ---------- tournament ---------- */
 function startTournament(){const t=tstats();
   if(!t.active){const F=FORMATS[fmtChoice];t.bankroll-=F.buyin;
     t.active={format:fmtChoice,level:0,handsAtLevel:0,hands:0,dealerName:null,out:[],players:[{name:'You',chips:F.chips,style:'hero'}].concat(BOTS.map(b=>({name:b.n,chips:F.chips,style:b.style}))),offCount:F.players-6,offChips:(F.players-6)*F.chips,usedNames:BOTS.map(b=>b.n),joined:[]};HC.save();}
   T=t.active;if(T.offCount===undefined){T.offCount=0;T.offChips=0;T.usedNames=BOTS.map(b=>b.n);T.joined=[];}startHand();}
-function tourneyBar(){if(mode!=='tourney'){$('#tbar').hidden=true;return;}const L=level();const F=fmtOf();const alive=T.players.filter(p=>p.chips>0).length+T.offCount;const per=F.handsPerLevel;
+function tourneyBar(){if(mode!=='tourney'){$('#tbar').hidden=true;return;}
+  if(G&&G.remote){const t=G.T,L=t.blinds,left=t.handsPerLevel-t.handsAtLevel;$('#tbar').hidden=false;$('#tbar').innerHTML=`<span><b>Level ${t.level+1}</b> · blinds ${L[0]}/${L[1]}${L[2]?` · ante ${L[2]}`:''}</span><span>${t.left} of ${t.total} left</span><span>next level in ${left} hand${left===1?'':'s'}</span>`;return;}const L=level();const F=fmtOf();const alive=T.players.filter(p=>p.chips>0).length+T.offCount;const per=F.handsPerLevel;
   $('#tbar').hidden=false;$('#tbar').innerHTML=`<span><b>Level ${T.level+1}</b> · blinds ${L[0]}/${L[1]}${L[2]?` · ante ${L[2]}`:''}</span><span>${alive} of ${F.players} left</span><span>next level in ${per-T.handsAtLevel} hand${per-T.handsAtLevel===1?'':'s'}</span>${G&&G.practice?'<span style="color:var(--gold)">practice replay</span>':''}`;}
 function fillTable(){ /* multi-table: players from broken tables join */
   const F=fmtOf();const seated=T.players.filter(p=>p.chips>0).length;let joined=[];
@@ -1376,9 +1521,9 @@ function alive(){return G.players.filter(p=>!p.folded);}
 function canAct(){return G.players.filter(p=>!p.folded&&!p.allIn);}
 function v(p,w){return p.isHero?w:{fold:'folds',check:'checks',call:'calls',bet:'bets','raise to':'raises to'}[w];}
 function log(s){G.log.push(s);const el=$('#log');el.innerHTML=G.log.slice(-6).join('<br>');el.scrollTop=el.scrollHeight;}
-function avatarOf(p,size){return HC.avatarSVG(p.isHero?HC.heroAvatar():HC.botAvatar(p.name,p.style),size);}
+function avatarOf(p,size){return HC.avatarSVG(p.isHero?HC.heroAvatar():p.avatar?HC.cleanAvatar(p.avatar):HC.botAvatar(p.name,p.style),size);}
 function chipUnits(bb){return mode==='tourney'?Math.round(bb*BB()):Math.round(bb);}
-function styleTag(p){return p.style&&p.style!=='normal'&&p.style!=='hero'?` <span class="style">${p.style}</span>`:'';}
+function styleTag(p){if(p.style==='human')return p.connected===false?' <span class="away">away</span>':'';return p.style&&p.style!=='normal'&&p.style!=='hero'?` <span class="style">${p.style}</span>`:'';}
 
 /* ---------- rendering ---------- */
 function render(){
@@ -1387,6 +1532,7 @@ function render(){
   const chipRef=mode==='tourney'?Math.max(1,G.players.reduce((a,p)=>a+chipUnits(p.startStack),0)/n):100;
   G.players.forEach((p,i)=>{const [x,y]=L.seat[i];const [bx,by]=L.bet[i];const isD=p.pos==='BTN';const side=x>50?'l':'r';const below=y<50&&x!==50; /* upper side seats keep their chips under the box, clear of the pot line */
     html+=`<div class="seat ${G.acting===i?'acting':''} ${p.folded?'folded':''}" style="left:${x}%;top:${y}%">
+      ${G.remote&&!p.isHero&&R.bubbles[p.sid]&&R.bubbles[p.sid].until>Date.now()?`<div class="bubble ${x<30?'bl':x>70?'br':''}">${esc(R.bubbles[p.sid].text)}</div>`:''}
       <div class="top">${avatarOf(p,36)}${!p.isHero&&!p.folded?`<div class="hc ${p.show?'up':''}">${p.show?p.cards.map(c=>P.cardHTML(c,'sm')).join(''):'<span class="card sm back"></span><span class="card sm back"></span>'}</div>`:''}</div>
       <div class="box"><div class="n">${p.name}${styleTag(p)}</div><div class="st">${p.allIn?'all in':money(p.stack)}</div><div class="p">${p.pos}${mode==='tourney'&&!p.allIn?` · ${p.stack<10?P.fmt(p.stack):Math.round(p.stack)}bb`:''}</div></div>
       ${p.stack>0?`<div class="chips ${below?'b'+side:side}">${HC.chipStackSVG(Math.max(1,chipUnits(p.stack)),chipRef)}</div>`:''}
@@ -1396,6 +1542,7 @@ function render(){
   });
   if(G.msg)html+=`<div class="msg">${G.msg}</div>`;
   t.innerHTML=html;
+  if(G.spectator){$('#hero-cards').innerHTML='';$('#hero-pos').textContent='Watching';$('#hero-handclass').textContent='';$('#hero-stack').textContent='You are not in this hand.';tourneyBar();return;}
   $('#hero-cards').innerHTML=h.cards.map(c=>P.cardHTML(c,'lg')).join('');
   $('#hero-pos').textContent=h.pos;$('#hero-handclass').textContent=P.handClass(h.cards[0],h.cards[1]);
   $('#hero-stack').innerHTML=(mode==='tourney'?`<b>${chips(h.stack)}</b> chips · ${P.fmt(h.stack)}bb`:`Stack <b>${P.fmt(h.stack)}bb</b>`)+(h.bet?` · in ${money(h.bet)}`:'')+(h.folded?' · folded':'')+(G.practice?' · <span style="color:var(--gold)">replay</span>':'');
@@ -1470,85 +1617,13 @@ function apply(p,act){
   G.history.push({street:G.street,seat:p.seat,name:p.name,isHero:p.isHero,text,reason:act.reason||'',coach:act.coach||null,board:G.board.slice()});
   if(G.street==='preflop')assignRange(p);
 }
-/* how the coach models an opponent: preflop range, narrowed by postflop action and by player type */
-function oppSpec(q){const st=q.style||'normal';
-  if(q.raisedPost)return {range:q.range,filter:st==='maniac'?P.quickStrength:P.quickStrong,keep:{maniac:0.45,station:0.04,nit:0.02,normal:0.06}[st]||0.06};
-  if(q.agg)return {range:q.range,filter:st==='nit'?P.quickStrong:P.quickStrength,keep:{maniac:0.5,station:0.15,nit:0.1,normal:0.12}[st]||0.12};
-  if(q.calledPost)return {range:q.range,filter:P.quickStrength,keep:{maniac:0.4,station:0.7,nit:0.15,normal:0.35}[st]||0.35};
-  return q.range;}
-function assignRange(p){if(p.isHero)return;const pos=p.pos;const hu=G.n===2;const st=p.style;
-  if(p.pfAction==='open'){const base=hu&&pos==='BTN'?P.OPEN_HU:(P.OPEN[pos]||P.OPEN.BTN);p.range=st==='maniac'?P.OPEN_HU:st==='nit'?P.OPEN.UTG:base;if(p.startStack<=10)p.range=P.PUSH[pos]||P.PUSH.BTN;}
-  else if(p.pfAction==='call'&&G.pf.raises.length){const key=vsKey(pos,G.pf.raises[0].pos);const t=P.VS_RAISE[key];p.range=P.union(P.parseRange(t.call),P.parseRange(t.ok||''));if(st==='station'||st==='maniac')p.range=P.union(p.range,P.OPEN.BTN);if(st==='nit')p.range=P.parseRange('77+ ATs+ AJo+ KQs');}
-  else if(p.pfAction==='3bet'){const key=vsKey(pos,G.pf.raises[0].pos);p.range=P.parseRange(P.VS_RAISE[key].threebet);if(st==='maniac')p.range=P.union(p.range,P.parseRange('22+ A2s+ K9s+ QTs+ JTs T9s 98s ATo+ KJo+'));if(st==='nit'||st==='station')p.range=P.parseRange('QQ+ AKs AKo');if(p.startStack<=15)p.range=P.union(p.range,P.parseRange(P.JAM_VS_RAISE.late));}
-  else if(p.pfAction==='4bet+')p.range=st==='maniac'?P.parseRange('99+ AJs+ AQo+ A5s A4s'):P.parseRange('QQ+ AKs AKo');
-  else if(p.pfAction==='limp')p.range=P.union(P.OPEN.BTN,P.parseRange(P.OVERLIMP_OK));
-  else p.range=null;}
-function vsKey(pos,raiserPos){const hg=P.heroGroup(pos),rg=P.posGroup(raiserPos);return hg==='ip'?(rg==='early'?'ipEarly':'ipLate'):hg==='sb'?(rg==='early'?'sbEarly':'sbLate'):(rg==='early'?'bbEarly':'bbLate');}
-function preflopSituation(p){const opened=G.pf.raises.length&&G.pf.raises[0].seat===p.seat;const threeBet=G.pf.raises.length>=2&&G.pf.raises[1].seat===p.seat;
-  return {pos:p.pos,cls:P.handClass(p.cards[0],p.cards[1]),raisers:G.pf.raises.map(r=>({pos:r.pos})),callers:G.pf.callers,limpers:G.pf.limpers,heroOpened:!!opened,heroThreeBet:threeBet,lastRaiseTo:G.pf.raises.length?G.pf.raises[G.pf.raises.length-1].to:1,heroInvested:p.bet,heroStack:r1(p.stack+p.bet),toCall:r1(G.currentBet-p.bet),pot:totalPot(),nPlayers:G.n};}
+/* opponent ranges, the preflop situation and the bots' decisions live in the engine block (shared with the home-game server) */
+const oppSpec=P.oppSpec,vsKey=P.vsKey;
+function assignRange(p){return P.assignRange(G,p);}
+function preflopSituation(p){return P.preflopSituation(G,p);}
 
 /* ---------- bots ---------- */
-async function botAct(p,check){
-  await sleep(delay());check();
-  const toCall=r1(G.currentBet-p.bet);const st=p.style;
-  if(G.street==='preflop'){
-    const s=preflopSituation(p);const base=P.preflopBaseline(s);let a=base.best;const cls=s.cls;const short=s.heroStack<=15;const prem=P.parseRange('QQ+ AKs AKo').has(cls);
-    let note='';
-    if(st==='station'){if(a==='fold'&&!short&&(P.OPEN.BTN.has(cls)||P.parseRange(P.OVERLIMP_OK).has(cls))&&G.pf.raises.length<=1&&rr()<0.75){a='call';note='a calling station sees a flop with this';}
-      else if(a==='raise'&&!prem&&base.scenario==='open'&&!short&&rr()<0.5){a='call';note='a calling station limps instead of raising';}
-      else if(a==='raise'&&!prem&&base.scenario!=='open'&&!short){a=P.parseRange(P.VS_RAISE.ipLate.call).has(cls)||P.OPEN.CO.has(cls)?'call':'fold';note='a calling station calls rather than re-raises';}}
-    else if(st==='nit'){if(base.scenario==='open'&&!short&&!P.OPEN.UTG.has(cls)){a='fold';note='a nit opens only premium hands';}
-      else if(a==='call'&&!short&&!P.parseRange('77+ ATs+ AJo+ KQs').has(cls)){a='fold';note='a nit does not call raises with this';}
-      else if(a==='raise'&&base.scenario!=='open'&&!short&&!prem){a=P.parseRange('JJ TT AQs AQo').has(cls)?'call':'fold';note='a nit re-raises only with QQ+ and AK';}}
-    else if(st==='maniac'){if(a==='fold'&&!short&&base.scenario==='open'&&P.OPEN_HU.has(cls)){a='raise';note='a maniac raises almost anything';}
-      else if(a==='fold'&&!short&&(base.scenario==='vsraise'||base.scenario==='vslimp')&&P.OPEN.BTN.has(cls)){a=rr()<0.45?'raise':'call';note=a==='raise'?'a maniac re-raises light':'a maniac never folds a playable hand';}
-      else if(a==='call'&&!short&&rr()<0.35){a='raise';note='a maniac turns a call into a raise';}
-      else if(a==='fold'&&base.scenario==='vs3bet'&&!short&&rr()<0.25){a='raise';note='a maniac 4-bet bluff';}}
-    else{if(base.ok.length&&rr()<0.2){a=base.ok[0];note='taking the borderline alternative';}}
-    if(a==='call'&&toCall===0)a='check';if(a==='check'&&toCall>0)a='call';
-    if(a==='fold'&&toCall===0)a='check';
-    if(a==='call'&&toCall>=p.stack&&!short&&rr()<0.5&&!prem&&st!=='station'&&st!=='maniac'){a='fold';note='not calling off the whole stack with this';}
-    const sc={open:'first in',vslimp:'over limpers',vsraise:'facing a raise','vsraise+call':'facing a raise and a call',vs3bet:'facing a 3-bet',cold3bet:'facing a raise and a 3-bet',vs4bet:'facing a 4-bet',committed:'committed',walk:'walk'}[base.scenario]||base.scenario;
-    let reason=`${cls} from the ${p.pos}, ${sc}${short?`, ${P.fmt(s.heroStack)}bb`:''}: `;
-    if(note)reason+=`the chart says ${base.best}, but ${note}`;
-    else reason+={raise:base.size&&base.size.to>=s.heroStack-0.5?'in the shoving range':base.scenario==='open'?'in the opening range, raise':base.scenario==='vslimp'?'strong enough to isolate the limpers':'strong enough to re-raise',call:base.scenario==='vslimp'?'limping along with a speculative hand':'good enough to call, not to re-raise',check:'free look',fold:'not in range, fold'}[a]||a;
-    if(a==='raise'){let to=base.size?base.size.to:G.currentBet*3;if(base.scenario==='open'&&!short&&(st==='maniac'||note))to=p.pos==='SB'&&G.n>2?3:2.5;if(base.best!=='raise')to=Math.max(to,G.pf.raises.length?r1(G.pf.raises[G.pf.raises.length-1].to*3):2.5);to=Math.max(to,r1(G.currentBet+G.minRaise));if(to>=p.stack+p.bet-2)to=r1(p.stack+p.bet);return {type:'raise',to,reason};}
-    return {type:a,reason};
-  }
-  const opps=alive().filter(q=>q!==p);const eq=P.equity(p.cards,G.board,opps.map(()=>null),220);const pot=totalPot();
-  const info=P.describeHand(p.cards,G.board);const isPFR=G.pfr===p.seat;
-  const hand=`${info.desc}${info.draws.length?' with '+info.draws.join(' and '):''}, ~${Math.round(eq*100)}% vs random hands`;
-  const R=(t,extra,why)=>Object.assign({type:t,reason:`${hand}: ${why}`},extra||{});
-  const raiseTo=()=>Math.min(r1(p.bet+p.stack),r1(Math.max(G.currentBet+G.minRaise,G.currentBet*2.7)));
-  const betTo=(f,why)=>{const amt=Math.max(1,r1(pot*f));return R('bet',{to:Math.min(r1(p.bet+p.stack),r1(p.bet+amt))},why);};
-  if(toCall>0){const po=toCall/(pot+toCall);const price=`needs ${Math.round(po*100)}%`;
-    if(st==='station'){if(info.tier>=4)return rr()<0.5?R('raise',{to:raiseTo()},'even a station raises a monster'):R('call',null,'calling with a monster');
-      if(info.tier>=1||info.outs>=4)return (toCall>=pot*1.5&&info.tier<=1&&info.outs<8)?R('fold',null,'even a station folds bottom pair to a huge bet'):R('call',null,`${price}, but a calling station never folds a pair or a draw`);
-      return eq>=po+0.05?R('call',null,`${price}, calling`):R('fold',null,'nothing at all, fold');}
-    if(st==='nit'){if(info.tier>=4)return R('raise',{to:raiseTo()},'a nit raises only with a monster: this is one');
-      if(info.tier>=3&&eq>=po+0.1)return R('call',null,'a strong hand, calling carefully');
-      if(info.outs>=8&&G.street!=='river'&&eq>=po)return R('call',null,`${price}, a strong draw at a fair price`);
-      return R('fold',null,'a nit folds anything short of a strong hand');}
-    if(st==='maniac'){if(eq>=0.7||info.tier>=3)return rr()<0.7?R('raise',{to:raiseTo()},'raising for value'):R('call',null,'calling to trap');
-      if((info.tier<=1||info.outs>=4)&&rr()<0.25&&toCall<p.stack*0.5)return R('raise',{to:raiseTo()},'a maniac bluff-raise');
-      if(eq>=po-0.1||info.tier>=1||info.outs>=4)return R('call',null,`${price}, a maniac does not fold`);
-      return R('fold',null,'even a maniac gives up sometimes');}
-    const margin=0.01;
-    if((eq>=0.8||info.tier>=4)&&rr()<0.65&&toCall<p.stack)return R('raise',{to:raiseTo()},'raising for value');
-    if(eq>=po+margin)return R('call',null,`${price}, calling on pot odds`);
-    if(info.outs>=8&&G.street!=='river'&&toCall<=pot*0.75)return R('call',null,`${price}, chasing the draw (${info.outs} outs)`);
-    return R('fold',null,`${price}, not enough equity, fold`);}
-  if(p.stack<=pot*1.2&&(info.tier>=3||eq>=0.6))return R('bet',{to:r1(p.bet+p.stack)},'stack is about the pot size, shoving');
-  if(st==='station'){if(info.tier>=3&&rr()<0.5)return betTo(0.5,'betting a good hand');return R('check',null,'a calling station mostly checks');}
-  if(st==='nit'){if(info.tier>=3)return betTo(0.6,'betting a strong hand for value');return R('check',null,'a nit does not bet without a strong hand');}
-  if(st==='maniac'){const f=rnd([0.5,0.66,0.8,1]);if(info.tier>=3||eq>=0.65)return betTo(f,'betting big for value');
-    const bluffP=G.street==='flop'?0.85:G.street==='turn'?0.6:0.45;if(rr()<bluffP)return betTo(f,isPFR&&G.street==='flop'?'a maniac fires the flop with anything':'a maniac barrels again');return R('check',null,'even a maniac checks sometimes');}
-  if(info.tier>=4||eq>=0.72)return rr()<0.85?betTo(rnd([0.6,0.7]),'betting big for value'):R('check',null,'slowplaying a big hand');
-  if(info.tier===3)return rr()<0.75?betTo(0.5,'betting for value'):R('check',null,'checking a good hand to control the pot');
-  if(G.street==='flop'&&isPFR&&opps.length===1&&rr()<0.7)return betTo(P.boardTexture(G.board).wet?0.6:0.35,'continuation bet as the preflop raiser');
-  if(info.outs>=8&&G.street!=='river'&&rr()<0.4)return betTo(0.5,'semi-bluff with a draw');
-  return R('check',null,info.tier>=1?'checking a marginal hand':'nothing, checking');
-}
+async function botAct(p,check){await sleep(delay());check();return P.botDecide(G,p,rr);}
 
 /* ---------- hero ---------- */
 function heroAct(check){
@@ -1617,7 +1692,7 @@ function showCoach(c,check){return new Promise(resolve=>{const el=$('#coach-area
 /* ---------- reads: what an opponent is probably thinking, from public information only ---------- */
 function readOf(q,heroCards){
   const acts=G.history.filter(h=>h.seat===q.seat);const post=acts.filter(h=>h.street!=='preflop');const st=q.style||'normal';
-  const styleWord={station:'a calling station',nit:'a nit',maniac:'a maniac',normal:'a straightforward player'}[st];
+  const styleWord={station:'a calling station',nit:'a nit',maniac:'a maniac',normal:'a straightforward player',human:'a real person, so expect anything'}[st];
   let pf='';const pct=q.range?P.rangePct(q.range):null;
   if(q.pfAction==='open')pf=`opened from the ${q.pos}, so about the top ${pct}% of hands: ${P.describeRange(q.range)}`;
   else if(q.pfAction==='call')pf=`called a raise rather than re-raising: ${st==='station'?'could be almost anything, stations call with junk':st==='nit'?'a real hand, nits do not call light':'pairs, suited broadways and suited connectors, rarely a premium'}`;
@@ -1638,7 +1713,7 @@ function readOf(q,heroCards){
   return `<b>${q.name}</b> (${q.pos}, ${P.fmt(q.stack+q.bet)}bb, ${styleWord}) ${pf}. ${pp?pp+'. ':''}${fit} ${stackNote}`.replace(/\s+/g,' ').trim();
 }
 function readsHTML(heroCards,full){const opps=G.players.filter(q=>!q.isHero&&(full||!q.folded));if(!opps.length)return '';
-  return `<h3>What the others are probably thinking</h3><p class="muted" style="font-size:12px">Reads from public information only: seat, player type, stack and actions so far.</p>${opps.map(q=>`<p style="font-size:13.5px">${readOf(q,heroCards)}${full?`<br><span class="muted">Actually had: ${q.cards.map(P.cardStr).join(' ')} (${P.handClass(q.cards[0],q.cards[1])}${G.board.length>=3?', '+P.describeHand(q.cards,G.board).desc:''}).</span>`:''}</p>`).join('')}`;}
+  return `<h3>What the others are probably thinking</h3><p class="muted" style="font-size:12px">Reads from public information only: seat, player type, stack and actions so far.</p>${opps.map(q=>`<p style="font-size:13.5px">${readOf(q,heroCards)}${full&&!q.cards?'<br><span class="muted">Did not show their cards.</span>':''}${full&&q.cards?`<br><span class="muted">Actually had: ${q.cards.map(P.cardStr).join(' ')} (${P.handClass(q.cards[0],q.cards[1])}${G.board.length>=3?', '+P.describeHand(q.cards,G.board).desc:''}).</span>`:''}</p>`).join('')}`;}
 
 /* ---------- hint sheet ---------- */
 function openHint(p,toCall,pot){
@@ -1670,7 +1745,7 @@ function handContext(full){
   const h=hero();const F=mode==='tourney'?fmtOf():null;
   const lines=[];lines.push(mode==='tourney'?`Format: ${F.name} tournament, level ${T.level+1}, blinds ${level()[0]}/${level()[1]}${level()[2]?' ante '+level()[2]:''}, ${T.players.filter(p=>p.chips>0).length+T.offCount} of ${F.players} players left. Amounts below are in big blinds.`:'Format: 6-max cash game, 100bb stacks, blinds 0.5/1. Amounts in big blinds.');
   lines.push('Players (seat order, hero = You):');
-  for(const p of G.players)lines.push(`- ${p.name} (${p.pos}, ${P.fmt(p.startStack)}bb, ${p.isHero?'the student':STYLE_DESC[p.style]||'straightforward'})${full||p.isHero?`: holds ${p.cards.map(P.cardStr).join(' ')} (${P.handClass(p.cards[0],p.cards[1])})`:''}`);
+  for(const p of G.players)lines.push(`- ${p.name} (${p.pos}, ${P.fmt(p.startStack)}bb, ${p.isHero?'the student':STYLE_DESC[p.style]||'straightforward'})${(full||p.isHero)&&p.cards?`: holds ${p.cards.map(P.cardStr).join(' ')} (${P.handClass(p.cards[0],p.cards[1])})`:''}`);
   lines.push(`Board: ${G.board.length?G.board.map(P.cardStr).join(' '):'(no flop yet)'}`);
   lines.push('Action:');
   for(const x of G.history){lines.push(`- [${x.street}] ${x.name} ${x.text}${x.coach?` | app coach graded this "${x.coach.grade}" (baseline: ${x.coach.best}). Reason: ${x.coach.why}`:(full&&x.reason)?` | thinking: ${x.reason}`:''}`);}
@@ -1704,7 +1779,7 @@ function openChat(full,liveCoach){
   let html=`<div class="handle"></div><div class="row" style="justify-content:space-between"><h2 style="margin:0">Ask the coach</h2><button class="btn sm ghost" type="button" id="chat-close">Close</button></div>`;
   if(onArtifact)html+=`<p class="muted">The AI coach can only call the Claude API from the kevinkeet.com version of this app, not from this preview link.</p>`;
   else if(!key&&!useServer())html+=`<p class="muted">${HC.SERVER?'Enter the table password (Home tab, Settings) to enable the AI coach.':'Add your Anthropic API key on the Home tab (Settings) to enable the AI coach. Each question costs a few cents.'}</p>`;
-  else html+=`<p class="muted" style="font-size:12.5px">${full?'The coach sees every player\'s cards and the whole hand.':'During the hand the coach sees only what you can see.'}</p><div id="chat-thread" class="stack" style="margin:8px 0"></div><div class="row" id="chat-quick"><button class="btn sm" type="button" data-q="Why was the baseline better than what I did?">Why was the baseline better?</button><button class="btn sm" type="button" data-q="How would a strong player have played my hand from start to finish, and why?">How would a strong player play it?</button><button class="btn sm" type="button" data-q="What is each opponent probably holding and thinking, and what could I have inferred from their actions?">What are the others thinking?</button></div><div class="row" style="margin-top:8px"><input id="chat-input" type="text" placeholder="Ask anything about this hand" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><button class="btn primary" type="button" id="chat-send">Send</button></div>`;
+  else html+=`<p class="muted" style="font-size:12.5px">${full?(G.remote?'The coach sees your cards, the cards shown at showdown and the whole action.':'The coach sees every player\'s cards and the whole hand.'):'During the hand the coach sees only what you can see.'}</p><div id="chat-thread" class="stack" style="margin:8px 0"></div><div class="row" id="chat-quick"><button class="btn sm" type="button" data-q="Why was the baseline better than what I did?">Why was the baseline better?</button><button class="btn sm" type="button" data-q="How would a strong player have played my hand from start to finish, and why?">How would a strong player play it?</button><button class="btn sm" type="button" data-q="What is each opponent probably holding and thinking, and what could I have inferred from their actions?">What are the others thinking?</button></div><div class="row" style="margin-top:8px"><input id="chat-input" type="text" placeholder="Ask anything about this hand" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><button class="btn primary" type="button" id="chat-send">Send</button></div>`;
   openSheet(html);$('#chat-close').onclick=closeSheet;
   if(onArtifact||(!key&&!useServer()))return;
   const thread=$('#chat-thread');const renderThread=()=>{thread.innerHTML=G.chat.map(m=>`<div class="grade ${m.role==='user'?'':'ok'}" style="border-left-color:${m.role==='user'?'var(--line)':'var(--accent)'}"><div class="eyebrow">${m.role==='user'?'You':'Coach'}</div><div class="why" style="white-space:pre-wrap">${m.content.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div></div>`).join('')+(G.chatBusy?'<div class="muted">Thinking…</div>':'');thread.scrollTop=thread.scrollHeight;};
@@ -1719,7 +1794,7 @@ function openChat(full,liveCoach){
 async function askClaude(full,liveCoach){
   const system=`You are a patient, direct Texas Hold'em coach for a beginner who is learning through a training app. The app plays 6-max no-limit hold'em against bots and grades the student's decisions against a tight-aggressive baseline (opening ranges by seat, 3-bet/call/fold charts, pot odds and outs after the flop, bet sizing in fractions of the pot, shove-or-fold under 10bb).
 Answer the student's question about the hand below. Be concrete: name players, cite the actual cards, pot sizes, pot odds and rough equities. Explain the reasoning a strong player would use, and where the app's baseline is simplified say so briefly. Keep answers under 220 words unless asked for more. Plain prose, no headers, no bullet lists longer than three items.${liveCoach?`\nThe student just made this decision and the app said: ${liveCoach.label}. You: ${liveCoach.you}. Baseline: ${liveCoach.best}. ${liveCoach.why}`:''}
-${full?'The hand is over and all hole cards are known.':'The hand is still in progress: you only know the student\'s own cards and the public action. Do not guess hidden cards as facts.'}
+${full?(G.remote?'The hand is over. This was a home game with real people and bots, so only the student\'s own cards and the cards shown at showdown are known; do not state hidden cards as facts.':'The hand is over and all hole cards are known.'):'The hand is still in progress: you only know the student\'s own cards and the public action. Do not guess hidden cards as facts.'}
 
 HAND
 ${handContext(full)}`;
@@ -1781,38 +1856,152 @@ function showSummary(net,tEnd){
   <p style="margin-top:6px">${outcome} ${live.length>1&&!h.folded?live.filter(p=>!p.isHero).map(p=>`${p.name}: ${P.handClass(p.cards[0],p.cards[1])} (${P.describeHand(p.cards,G.board).desc})`).join('. ')+'.':''}${busted.length?` <b>${busted.join(' and ')} ${busted.length>1?'are':'is'} out.</b>`:''}${G.offBusts?` ${G.offBusts} player${G.offBusts>1?'s':''} busted at other tables.`:''}</p>
   <div class="summary">${decs.length?decs.map(d=>`<div class="d"><span class="chip ${d.grade}">${{good:'Good',ok:'Okay',bad:'Miss'}[d.grade]}</span><div><b>${d.label}</b>${d.hinted?' <span class="muted">(hint)</span>':''} · you: ${d.you}; baseline: ${d.best}${HC.S.settings.coachLive?'':'<div class="muted" style="font-size:12.5px;margin-top:2px">'+d.why+'</div>'}</div></div>`).join(''):'<p class="muted">No decisions this hand.</p>'}</div>
   <div id="ai-review" style="margin-top:10px"></div>
-  <div class="row" style="margin-top:10px"><button class="btn sm" type="button" id="sum-ask">Ask the coach about this hand</button><span class="muted" style="font-size:12px">Replay from:</span>${streets.map(s=>`<button class="btn sm ghost" type="button" data-replay="${s}">${s}</button>`).join('')}</div>
+  <div class="row" style="margin-top:10px"><button class="btn sm" type="button" id="sum-ask">Ask the coach about this hand</button>${streets.length?'<span class="muted" style="font-size:12px">Replay from:</span>':''}${streets.map(s=>`<button class="btn sm ghost" type="button" data-replay="${s}">${s}</button>`).join('')}</div>
   ${reviewHTML()}
   <p class="muted" style="font-size:12.5px;margin-top:8px">Grade decisions, not results. A good decision that loses is still good; a mistake that wins is still a mistake.</p>
   <div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="sum-next" style="flex:1">${tEnd?'Back to Play':G.practice?'Back to the game':'Next hand'}</button>${tEnd?'':'<button class="btn ghost" type="button" id="sum-close">Look at the table</button>'}</div>`;
   openSheet(html);
   renderAiReview();
-  $('#sum-next').onclick=()=>{closeSheet();if(tEnd){token++;G=null;$('#play-table').hidden=true;$('#play-intro').hidden=false;renderIntro();}else startHand();};
+  $('#sum-next').onclick=()=>{closeSheet();if(tEnd){token++;G=null;$('#play-table').hidden=true;$('#play-intro').hidden=false;renderIntro();}else nextHand();};
   $('#sum-ask').onclick=()=>openChat(true,null);
   $$('#sheet [data-replay]').forEach(btn=>btn.onclick=()=>replayFrom(btn.dataset.replay));
-  const sc=$('#sum-close');if(sc)sc.onclick=()=>{closeSheet();$('#coach-area').hidden=false;$('#coach-area').innerHTML=`<div class="row"><button class="btn primary" type="button" id="deal-again" style="flex:1">Next hand</button><button class="btn ghost" type="button" id="review-again">Review</button></div>`;$('#deal-again').onclick=()=>startHand();$('#review-again').onclick=()=>showSummary(net,tEnd);};
+  const sc=$('#sum-close');if(sc)sc.onclick=()=>{closeSheet();$('#coach-area').hidden=false;$('#coach-area').innerHTML=`<div class="row"><button class="btn primary" type="button" id="deal-again" style="flex:1">Next hand</button><button class="btn ghost" type="button" id="review-again">Review</button></div>`;$('#deal-again').onclick=()=>nextHand();$('#review-again').onclick=()=>showSummary(net,tEnd);};
 }
 function renderAiReview(){const el=$('#ai-review');if(!el)return;
   if(!aiAvailable()){el.innerHTML=/claude\.ai$/.test(location.hostname)?'':`<p class="muted" style="font-size:12.5px">${HC.SERVER?'Enter the table password in Settings for an AI review of every hand.':'Add an API key in Settings for an AI review of every hand.'}</p>`;return;}
-  const show=txt=>{el.innerHTML=`<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Claude, with all cards known</span></div><div class="why">${md(txt)}</div></div>`;};
+  const show=txt=>{R.aiReview=G.aiReview;el.innerHTML=`<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">${G.remote?'Claude, from what you could see':'Claude, with all cards known'}</span></div><div class="why">${md(txt)}</div></div>`;};
   if(G.aiReview){show(G.aiReview);return;}
   const run=async()=>{el.innerHTML='<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Reviewing the hand…</span></div></div>';try{show(await aiReview());}catch(e){el.innerHTML=`<p class="muted">AI review failed: ${e.message||e}</p>`;}};
-  if(HC.S.settings.aiReview!==false&&!G.practice&&G.decisions.length)run();
+  if(aiAuto()&&!G.practice&&G.decisions.length)run();
   else{el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-review-btn">AI review of this hand</button>`;$('#ai-review-btn').onclick=run;}}
 function reviewHTML(){
   const board=G.board;const winners=new Set(G.winners||[]);
-  const everyone=G.players.map(p=>{const cls=P.handClass(p.cards[0],p.cards[1]);const openable=P.OPEN.BTN.has(cls)?(P.OPEN.UTG.has(cls)?'premium-ish, playable anywhere':'playable in late position'):'junk';
+  const back2='<span class="card sm back"></span><span class="card sm back"></span>';
+  const everyone=G.players.map(p=>{if(!p.cards){const fate=winners.has(p.seat)?'<b>won</b> without showing':p.folded?`folded ${p.foldedOn==='preflop'?'preflop':'on the '+p.foldedOn}`:'did not show';return `<div class="d" style="align-items:center"><span style="line-height:0;flex:none">${avatarOf(p,26)}</span><span class="cards">${back2}</span><div><b>${p.name}</b>${styleTag(p)} <span class="chip pos" style="font-size:11px">${p.pos}</span><div class="muted" style="font-size:12.5px">${fate}</div></div></div>`;}
+    const cls=P.handClass(p.cards[0],p.cards[1]);const openable=P.OPEN.BTN.has(cls)?(P.OPEN.UTG.has(cls)?'premium-ish, playable anywhere':'playable in late position'):'junk';
     const fate=winners.has(p.seat)?'<b>won</b>':p.folded?`folded ${p.foldedOn==='preflop'?'preflop':'on the '+p.foldedOn}`:'lost at showdown';
     const final=board.length>=3&&!p.folded?P.describeHand(p.cards,board).desc:board.length>=3?`would have had ${P.describeHand(p.cards,board).desc}`:'';
     return `<div class="d" style="align-items:center"><span style="line-height:0;flex:none">${avatarOf(p,26)}</span><span class="cards">${p.cards.map(c=>P.cardHTML(c,'sm')).join('')}</span><div><b>${p.name}</b>${styleTag(p)} <span class="chip pos" style="font-size:11px">${p.pos}</span> ${cls} <span class="muted">(${openable})</span><div class="muted" style="font-size:12.5px">${fate}${final?' · '+final:''}</div></div></div>`;}).join('');
   const streets=['preflop','flop','turn','river'];let rows='';
   for(const st of streets){const items=G.history.filter(h=>h.street===st);if(!items.length)continue;
     const b=items[0].board;rows+=`<div style="margin:10px 0 4px" class="row"><span class="eyebrow">${st}</span>${b.length?`<span class="cards">${b.map(c=>P.cardHTML(c,'sm')).join('')}</span>`:''}</div>`;
-    rows+=items.map(h=>{const p=G.players[h.seat];const c=h.coach;return `<div class="d" style="padding:5px 0"><span class="cards" style="flex:none">${p.cards.map(x=>P.cardHTML(x,'sm')).join('')}</span><div><b>${h.name}</b> ${h.text}${c?` <span class="chip ${c.grade}" style="font-size:11px">${{good:'Good',ok:'Okay',bad:'Miss'}[c.grade]}</span>`:''}<div class="muted" style="font-size:12.5px">${c?`Coach: ${c.why.length>220?c.why.slice(0,220)+'…':c.why}`:h.reason?`Thinking: ${h.reason}`:''}</div></div></div>`;}).join('');}
-  return `<details class="lesson" style="margin-top:12px"><summary style="font-size:15px">Hand review: what everyone had and was thinking</summary><div class="body"><div class="eyebrow" style="margin-bottom:4px">Hole cards</div><div class="summary">${everyone}</div>${readsHTML(hero().cards,true)}<div class="eyebrow" style="margin:10px 0 4px">Action</div><div class="summary">${rows}</div><p class="muted" style="font-size:12px;margin-top:8px">Bots reason from the same charts you are learning, plus their equity against random hands. Stations, nits and maniacs deviate from the chart in the direction of their label.</p></div></details>`;}
+    rows+=items.map(h=>{const p=G.players[h.seat];const c=h.coach;return `<div class="d" style="padding:5px 0"><span class="cards" style="flex:none">${p.cards?p.cards.map(x=>P.cardHTML(x,'sm')).join(''):back2}</span><div><b>${h.name}</b> ${h.text}${c?` <span class="chip ${c.grade}" style="font-size:11px">${{good:'Good',ok:'Okay',bad:'Miss'}[c.grade]}</span>`:''}<div class="muted" style="font-size:12.5px">${c?`Coach: ${c.why.length>220?c.why.slice(0,220)+'…':c.why}`:h.reason?`Thinking: ${h.reason}`:''}</div></div></div>`;}).join('');}
+  return `<details class="lesson" style="margin-top:12px"><summary style="font-size:15px">${G.remote?'Hand review: the action and what was shown':'Hand review: what everyone had and was thinking'}</summary><div class="body"><div class="eyebrow" style="margin-bottom:4px">Hole cards</div><div class="summary">${everyone}</div>${readsHTML(hero().cards,true)}<div class="eyebrow" style="margin:10px 0 4px">Action</div><div class="summary">${rows}</div><p class="muted" style="font-size:12px;margin-top:8px">Bots reason from the same charts you are learning, plus their equity against random hands. Stations, nits and maniacs deviate from the chart in the direction of their label.</p></div></details>`;}
 function openSheet(html){closeSheet();const ov=document.createElement('div');ov.className='overlay';ov.id='overlay';const sh=document.createElement('div');sh.className='sheet';sh.id='sheet';sh.innerHTML=html;document.body.appendChild(ov);document.body.appendChild(sh);ov.onclick=()=>{if(G&&G.finished&&!$('#sum-next'))closeSheet();};}
 function closeSheet(){const a=$('#overlay'),b=$('#sheet');if(a)a.remove();if(b)b.remove();}
-window.Play={onShow,startHand,startTournament,replayFrom};
+
+/* =====================================================================
+   Home game: a table shared with friends. The server (poker/worker/src/room.js)
+   deals and runs the hand; this side mirrors the view it is sent into G, so the
+   table, the coach, hints and the hand summary are the same code as solo play.
+   ===================================================================== */
+const R={active:false,ws:null,code:'',room:null,chat:[],unread:0,bubbles:{},turnSeq:null,timer:null,decisions:[],heroCoaches:[],aichat:[],hand:0,summaryShown:false,retry:0,closing:false,pinger:null};
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function lsGet(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+function lsSet(k,v){try{if(v)localStorage.setItem(k,v);else localStorage.removeItem(k);}catch(e){}}
+function myPid(){let p=lsGet('holdem-coach-pid');if(!/^[A-Za-z0-9_-]{8,40}$/.test(p)){const a=new Uint8Array(12);crypto.getRandomValues(a);p='p_'+Array.from(a,x=>x.toString(36).padStart(2,'0')).join('').slice(0,22);lsSet('holdem-coach-pid',p);}return p;}
+function hgStatus(msg,bad){const el=$('#hg-status');el.textContent=msg||'';el.style.color=bad?'var(--bad)':'';}
+function hgName(){const n=$('#hg-name').value.trim();if(!n){hgStatus('Enter your name first.',true);$('#hg-name').focus();return '';}lsSet('holdem-coach-name',n);return n;}
+
+function onShowFriends(){
+  if(!$('#hg-name').value)$('#hg-name').value=lsGet('holdem-coach-name');
+  const m=(location.hash||'').match(/^#([A-Za-z0-9]{5})$/);if(m&&!$('#hg-code').value)$('#hg-code').value=m[1].toUpperCase();
+  const last=lsGet('holdem-coach-room');$('#hg-rejoin').hidden=!last||R.active;if(last)$('#hg-rejoin').textContent=`Rejoin table ${last}`;
+  $('#hg-unavailable').hidden=!!HC.SERVER;$('#hg-forms').hidden=!HC.SERVER;
+  renderLobby();}
+async function hgCreate(){const name=hgName();if(!name)return;hgStatus('Creating a table…');
+  try{const res=await fetch(HC.SERVER+'/rooms',{method:'POST',headers:{'content-type':'application/json','X-Poker-Pass':HC.tablePass()},body:JSON.stringify({format:R.fmt||'cash'})});
+    if(res.status===401){lsSet('holdem-coach-pass','');HC.checkGate();throw new Error('The table password was refused. Enter it again.');}
+    if(!res.ok)throw new Error('Could not create a table (HTTP '+res.status+').');
+    const j=await res.json();connect(j.code);}catch(e){hgStatus(e.message||String(e),true);}}
+function hgJoin(code){const name=hgName();if(!name)return;code=(code||$('#hg-code').value).trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(code)){hgStatus('A table code is 5 letters or digits.',true);return;}connect(code);}
+
+function connect(code){
+  if(R.ws){R.closing=true;try{R.ws.close();}catch(e){}}
+  R.active=true;R.closing=false;R.code=code;hgStatus(R.retry?'Reconnecting…':'Connecting…');
+  const ws=new WebSocket(HC.SERVER.replace(/^http/,'ws')+'/rooms/'+code+'/ws');R.ws=ws;
+  ws.onopen=()=>{ws.send(JSON.stringify({t:'hello',pass:HC.tablePass(),pid:myPid(),name:lsGet('holdem-coach-name')||'Player',avatar:HC.heroAvatar()}));};
+  ws.onmessage=e=>{if(ws!==R.ws)return;let m;try{m=JSON.parse(e.data);}catch(err){return;}
+    if(m.t==='room')onRoom(m);else if(m.t==='state')onState(m);else if(m.t==='chat')onTChat(m);
+    else if(m.t==='error'){R.closing=true;hgStatus(m.msg||'Could not join.',true);if(m.code==='bad-pass'){lsSet('holdem-coach-pass','');HC.checkGate();}if(m.code==='no-room')lsSet('holdem-coach-room','');endRemote(true);}};
+  ws.onclose=()=>{if(ws!==R.ws)return;clearInterval(R.pinger);if(R.closing||!R.active)return;
+    R.retry++;if(R.retry>8){hgStatus('Lost the connection to the table. Use Rejoin to try again.',true);endRemote(true);return;}
+    HC.toast('Connection lost. Reconnecting…');setTimeout(()=>{if(R.active&&!R.closing)connect(R.code);},Math.min(8000,600*R.retry*R.retry));};
+  clearInterval(R.pinger);R.pinger=setInterval(()=>rsend({t:'ping'}),25000);}
+function rsend(o){if(R.ws&&R.ws.readyState===1)R.ws.send(JSON.stringify(o));}
+function endRemote(toFriends){R.active=false;clearInterval(R.pinger);clearInterval(R.timer);if(R.ws){const w=R.ws;R.ws=null;try{w.close();}catch(e){}}R.room=null;R.turnSeq=null;R.chat=[];R.unread=0;
+  if(G&&G.remote){token++;G=null;closeSheet();$('#play-table').hidden=true;$('#play-intro').hidden=false;$('#tchat').hidden=true;renderIntro();}
+  document.body.classList.remove('remote');if(toFriends){HC.go('friends');}}
+function hgLeave(){if(!R.active)return;if(R.room&&R.room.phase==='playing'&&!confirm('Leave the table? A bot takes your seat.'))return;R.closing=true;rsend({t:'leave'});lsSet('holdem-coach-room','');hgStatus('');setTimeout(()=>endRemote(true),150);}
+
+function onRoom(m){const first=!R.room;const was=R.room&&R.room.phase;R.room=m;R.retry=0;hgStatus('');lsSet('holdem-coach-room',m.code);
+  if(first){R.chat=(m.chat||[]).slice();R.unread=0;renderTChat();}
+  document.body.classList.add('remote');
+  if(m.phase==='playing'){if(was!=='playing'||first){HC.go('play');$('#play-intro').hidden=true;$('#play-table').hidden=false;$('#tchat').hidden=false;$('#action-area').hidden=true;$('#coach-area').hidden=true;
+      if(!G||!G.remote){$('#table').innerHTML='<div class="felt"></div><div class="center"><div class="pot">'+(m.waiting?'You take a seat when the next hand starts':'Waiting for the deal…')+'</div></div>';$('#log').innerHTML='';$('#hero-cards').innerHTML='';$('#hero-stack').textContent='';$('#hero-pos').textContent='';$('#hero-handclass').textContent='';$('#tbar').hidden=true;}}}
+  else{if(G&&G.remote){token++;G=null;closeSheet();$('#play-table').hidden=true;$('#play-intro').hidden=false;}if(was==='playing'||first)HC.go('friends');}
+  renderLobby();if(G&&G.remote)render();}
+function seatAvatar(s,size){return HC.avatarSVG(s.kind==='human'?(R.room&&s.id===R.room.you?HC.heroAvatar():HC.cleanAvatar(s.avatar)):HC.botAvatar(s.name,s.style),size);}
+function renderLobby(){const on=R.active&&R.room;$('#hg-entry').hidden=!!on;$('#hg-lobby').hidden=!on;if(!on)return;const m=R.room;
+  const link=location.origin+location.pathname+'#'+m.code;const fmtName=m.format==='sng'?'Sit & go tournament':'Cash game';
+  const humans=m.seats.filter(s=>s.kind==='human');
+  let h=`<div class="hero-card"><div class="eyebrow" style="color:#cfe4d6">${fmtName} · table code</div><h1 style="letter-spacing:.12em;font-family:var(--mono)">${m.code}</h1><p style="color:#e4efe7;max-width:none;font-size:13.5px">Friends open <b>${esc(location.host+location.pathname)}</b>, tap Friends and enter this code, or use the link.</p><button class="btn gold" type="button" id="hg-copy">Copy invite link</button></div>`;
+  if(m.phase==='over'&&m.standings){h+=`<h2>Final standings</h2><div class="panel tight">${m.standings.map(s=>`<div class="opt"><span><b>${s.place}.</b> ${esc(s.name)}</span>${s.place===1?'<span class="chip good">Winner</span>':''}</div>`).join('')}</div>`;}
+  h+=`<h2>${m.phase==='lobby'?'At the table':'Players'}</h2><div class="panel tight">${m.seats.filter(s=>s.kind!=='empty').map(s=>`<div class="opt"><span class="row" style="flex-wrap:nowrap"><span style="line-height:0">${seatAvatar(s,32)}</span><span><b>${esc(s.name)}</b>${s.id===m.you?' <span class="muted">(you)</span>':''}${s.host?' <span class="chip pos" style="font-size:11px">host</span>':''}${s.kind==='bot'?` <span class="muted" style="font-size:12px">bot${s.style!=='normal'?' · '+s.style:''}</span>`:''}</span></span><span class="muted" style="font-size:12.5px">${s.kind==='human'&&!s.connected?'away':m.phase==='playing'?(m.format==='sng'?(s.out?'out':(s.chips||0).toLocaleString()):P.fmt(s.stack)+'bb'):''}</span></div>`).join('')||'<p class="muted">Nobody yet.</p>'}</div>`;
+  if(m.phase==='lobby')h+=m.host?`<p class="muted" style="font-size:13px;margin-top:8px">${humans.length<2?'You can start now and friends can still join a cash game later, or wait for them here.':'Everyone here?'} Empty seats are filled by bots.</p><button class="btn primary block" type="button" id="hg-start">Start the game</button>`:`<p class="muted" style="margin-top:8px">Waiting for the host to start the game.</p>`;
+  else if(m.phase==='over')h+=m.host?`<button class="btn primary block" type="button" id="hg-again" style="margin-top:10px">Back to the lobby for another</button>`:`<p class="muted" style="margin-top:8px">The host can start another game.</p>`;
+  else h+=`<button class="btn primary block" type="button" id="hg-back" style="margin-top:10px">Back to the table</button>`;
+  h+=`<p class="muted" style="font-size:12.5px;margin-top:10px">Everyone sees only their own cards. Coach notes, hints and hand reviews are private to each player.${m.host?'':' As a guest, the AI review runs when you ask for it (or turn it on in Settings).'}</p>`;
+  $('#hg-room').innerHTML=h;
+  $('#hg-copy').onclick=async()=>{try{await navigator.clipboard.writeText(link);HC.toast('Invite link copied');}catch(e){prompt('Copy this link',link);}};
+  const st=$('#hg-start');if(st)st.onclick=()=>rsend({t:'start'});const ag=$('#hg-again');if(ag)ag.onclick=()=>rsend({t:'again'});const bk=$('#hg-back');if(bk)bk.onclick=()=>HC.go('play');}
+
+/* ---------- table chat ---------- */
+function onTChat(m){R.chat.push(m);if(R.chat.length>80)R.chat.shift();
+  if(m.sid!=null){R.bubbles[m.sid]={text:m.text,until:Date.now()+5000};setTimeout(()=>{if(G&&G.remote)render();},5100);if(G&&G.remote)render();}
+  renderTChat();}
+function renderTChat(){const mine=R.room?R.room.you:null;
+  const html=R.chat.length?R.chat.map(c=>`<div class="tc ${c.sid!=null&&c.sid===mine?'me':''}"><b>${esc(c.sid!=null&&c.sid===mine?'You':c.name)}</b> ${esc(c.text)}</div>`).join(''):'<div class="muted" style="font-size:12.5px">Say hello to the table.</div>';
+  $$('.tchat-list').forEach(el=>{el.innerHTML=html;el.scrollTop=el.scrollHeight;});}
+function sendTChat(input){const text=input.value.trim();if(!text)return;rsend({t:'chat',text:text.slice(0,200)});input.value='';}
+$$('.tchat-form').forEach(f=>f.addEventListener('submit',e=>{e.preventDefault();sendTChat(f.querySelector('input'));}));
+
+/* ---------- the hand, as the server shows it to this player ---------- */
+function onState(m){
+  if(!m.G||!R.room||R.room.phase!=='playing')return;const v=m.G;
+  if(v.hand!==R.hand){R.hand=v.hand;R.decisions=[];R.heroCoaches=[];R.aichat=[];R.aiReview=null;R.summaryShown=false;closeSheet();$('#coach-area').hidden=true;$('#coach-area').innerHTML='';}
+  mode=v.format==='sng'?'tourney':'cash';T=v.T?{level:v.T.level,remote:v.T}:null;
+  G=Object.assign(v,{remote:true,decisions:R.decisions,chat:R.aichat,aiReview:R.aiReview,snapshots:{},practice:false,rng:Math.random,hint:false});
+  let k=0;for(const h of G.history)h.coach=h.isHero?(R.heroCoaches[k++]||null):null;
+  for(const p of G.players)assignRange(p);
+  const el=$('#log');el.innerHTML=G.log.slice(-6).map(esc).join('<br>');el.scrollTop=el.scrollHeight;
+  $('#play-intro').hidden=true;$('#play-table').hidden=false;$('#tchat').hidden=false;
+  render();
+  if(m.turn&&G.acting===0&&!G.spectator&&!G.finished){
+    if(R.turnSeq!==m.turn.seq){R.turnSeq=m.turn.seq;token++;const my=token,seq=m.turn.seq;startTurnTimer(m.turn.ms);
+      heroAct(()=>{}).then(act=>{if(my!==token)return;stopTurnTimer();R.turnSeq=null;rsend({t:'act',seq,type:act.type,to:act.to});
+        if(act.coach){R.heroCoaches.push(act.coach);if(HC.S.settings.coachLive)showCoachRemote(act.coach);}});}
+    else startTurnTimer(m.turn.ms);}
+  else if(R.turnSeq!==null){R.turnSeq=null;token++;stopTurnTimer();$('#action-area').hidden=true;closeSheet();}
+  if(G.finished&&!R.summaryShown&&!G.spectator){R.summaryShown=true;const h=hero();const net=r1(h.stack-h.startStack);G.heroNet=net;
+    if(mode==='cash'){session.hands++;session.bb=r1(session.bb+net);const pl=HC.S.play;pl.hands++;pl.bb=r1(pl.bb+net);HC.save();}
+    const my=R.hand;setTimeout(()=>{if(G&&G.remote&&R.hand===my&&G.finished)showSummary(net,null);},1400);}
+}
+function startTurnTimer(ms){clearInterval(R.timer);const end=Date.now()+ms;const el=$('#turn-timer');el.hidden=false;
+  const tick=()=>{const s=Math.max(0,Math.ceil((end-Date.now())/1000));el.textContent=`Your turn · ${s}s`;el.style.color=s<=10?'var(--bad)':'';if(s<=0)clearInterval(R.timer);};tick();R.timer=setInterval(tick,500);
+  if(document.hidden||!$('#screen-play')||$('#screen-play').hidden)HC.toast('Your turn at the table');if(navigator.vibrate)try{navigator.vibrate(60);}catch(e){}}
+function stopTurnTimer(){clearInterval(R.timer);$('#turn-timer').hidden=true;}
+function showCoachRemote(c){const el=$('#coach-area');el.hidden=false;el.innerHTML=coachHTML(c,true);$('#coach-continue').textContent='Got it';
+  $('#coach-continue').onclick=()=>{el.hidden=true;el.innerHTML='';};$('#coach-ask').onclick=()=>openChat(false,c);}
+function remoteNext(){closeSheet();rsend({t:'next'});const el=$('#coach-area');el.hidden=false;el.innerHTML='<p class="muted" style="text-align:center;margin:6px 0">Waiting for the next hand…</p>';}
+function nextHand(){if(G&&G.remote)remoteNext();else startHand();}
+function aiAuto(){return HC.S.settings.aiReview!==false&&(!G.remote||(R.room&&R.room.host)||!!HC.S.settings.aiReviewHome);}
+
+$('#hg-create').addEventListener('click',hgCreate);$('#hg-join').addEventListener('click',()=>hgJoin());$('#hg-rejoin').addEventListener('click',()=>hgJoin(lsGet('holdem-coach-room')));
+$('#hg-code').addEventListener('keydown',e=>{if(e.key==='Enter')hgJoin();});$('#hg-leave').addEventListener('click',hgLeave);
+$$('#hg-fmt button').forEach(b=>b.addEventListener('click',()=>{R.fmt=b.dataset.v;$$('#hg-fmt button').forEach(x=>x.classList.toggle('active',x===b));$('#hg-fmt-desc').textContent=b.dataset.v==='sng'?'Sit & go: everyone starts with 1,500 chips, blinds go up every 8 hands, last player standing wins. Friends must join before it starts.':'Cash game: 100 big blinds each, stacks carry over from hand to hand, and friends can join or leave at any time.';}));
+window.Play={onShow,onShowFriends,startHand,startTournament,replayFrom};
+if(!$('#screen-friends').hidden)onShowFriends(); /* opened from an invite link before this script loaded */
 })();
 </script>
 </body>

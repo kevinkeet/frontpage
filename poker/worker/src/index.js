@@ -7,9 +7,16 @@
  *
  *   POST /auth          {password}            -> 204 or 401
  *   POST /v1/messages   Messages API body     -> Claude's JSON response
+ *   POST /rooms         {format}              -> {code}   create a home-game table (needs X-Poker-Pass)
+ *   GET  /rooms/CODE/ws                       -> WebSocket to that table (the password goes in the first message)
  *
+ * Home-game tables are Durable Objects, see room.js.
  * Required secrets: ANTHROPIC_API_KEY, SITE_PASSWORD.
  */
+export { Room } from './room.js';
+
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no I, L, O, 0, 1
+function newCode() { const b = crypto.getRandomValues(new Uint8Array(5)); return [...b].map(x => CODE_CHARS[x % CODE_CHARS.length]).join(''); }
 const ALLOWED_MODELS = new Set(['claude-opus-5', 'claude-sonnet-5', 'claude-haiku-4-5']);
 const MAX_TOKENS_CAP = 2000;
 const WINDOW_MS = 60_000, MAX_PER_WINDOW = 30;   // per-IP requests per minute (per isolate, best effort)
@@ -52,6 +59,15 @@ export default {
   async fetch(req, env) {
     const h = cors(req, env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
+
+    /* home-game WebSocket: browsers cannot add headers here, so the table password arrives in the first message */
+    const ws = new URL(req.url).pathname.match(/^\/rooms\/([A-Za-z0-9]{5})\/ws$/);
+    if (ws && req.method === 'GET') {
+      if (h['Access-Control-Allow-Origin'] === 'null') return json({ error: 'origin not allowed' }, 403, h);
+      if (rateLimited(req)) return json({ error: 'too many requests, slow down' }, 429, h);
+      const stub = env.ROOMS.get(env.ROOMS.idFromName(ws[1].toUpperCase()));
+      return stub.fetch(new Request('https://room/ws', { headers: req.headers }));
+    }
     if (req.method !== 'POST') return json({ error: 'POST only' }, 405, h);
     if (h['Access-Control-Allow-Origin'] === 'null') return json({ error: 'origin not allowed' }, 403, h);
     if (!env.SITE_PASSWORD || !env.ANTHROPIC_API_KEY) return json({ error: 'worker secrets not set' }, 500, h);
@@ -62,6 +78,20 @@ export default {
       try { body = await req.json(); } catch (e) {}
       if (typeof body.password === 'string' && timingSafeEqual(body.password, env.SITE_PASSWORD)) return new Response(null, { status: 204, headers: h });
       return json({ error: 'wrong password' }, 401, h);
+    }
+
+    if (url.pathname === '/rooms') {
+      const pass = req.headers.get('X-Poker-Pass') || '';
+      if (!timingSafeEqual(pass, env.SITE_PASSWORD)) return json({ error: 'wrong table password' }, 401, h);
+      if (rateLimited(req)) return json({ error: 'too many requests, slow down' }, 429, h);
+      let body = {};
+      try { body = await req.json(); } catch (e) {}
+      for (let i = 0; i < 5; i++) {
+        const code = newCode();
+        const res = await env.ROOMS.get(env.ROOMS.idFromName(code)).fetch(new Request('https://room/init', { method: 'POST', body: JSON.stringify({ code, format: body.format }) }));
+        if (res.ok) return json({ code }, 200, h);
+      }
+      return json({ error: 'could not create a table, try again' }, 500, h);
     }
 
     if (url.pathname === '/v1/messages') {
@@ -83,6 +113,8 @@ export default {
         },
         body: JSON.stringify(body),
       });
+      /* a 401 from this worker means "wrong table password", so a rejected API key must not look like one */
+      if (upstream.status === 401 || upstream.status === 403) return json({ error: { message: 'The shared AI key was refused by Anthropic. Tell the host.' } }, 502, h);
       const text = await upstream.text();
       return new Response(text, { status: upstream.status, headers: { 'Content-Type': 'application/json', ...h } });
     }

@@ -55,6 +55,16 @@ window.__COACH_SERVER = 'https://holdem-coach-api.<you>.workers.dev';
 Commit and push. From then on the site opens with a password screen; after a
 correct password the AI coach works for everyone with no key field needed.
 
+## Home-game tables
+
+The same worker hosts the Friends tab's tables: `POST /rooms` creates one (needs the
+table password) and `GET /rooms/CODE/ws` is the WebSocket to it. Each table is a
+Durable Object (`src/room.js`) that deals the cards and sends every player only what
+they may see. It reuses the app's engine, which `scripts/build-engine.mjs` extracts from
+`../index.html` on every `wrangler dev` / `wrangler deploy`, so **redeploy the worker
+after changing the engine block of `poker/index.html`**. Durable Objects with the SQLite
+backend are included in Cloudflare's free plan; no extra setup is needed beyond deploying.
+
 ## What the password does and does not protect
 
 GitHub Pages is a static host, so the page itself cannot be locked server-side:

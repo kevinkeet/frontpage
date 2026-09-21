@@ -6,5 +6,18 @@ compatibility_date = "2026-06-01"
 #   ANTHROPIC_API_KEY  – the shared Anthropic key
 #   SITE_PASSWORD      – the table password friends type into the app
 
+# The home-game server reuses the app's engine; this writes src/engine.generated.js from ../index.html.
+[build]
+command = "node scripts/build-engine.mjs"
+
+# One Durable Object per home-game table (SQLite-backed, which is what the free plan offers).
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]
+
 [vars]
 ALLOWED_ORIGINS = "https://kevinkeet.com,https://www.kevinkeet.com,http://localhost:8080,http://127.0.0.1:8080"

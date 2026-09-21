@@ -8,8 +8,9 @@ Live at **https://kevinkeet.com/poker/** (GitHub Pages, served from `main` of th
 - `poker/index.html` — the whole app: CSS, markup and three `<script>` blocks
   (engine `window.Poker`; UI/home/learn/drills `window.HC`; play/tournaments `window.Play`).
   No build step, no framework, no dependencies except Google Fonts.
-- `poker/worker/` — Cloudflare Worker that holds the shared Anthropic key and checks a
-  table password. `src/index.js`, `wrangler.toml`, `README.md`.
+- `poker/worker/` — Cloudflare Worker that holds the shared Anthropic key, checks a
+  table password, and hosts home-game tables. `src/index.js` (routes), `src/room.js`
+  (one Durable Object per table), `scripts/build-engine.mjs`, `wrangler.toml`, `README.md`.
 - `.github/workflows/deploy-worker.yml` — deploys the worker, sets its secrets, and
   writes the worker URL into `window.__COACH_SERVER` in `poker/index.html`.
 - Progress is stored in `localStorage` under `holdem-coach-v1`; the personal API key
@@ -44,6 +45,47 @@ Live at **https://kevinkeet.com/poker/** (GitHub Pages, served from `main` of th
   pile is about 10 chips per `ref` (100bb in cash, the table average in tournaments).
   `HC.chipDot(units)` is the single chip shown in bet pills.
 - Card faces show "10"; shorthand (T9s, Ts) still uses T.
+- Friends tab (home game): create a table (cash or sit & go) and get a 5-character code
+  and an invite link (`kevinkeet.com/poker/#CODE`); friends join with the code; the host
+  starts the game and empty seats are filled by bots. Table chat in the lobby and at the
+  table, with a speech bubble at the speaker's seat. Cash: 100bb, stacks carry over, auto
+  rebuy, join/leave any time (a newcomer takes a bot's chair at the next hand, a leaver's
+  chair goes to a bot). Sit & go: 1,500 chips, levels every 8 hands, ends when one player
+  is left or every human is out. 45s to act (5s if disconnected), then check/fold.
+
+## Home game architecture
+- The server is authoritative. `room.js` deals, holds the deck, runs the betting and the
+  showdown, and plays the bots. It imports the engine **extracted from `index.html`**
+  (`scripts/build-engine.mjs` writes `src/engine.generated.js`, run by wrangler's
+  `[build]`; not committed). So the second script block (engine + "table logic shared…"
+  section: `oppSpec`, `assignRange`, `preflopSituation`, `botDecide`, `totalPot`) must
+  stay free of DOM access, and **after changing it, redeploy the worker**.
+- After every change the room sends each player a `state` message: the hand rotated so
+  that the viewer is seat 0, with only their own hole cards plus cards shown at
+  showdown, third-person log lines ("You call" for the viewer). The client (`R`,
+  `onState` at the end of the play block) copies that view into `G`, so `render()`, the
+  coach (`decorate`), hints, reads and `showSummary` are the same code as solo play.
+  Client-only data (graded decisions, AI chat) lives in `R` and is re-attached to each
+  new `G`. Anything that touches `p.cards` of an opponent must allow `null`.
+- Trust boundary: names, avatar specs and chat are cleaned in `room.js` (`cleanName`,
+  `cleanAvatar`, `cleanChat`) and chat/avatars are escaped/cleaned again in the client
+  (`esc`, `HC.cleanAvatar`). The table password travels in the first WebSocket message
+  (`hello`), never in the URL. Player identity is a random `pid` kept in localStorage
+  (`holdem-coach-pid`); reconnecting with it returns you to your seat.
+- AI cost: at a home game the automatic AI review runs for the host only; guests get a
+  button per hand, or can opt in under Settings. The AI is told that hidden cards are
+  unknown.
+- Room state (seats, stacks, level, chat) is saved to Durable Object storage between
+  hands; a hand interrupted by a restart is void and stacks return to their pre-hand
+  values. Rooms delete themselves 24h after the last hand.
+- Local testing: `.claude/launch.json` has `holdem-worker` (wrangler dev, :8787) and
+  `holdem-site` (:8090). `poker/worker/.dev.vars` (ignored) needs `SITE_PASSWORD`,
+  a dummy `ANTHROPIC_API_KEY`, `ALLOWED_ORIGINS=http://localhost:8090`, and optionally
+  `FAST_TIMERS=1`. In the browser set localStorage `holdem-coach-dev-server` to
+  `http://localhost:8787` (honoured on localhost only) and `holdem-coach-pass`.
+  Tests used: a Node WebSocket script (privacy, chip conservation, bad password, name and
+  avatar cleaning, reconnect), a sit & go played to the end, and two Playwright browsers
+  playing each other.
 
 ## AI coach plumbing
 - Calls go to the Claude API (`claude-opus-5`, `output_config.effort: medium`,
@@ -86,13 +128,9 @@ Earlier a local `npx wrangler login` on Kevin's Mac succeeded but nothing was de
   (built by stripping the doctype/html/head/body wrapper lines); it cannot reach the API.
 
 ## Backlog (agreed, not started)
-1. **Play with friends remotely.** Design: "Home game" tab; host creates a table and gets
-   a room code; friends join at kevinkeet.com/poker; empty seats filled by bots. Run the
-   existing engine inside a Cloudflare Durable Object per room (deals cards, holds the
-   deck, pushes each player their own cards over WebSockets); per-player coach notes and
-   reviews stay private. Cash and tournament formats. Cloudflare free plan covers it; the
-   only spend is AI coach calls (billed to the shared key), so consider making the auto
-   review opt-in per player or using a cheaper model for guests.
+1. Home game follow-ups: sit-out button, host controls (kick, pause, table size, bot
+   mix), showing a folded hand voluntarily, a chat drawer that stays visible on phones,
+   sound/notification on your turn, multi-table tournaments.
 2. Nice-to-haves: scrollable hand history, "hands like this" drill from a review,
    haptics on the phone when it is your turn.
 
