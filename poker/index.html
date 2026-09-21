@@ -227,6 +227,17 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
   main{padding:18px 24px 32px;max-width:640px;margin:0 auto;width:100%}
   .table{max-height:60vh}
 }
+/* on a computer the tab bar moves up into the header, where people look for navigation */
+@media (min-width:760px){
+  #app{position:relative}
+  .topbar{min-height:54px}
+  nav.tabs{position:absolute;top:0;left:50%;transform:translateX(-50%);height:54px;display:flex;align-items:center;gap:4px;border-top:0;background:none;padding:0}
+  nav.tabs button{flex-direction:row;gap:7px;font-size:14.5px;padding:8px 16px;border-radius:9px;cursor:pointer}
+  nav.tabs button .glyph{font-size:16px}
+  nav.tabs button:hover{background:var(--surface2);color:var(--ink)}
+  nav.tabs button.active{background:var(--surface2)}
+  .toast{top:66px}
+}
 </style>
 <div class="gate" id="gate" hidden>
   <form class="box" id="gate-form">
@@ -251,6 +262,10 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
         <h1 id="home-next-title">Start with the preflop drill</h1>
         <p id="home-next-body" style="color:#e4efe7;max-width:none">Learn which hands to raise from each seat. Everything else builds on this.</p>
         <button class="btn gold" id="home-next-btn" type="button">Go</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="home-play" type="button" style="flex:1">♦ Play a hand</button>
+        <button class="btn" id="home-drill" type="button" style="flex:1">♣ Run a drill</button>
       </div>
       <h2>Progress</h2>
       <div class="statgrid" id="home-stats"></div>
@@ -802,6 +817,7 @@ checkGate();
 /* ---------- navigation ---------- */
 function go(name){$$('.screen').forEach(s=>s.hidden=s.id!=='screen-'+name);$$('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));$('#main').scrollTop=0;if(name==='home')renderHome();if(name==='play'&&window.Play)window.Play.onShow();try{localStorage.setItem(KEY+':tab',name);}catch(e){}}
 $$('nav.tabs button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.screen)));
+$('#home-play').addEventListener('click',()=>go('play'));$('#home-drill').addEventListener('click',()=>go('drill'));
 
 /* ---------- curriculum ---------- */
 const STEPS=[
