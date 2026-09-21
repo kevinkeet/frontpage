@@ -7,16 +7,25 @@ forwards the request to Claude. The key never reaches a browser.
 
 ## Deploy (once)
 
+Run these from a local clone of this repo (the `frontpage` repository), in order.
+The worker must exist before secrets can be attached to it, so deploy first.
+
 ```bash
 cd poker/worker
 npm install
-npx wrangler login                          # one-time
-npx wrangler secret put ANTHROPIC_API_KEY   # paste the key
+npx wrangler login                          # one-time; opens a browser to authorize
+npm run deploy                              # first deploy creates the worker and prints its URL
+npx wrangler secret put ANTHROPIC_API_KEY   # paste the key when prompted
 npx wrangler secret put SITE_PASSWORD       # the password you give friends
-npm run deploy
 ```
 
 Wrangler prints the worker URL, e.g. `https://holdem-coach-api.<you>.workers.dev`.
+Secrets take effect immediately; no second deploy is needed.
+
+If something goes wrong: `npx wrangler whoami` shows whether login worked,
+`npx wrangler deployments list` shows whether the deploy happened, and
+`npx wrangler secret list` shows which secrets are set. Re-running any of the
+commands above is safe.
 
 ## Wire it into the app
 
