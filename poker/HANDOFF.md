@@ -30,7 +30,20 @@ Live at **https://kevinkeet.com/poker/** (GitHub Pages, served from `main` of th
   hand outlined, pot-odds and outs tables, opponent reads, optional AI read, and an
   optional reveal of the coach's advice (marks the decision as hinted).
 - Home: curriculum, stats, leak report built from a log of graded decisions, settings
-  (coach note timing, bot speed, AI review toggle, personal API key, reset).
+  (avatar, coach note timing, bot speed, AI review toggle, personal API key, reset).
+- Avatars and chip stacks: every seat shows an inline-SVG avatar and a chip stack.
+  An avatar is a small spec object `{bg,skin,hair,hc,acc,eyes,mouth,shirt}` drawn by
+  `HC.avatarSVG(spec,size)`. The five regular bots are hand-made (`AV_BOTS`); other bots
+  get a look from their style plus a hash of their name (`HC.botAvatar`): station =
+  headphones on yellow, nit = glasses/visor on grey-blue, maniac = shades and a grin on
+  red, normal = plain or cap on green/teal. The player's avatar is
+  `HC.S.settings.avatar` (8 presets or custom, edited in Settings); specs are tiny so
+  they can be sent to other players in the home game. `HC.chipStackSVG(units,ref)` draws
+  a stack in casino colors (1 white, 5 red, 25 green, 100 black, 500 purple, 1000
+  yellow, 5000 orange): fewest chips first, then big chips are broken down until the
+  pile is about 10 chips per `ref` (100bb in cash, the table average in tournaments).
+  `HC.chipDot(units)` is the single chip shown in bet pills.
+- Card faces show "10"; shorthand (T9s, Ts) still uses T.
 
 ## AI coach plumbing
 - Calls go to the Claude API (`claude-opus-5`, `output_config.effort: medium`,
@@ -80,18 +93,17 @@ Earlier a local `npx wrangler login` on Kevin's Mac succeeded but nothing was de
    reviews stay private. Cash and tournament formats. Cloudflare free plan covers it; the
    only spend is AI coach calls (billed to the shared key), so consider making the auto
    review opt-in per player or using a cheaper model for guests.
-2. **Avatars and chip stacks.** Pre-drawn avatar per bot matching its type; pick-or-make
-   avatar for the player (and friends); a chip stack graphic beside each seat that scales
-   with the stack, colored by denomination.
-3. Show "10" instead of "T" on card faces (keep T in shorthand like T9s).
-4. Nice-to-haves: scrollable hand history, "hands like this" drill from a review,
+2. Nice-to-haves: scrollable hand history, "hands like this" drill from a review,
    haptics on the phone when it is your turn.
 
 ## Known gotchas
 - `[hidden]{display:none!important}` is in the CSS on purpose (flex classes otherwise
   override the hidden attribute).
-- Seat layouts are per player count in `LAYOUT` (2–6); board sits at ~52% height, keep
-  side seats above ~40% or below ~65%.
+- Seat layouts are per player count in `LAYOUT` (2–6); board sits at ~52% height (pot
+  line ~41%, board 45–64%). A seat is avatar + hole cards over the name box, ~92px tall,
+  so side seats sit at y≈33% or y≈77%. Chips go beside the box, except upper side seats
+  (y<50) where they hang below it. Bet pills (`bet` in `LAYOUT`) must dodge the pot line,
+  which is wide in tournaments; check all five layouts after moving anything.
 - `preflopBaseline` scenarios: open, vslimp, vsraise, vsraise+call, vs3bet, cold3bet,
   vs4bet, committed, walk. Short-stack branches at ≤15bb and ≤10bb; heads-up uses
   `OPEN_HU` for the button.

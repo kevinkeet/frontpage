@@ -75,6 +75,7 @@ nav.tabs button:focus-visible,button:focus-visible{outline:2px solid var(--accen
 /* cards */
 .card{display:inline-flex;flex-direction:column;justify-content:space-between;width:44px;height:62px;border-radius:6px;background:var(--card-face);color:var(--card-ink);box-shadow:0 1px 3px rgba(0,0,0,.3);padding:3px 5px;font-family:var(--display);font-weight:700;font-size:20px;line-height:1;position:relative;user-select:none}
 .card.red{color:var(--card-red)}
+.card .ten{letter-spacing:-.08em;margin-left:-1px}
 .card .s{font-size:16px;align-self:flex-end;font-family:var(--body)}
 .card.sm{width:32px;height:45px;font-size:15px;padding:2px 3px;border-radius:4px}
 .card.sm .s{font-size:12px}
@@ -182,15 +183,41 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
 .table .center{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);text-align:center;width:80%}
 .table .pot{color:#f4e7c3;font-family:var(--mono);font-size:13px;margin-bottom:6px}
 .table .board{display:flex;justify-content:center;gap:4px;min-height:45px}
-.table .msg{position:absolute;left:50%;bottom:22%;transform:translateX(-50%);color:#f2efe6;font-size:12px;background:rgba(0,0,0,.35);padding:3px 10px;border-radius:999px;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
-.seat{position:absolute;transform:translate(-50%,-50%);width:74px;text-align:center}
+.table .msg{position:absolute;left:50%;bottom:23.5%;transform:translateX(-50%);color:#f2efe6;font-size:12px;background:rgba(0,0,0,.35);padding:3px 10px;border-radius:12px;max-width:50%;width:max-content;text-align:center;line-height:1.3;z-index:2}
+.seat{position:absolute;transform:translate(-50%,-50%);width:84px;text-align:center}
+.seat .top{display:flex;justify-content:center;align-items:flex-end;margin-bottom:-5px;position:relative;z-index:1}
+.seat .top+.box{padding-top:6px}
+.seat .av,.av-ring{border-radius:50%;flex:none;display:block;box-shadow:0 0 0 2px var(--surface),0 1px 4px rgba(0,0,0,.35)}
+.seat.acting .av{box-shadow:0 0 0 2px var(--gold),0 1px 4px rgba(0,0,0,.35)}
+.seat.folded .av{filter:grayscale(1);opacity:.55}
+.seat .chips{position:absolute;bottom:1px;line-height:0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.seat .chips.r{left:100%;margin-left:2px}
+.seat .chips.l{right:100%;margin-right:2px}
+.seat .chips.br,.seat .chips.bl{top:100%;bottom:auto;margin-top:2px}
+.seat .chips.br{left:6px}
+.seat .chips.bl{right:6px}
+.seat.folded .chips{opacity:.7}
+.chipdot{vertical-align:-1.5px;margin-right:3px}
+.av-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;font-size:13px}
+.av-sw{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.av-sw button{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);padding:0;cursor:pointer}
+.av-sw button.on{border-color:var(--surface);box-shadow:0 0 0 2px var(--gold)}
+.av-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;justify-items:center;margin-top:6px}
+.av-presets button{border:0;background:none;padding:0;cursor:pointer;border-radius:50%;line-height:0}
+.av-presets svg{border-radius:50%}
+#avatar-editor{padding:8px 0 10px;border-bottom:1px solid var(--line)}
+#avatar-editor .seg{justify-content:flex-end}
+#avatar-editor .seg button{padding:5px 8px;font-size:12px}
 .seat .box{background:var(--surface);border:1.5px solid var(--line);border-radius:9px;padding:3px 4px;font-size:11px;line-height:1.25;box-shadow:var(--shadow)}
 .seat .box .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seat .box .st{font-family:var(--mono);color:var(--muted)}
 .seat .box .p{font-size:9.5px;color:var(--muted);letter-spacing:.04em}
 .seat.acting .box{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
 .seat.folded .box{opacity:.4}
-.seat .hc{display:flex;justify-content:center;gap:2px;margin-top:-6px}
+.seat .hc{display:flex;margin-left:-7px}
+.seat .hc .card+.card{margin-left:-13px}
+.seat .hc.up{margin-left:-9px}
+.seat .hc.up .card+.card{margin-left:1px}
 .seat .bet{position:absolute;font-family:var(--mono);font-size:11px;color:#f4e7c3;background:rgba(0,0,0,.4);padding:1px 7px;border-radius:999px;white-space:nowrap}
 .seat .btnmark{position:absolute;width:18px;height:18px;border-radius:50%;background:#f4e7c3;color:#1a1408;font-size:10px;font-weight:700;display:grid;place-items:center;border:1px solid #9c8a5a}
 .seat .style{font-size:9px;color:var(--gold)}
@@ -276,6 +303,8 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
       <div class="curriculum" id="curriculum"></div>
       <h2>Settings</h2>
       <div class="panel tight">
+        <div class="opt"><span>Your avatar</span><span class="row"><span id="opt-avatar-preview" style="line-height:0"></span><button class="btn sm ghost" id="btn-avatar" type="button">Change</button></span></div>
+        <div id="avatar-editor" hidden></div>
         <div class="opt"><span>Coach note after every decision</span><input type="checkbox" id="opt-coach-live" checked></div>
         <div class="opt"><span>Bot speed</span>
           <span class="seg" id="opt-speed"><button type="button" data-v="fast">Fast</button><button type="button" data-v="normal" class="active">Normal</button><button type="button" data-v="slow">Slow</button></span></div>
@@ -393,7 +422,7 @@ function parseCard(t){return {r:RANKS.indexOf(t[0])+2,s:SUITS.indexOf(t[1])};}
 function rankName(r,plural){const n={14:'ace',13:'king',12:'queen',11:'jack',10:'ten',9:'nine',8:'eight',7:'seven',6:'six',5:'five',4:'four',3:'three',2:'two'}[r];return plural?(n==='six'?'sixes':n+'s'):n;}
 function handClass(a,b){const hi=Math.max(a.r,b.r),lo=Math.min(a.r,b.r);if(hi===lo)return RANKS[hi-2]+RANKS[hi-2];return RANKS[hi-2]+RANKS[lo-2]+(a.s===b.s?'s':'o');}
 function classCards(cls){const hi=RANKS.indexOf(cls[0])+2,lo=RANKS.indexOf(cls[1])+2;if(cls.length===2)return[{r:hi,s:0},{r:hi,s:1}];return[{r:hi,s:0},{r:lo,s:cls[2]==='s'?0:1}];}
-function cardHTML(c,cls){if(!c)return `<span class="card back ${cls||''}"></span>`;const red=c.s===1||c.s===2;return `<span class="card ${red?'red':''} ${cls||''}"><span>${RANKS[c.r-2]}</span><span class="s">${SUIT_SYM[c.s]}</span></span>`;}
+function cardHTML(c,cls){if(!c)return `<span class="card back ${cls||''}"></span>`;const red=c.s===1||c.s===2;return `<span class="card ${red?'red':''} ${cls||''}"><span${c.r===10?' class="ten"':''}>${c.r===10?'10':RANKS[c.r-2]}</span><span class="s">${SUIT_SYM[c.s]}</span></span>`;}
 function cardsHTML(cs,cls){return `<span class="cards">${cs.map(c=>cardHTML(c,cls)).join('')}</span>`;}
 
 /* ---------- evaluator: returns numeric score, higher wins ---------- */
@@ -855,6 +884,7 @@ function renderHome(){
   $('#opt-table-row').hidden=!(SERVER&&tablePass());
   $('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;
   $$('#opt-speed button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.settings.speed));
+  renderAvatarSettings();
 }
 $('#opt-coach-live').addEventListener('change',e=>{S.settings.coachLive=e.target.checked;save();});
 $('#opt-ai-review').addEventListener('change',e=>{S.settings.aiReview=e.target.checked;save();});
@@ -1155,6 +1185,97 @@ function readingQ(){
 }
 function tierWord(t,n){return ['Weak: check and fold to real pressure.','A marginal hand: pot control, do not build a big pot.','A medium hand: worth one bet, fold to heavy action.','A strong hand: bet for value.','A monster: build the pot.'][t]+(n<5?'':'');}
 
+/* ---------- avatars and chip stacks ---------- */
+/* An avatar is a small spec object {bg,skin,hair,hc,acc,eyes,mouth,shirt} drawn as inline SVG,
+   so it is cheap to store (settings) and to send to other players later. */
+const AV={
+  bg:['#b98a2a','#4f8f86','#6f9a5b','#d9a545','#8d99a6','#c9452f','#7a5ea8','#c46a8d'],
+  skin:['#f6d7bd','#eebf98','#d9a071','#b9794d','#8d5a36','#5e3b24'],
+  hc:['#1e1510','#4a2f1d','#8a5a2b','#d9b24c','#b5482e','#9a9a9a'],
+  hair:['short','bob','long','bun','curly','spiky','bald'],
+  acc:['none','glasses','shades','cap','headphones','visor'],
+  mouth:['smile','flat','grin','smirk'],
+  shirt:['#2e4a6b','#c4553d','#5b5470','#394a59','#1c1c1c','#2e6b4e']};
+const AV_BOTS={
+  Maya:{bg:'#4f8f86',skin:'#eebf98',hair:'bob',hc:'#1e1510',acc:'none',eyes:'open',mouth:'smile',shirt:'#2e4a6b'},
+  Dev:{bg:'#d9a545',skin:'#b9794d',hair:'curly',hc:'#1e1510',acc:'headphones',eyes:'happy',mouth:'smile',shirt:'#c4553d'},
+  Rosa:{bg:'#8d99a6',skin:'#f6d7bd',hair:'bun',hc:'#9a9a9a',acc:'glasses',eyes:'narrow',mouth:'flat',shirt:'#5b5470'},
+  Ken:{bg:'#6f9a5b',skin:'#eebf98',hair:'short',hc:'#4a2f1d',acc:'cap',eyes:'open',mouth:'smirk',shirt:'#394a59'},
+  Lou:{bg:'#c9452f',skin:'#d9a071',hair:'spiky',hc:'#d9b24c',acc:'shades',eyes:'open',mouth:'grin',shirt:'#1c1c1c'}};
+/* each playing style has a signature look, so a face tells you the type at a glance */
+const AV_STYLE={normal:{bg:['#4f8f86','#6f9a5b','#5d8fc4'],acc:['none','none','cap'],eyes:'open',mouth:['smile','smirk']},
+  station:{bg:['#d9a545','#e0b35a'],acc:['headphones'],eyes:'happy',mouth:['smile']},
+  nit:{bg:['#8d99a6','#7f8fa3'],acc:['glasses','visor'],eyes:'narrow',mouth:['flat']},
+  maniac:{bg:['#c9452f','#d2642a'],acc:['shades'],eyes:'open',mouth:['grin']}};
+const AV_PRESETS=[
+  {bg:'#b98a2a',skin:'#eebf98',hair:'short',hc:'#4a2f1d',acc:'none',eyes:'open',mouth:'smile',shirt:'#2e6b4e'},
+  {bg:'#7a5ea8',skin:'#f6d7bd',hair:'long',hc:'#8a5a2b',acc:'none',eyes:'open',mouth:'smile',shirt:'#2e4a6b'},
+  {bg:'#4f8f86',skin:'#8d5a36',hair:'curly',hc:'#1e1510',acc:'glasses',eyes:'open',mouth:'smirk',shirt:'#c4553d'},
+  {bg:'#c46a8d',skin:'#d9a071',hair:'bun',hc:'#1e1510',acc:'none',eyes:'happy',mouth:'smile',shirt:'#5b5470'},
+  {bg:'#6f9a5b',skin:'#f6d7bd',hair:'bald',hc:'#9a9a9a',acc:'visor',eyes:'open',mouth:'flat',shirt:'#394a59'},
+  {bg:'#c9452f',skin:'#5e3b24',hair:'short',hc:'#1e1510',acc:'shades',eyes:'open',mouth:'grin',shirt:'#1c1c1c'},
+  {bg:'#8d99a6',skin:'#b9794d',hair:'bob',hc:'#b5482e',acc:'headphones',eyes:'open',mouth:'smile',shirt:'#2e4a6b'},
+  {bg:'#d9a545',skin:'#eebf98',hair:'spiky',hc:'#d9b24c',acc:'cap',eyes:'open',mouth:'smirk',shirt:'#2e6b4e'}];
+function avHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function botAvatar(name,style){if(AV_BOTS[name])return AV_BOTS[name];const t=AV_STYLE[style]||AV_STYLE.normal;let h=avHash(name);const pick=a=>{const v=a[h%a.length];h=Math.floor(h/7)+13;return v;};
+  return {bg:pick(t.bg),skin:pick(AV.skin),hair:pick(AV.hair.slice(0,6)),hc:pick(AV.hc),acc:pick(t.acc),eyes:t.eyes,mouth:pick(t.mouth),shirt:pick(AV.shirt)};}
+function heroAvatar(){return Object.assign({},AV_PRESETS[0],S.settings.avatar||{});}
+function shade(hex,f){const n=parseInt(hex.slice(1),16);const c=[n>>16,n>>8&255,n&255].map(v=>Math.max(0,Math.min(255,Math.round(v*f))));return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join('');}
+let avUid=0;
+function avatarSVG(a,size){const id='av'+(++avUid);const ink='#2a1c14';const hc=a.hc,sk=a.skin,dark=shade(sk,.82);
+  let back='',hair='';
+  const top=`<path d="M11.2 19.5Q10.2 8 20 7.6Q29.8 8 28.8 19.5Q27.6 13.2 24 12.2Q20 14.2 14.6 12.6Q12.2 14.6 11.2 19.5Z" fill="${hc}"/>`;
+  if(a.hair==='short')hair=top;
+  else if(a.hair==='bob'){back=`<path d="M9.6 29Q7.6 7 20 6.6Q32.4 7 30.4 29Q27 31 20 30Q13 31 9.6 29Z" fill="${hc}"/>`;hair=`<path d="M11 19Q10.6 9 20 8.4Q29.4 9 29 19Q26.5 12.6 20.5 12.2Q15 13 11 19Z" fill="${hc}"/>`;}
+  else if(a.hair==='long'){back=`<path d="M9 38Q6.6 7 20 6.4Q33.4 7 31 38Z" fill="${hc}"/>`;hair=`<path d="M11 19.5Q10.4 9 20 8.4Q29.6 9 29 19.5Q27.4 13 21.5 11.6Q16 15.4 11 19.5Z" fill="${hc}"/>`;}
+  else if(a.hair==='bun'){back=`<circle cx="20" cy="5.8" r="3.9" fill="${hc}"/>`;hair=top;}
+  else if(a.hair==='curly'){hair=[[12,14.6,3.3],[14.2,10.6,3.5],[18,8.4,3.6],[22.2,8.4,3.6],[25.8,10.6,3.5],[28,14.6,3.3],[20,11,3]].map(c=>`<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" fill="${hc}"/>`).join('');}
+  else if(a.hair==='spiky'){hair=`<path d="M11 18.6L10.4 10.4L14 13L14.6 6.4L18.2 11L20.4 4.6L22.6 11L26 6.6L26.4 13L29.8 10.6L29 18.6Q26 13.2 20 13.2Q14 13.2 11 18.6Z" fill="${hc}"/>`;}
+  const eyes=a.acc==='shades'?'':a.eyes==='happy'?`<path d="M15 19.6Q16.5 17.6 18 19.6M22 19.6Q23.5 17.6 25 19.6" stroke="${ink}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`
+    :a.eyes==='narrow'?`<path d="M15 19.3H18M22 19.3H25" stroke="${ink}" stroke-width="1.3" stroke-linecap="round"/><path d="M14.6 16.4L18.2 17.3M25.4 16.4L21.8 17.3" stroke="${ink}" stroke-width=".9" stroke-linecap="round"/>`
+    :`<circle cx="16.5" cy="19.2" r="1.15" fill="${ink}"/><circle cx="23.5" cy="19.2" r="1.15" fill="${ink}"/>`;
+  const mouth={smile:`<path d="M16.6 23.6Q20 26.6 23.4 23.6" stroke="${ink}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`,
+    flat:`<path d="M17.2 24.6H22.8" stroke="${ink}" stroke-width="1.1" stroke-linecap="round"/>`,
+    grin:`<path d="M15.6 22.8Q20 29 24.4 22.8Z" fill="#fff" stroke="${ink}" stroke-width=".9" stroke-linejoin="round"/>`,
+    smirk:`<path d="M17 24.6Q21 26 23.6 23.2" stroke="${ink}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`}[a.mouth]||'';
+  const acc={glasses:`<g fill="rgba(255,255,255,.35)" stroke="${ink}" stroke-width=".9"><circle cx="16.3" cy="19.2" r="2.9"/><circle cx="23.7" cy="19.2" r="2.9"/></g><path d="M19.2 19.2H20.8M13.4 18.8L11.4 18.2M26.6 18.8L28.6 18.2" stroke="${ink}" stroke-width=".9"/>`,
+    shades:`<path d="M12.6 17.2H19Q19.2 21.6 16 21.8Q12.8 21.6 12.6 17.2ZM21 17.2H27.4Q27.2 21.6 24 21.8Q20.8 21.6 21 17.2Z" fill="#15181c"/><path d="M11.4 17.4H28.6" stroke="#15181c" stroke-width="1.1"/><path d="M14 18.4L15.6 18.4M22.4 18.4L24 18.4" stroke="rgba(255,255,255,.55)" stroke-width=".7" stroke-linecap="round"/>`,
+    cap:`<path d="M10.8 15.6Q10.6 6.6 20 6.4Q29.4 6.6 29.2 15.6Z" fill="#27364a"/><path d="M10.4 15.2Q20 12.6 29.6 15.2L35 17.2Q27 15.6 10.4 16.8Z" fill="#1b2635"/>`,
+    headphones:`<path d="M10.6 19Q10 6.6 20 6.4Q30 6.6 29.4 19" stroke="#2b2f36" stroke-width="1.7" fill="none"/><rect x="8.4" y="16.4" width="4.2" height="7.4" rx="2" fill="#2b2f36"/><rect x="27.4" y="16.4" width="4.2" height="7.4" rx="2" fill="#2b2f36"/>`,
+    visor:`<path d="M10.8 15.4Q20 10.6 29.2 15.4L29.2 13.4Q20 8.8 10.8 13.4Z" fill="#1d5a3c"/><path d="M9.6 15.2Q20 11 30.4 15.2L32.6 18.4Q20 13.6 7.4 18.4Z" fill="rgba(38,140,90,.85)"/>`}[a.acc]||'';
+  return `<svg class="av" viewBox="0 0 40 40" width="${size||36}" height="${size||36}" aria-hidden="true"><defs><clipPath id="${id}"><circle cx="20" cy="20" r="20"/></clipPath></defs><g clip-path="url(#${id})"><rect width="40" height="40" fill="${a.bg}"/>${back}<ellipse cx="20" cy="41" rx="14" ry="9.5" fill="${a.shirt}"/><rect x="17" y="26" width="6" height="7" rx="2.4" fill="${dark}"/><circle cx="11.4" cy="20.4" r="1.9" fill="${dark}"/><circle cx="28.6" cy="20.4" r="1.9" fill="${dark}"/><ellipse cx="20" cy="19.4" rx="8.7" ry="9.7" fill="${sk}"/>${hair}${eyes}${mouth}${acc}</g></svg>`;}
+
+/* Chip stacks. Denominations use the usual casino colors. A stack is first made with the
+   fewest chips, then big chips are broken into smaller ones until the pile is about as tall
+   as the stack is deep, so the picture grows and shrinks with the money. */
+const CHIP_DENOMS=[[5000,'#e0762b'],[1000,'#e3c23f'],[500,'#7a4fb0'],[100,'#23262b'],[25,'#2f8a55'],[5,'#c5382f'],[1,'#f1ede2']];
+function chipBreakdown(units,target){units=Math.max(0,Math.round(units));const cnt=CHIP_DENOMS.map(()=>0);let rem=units;CHIP_DENOMS.forEach(([d],i)=>{cnt[i]=Math.floor(rem/d);rem-=cnt[i]*d;});
+  let total=cnt.reduce((a,b)=>a+b,0);let guard=200;
+  while(total<target&&guard--){let done=false;for(let i=0;i<CHIP_DENOMS.length-1;i++){if(!cnt[i])continue;const add=CHIP_DENOMS[i][0]/CHIP_DENOMS[i+1][0];if(total+add-1>target+3)continue;cnt[i]--;cnt[i+1]+=add;total+=add-1;done=true;break;}if(!done)break;}
+  return cnt;}
+function chipStackSVG(units,ref,opts){opts=opts||{};if(units<=0)return '';const maxChips=opts.max||21,per=opts.per||7;
+  const target=Math.max(1,Math.min(maxChips,Math.round(10*units/Math.max(1,ref))));const cnt=chipBreakdown(units,target);
+  let cols=[];cnt.forEach((c,i)=>{while(c>0){const k=Math.min(per,c);cols.push({color:CHIP_DENOMS[i][1],n:k});c-=k;}});
+  if(cols.length>3)cols=cols.slice(0,3); /* keep the picture small */
+  const cw=10.6,ch=2.5,ry=2.1,rx=4.8;const w=cols.length*cw+1,h=per*ch+ry*2+2;let g='';
+  cols.forEach((col,ci)=>{const cx=ci*cw+rx+1;const edge=shade(col.color,.62),stripe=col.color==='#f1ede2'?'#5d8fc4':'rgba(255,255,255,.85)';
+    for(let k=0;k<col.n;k++){const y=h-ry-1-k*ch;g+=`<path d="M${cx-rx} ${y-ch}V${y}A${rx} ${ry} 0 0 0 ${cx+rx} ${y}V${y-ch}Z" fill="${col.color}" stroke="${edge}" stroke-width=".5"/><rect x="${cx-1.1}" y="${y-ch+ry-.2}" width="2.2" height="${ch-.5}" fill="${stripe}"/><rect x="${cx-rx+.5}" y="${y-ch+.8}" width="1.3" height="${ch-.5}" fill="${stripe}"/><rect x="${cx+rx-1.8}" y="${y-ch+.8}" width="1.3" height="${ch-.5}" fill="${stripe}"/>`;}
+    const ty=h-ry-1-col.n*ch;g+=`<ellipse cx="${cx}" cy="${ty}" rx="${rx}" ry="${ry}" fill="${col.color}" stroke="${edge}" stroke-width=".5"/><ellipse cx="${cx}" cy="${ty}" rx="${rx-1.8}" ry="${ry-.85}" fill="none" stroke="${stripe}" stroke-width=".55" stroke-dasharray="1.4 1.2"/>`;});
+  return `<svg class="chipstack" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">${g}</svg>`;}
+function chipDot(units){let c=CHIP_DENOMS[CHIP_DENOMS.length-1][1];for(const [d,col] of CHIP_DENOMS){if(units>=d){c=col;break;}}
+  return `<svg class="chipdot" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><circle cx="6" cy="6" r="5.4" fill="${c}" stroke="${shade(c,.6)}" stroke-width=".8"/><circle cx="6" cy="6" r="3.3" fill="none" stroke="${c==='#f1ede2'?'#5d8fc4':'rgba(255,255,255,.85)'}" stroke-width="1" stroke-dasharray="1.7 1.75"/></svg>`;}
+
+/* avatar picker in Settings */
+function renderAvatarSettings(){const a=heroAvatar();$('#opt-avatar-preview').innerHTML=avatarSVG(a,40);const ed=$('#avatar-editor');if(ed.hidden)return;
+  const sw=(key,vals)=>`<div class="av-row"><span class="muted">${{bg:'Background',skin:'Skin',hc:'Hair color',shirt:'Shirt'}[key]}</span><span class="av-sw">${vals.map(v=>`<button type="button" class="${a[key]===v?'on':''}" data-k="${key}" data-v="${v}" style="background:${v}" aria-label="${key} ${v}"></button>`).join('')}</span></div>`;
+  const seg=(key,vals,label)=>`<div class="av-row"><span class="muted">${label}</span><span class="seg wrap">${vals.map(v=>`<button type="button" class="${a[key]===v?'active':''}" data-k="${key}" data-v="${v}">${v}</button>`).join('')}</span></div>`;
+  ed.innerHTML=`<div class="eyebrow">Pick one</div><div class="av-presets">${AV_PRESETS.map((p,i)=>`<button type="button" data-preset="${i}" aria-label="Avatar ${i+1}">${avatarSVG(p,44)}</button>`).join('')}</div>
+    <div class="eyebrow" style="margin-top:10px">Or make your own</div>${sw('skin',AV.skin)}${seg('hair',AV.hair,'Hair')}${sw('hc',AV.hc)}${seg('acc',AV.acc,'Extras')}${seg('mouth',AV.mouth,'Mouth')}${sw('shirt',AV.shirt)}${sw('bg',AV.bg)}`;
+  ed.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{S.settings.avatar=Object.assign({},AV_PRESETS[+b.dataset.preset]);save();renderAvatarSettings();}));
+  ed.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{S.settings.avatar=Object.assign(heroAvatar(),{[b.dataset.k]:b.dataset.v});save();renderAvatarSettings();}));}
+$('#btn-avatar').addEventListener('click',()=>{const ed=$('#avatar-editor');ed.hidden=!ed.hidden;$('#btn-avatar').textContent=ed.hidden?'Change':'Done';renderAvatarSettings();});
+Object.assign(window.HC,{avatarSVG,botAvatar,heroAvatar,chipStackSVG,chipDot});
+
 /* ---------- boot ---------- */
 renderLessons();renderHome();
 let startTab='home';try{startTab=localStorage.getItem(KEY+':tab')||'home';}catch(e){}
@@ -1175,10 +1296,10 @@ const BOTS=[{n:'Maya',style:'normal'},{n:'Dev',style:'station'},{n:'Rosa',style:
 const EXTRA_NAMES=['Ana','Bo','Cyd','Eli','Fay','Gus','Ivy','Jo','Kai','Lia','Max','Nia','Oli','Pia','Raj','Sol'];
 const STYLE_DESC={normal:'plays a straightforward chart',station:'a calling station: calls far too much, rarely raises, almost never bluffs',nit:'a nit: plays only premium hands, so a raise means strength',maniac:'a maniac: raises and bluffs far too often'};
 const LAYOUT={
-  6:{seat:[[50,90],[12,70],[16,33],[50,17],[84,33],[88,70]],bet:[[50,73],[27,64],[30,42],[50,33],[70,42],[73,64]]},
-  5:{seat:[[50,90],[12,66],[22,25],[78,25],[88,66]],bet:[[50,73],[28,60],[34,40],[66,40],[72,60]]},
-  4:{seat:[[50,90],[12,68],[50,17],[88,68]],bet:[[50,73],[27,62],[50,33],[73,62]]},
-  3:{seat:[[50,90],[16,34],[84,34]],bet:[[50,73],[31,40],[69,40]]},
+  6:{seat:[[50,90],[12,77],[16,33],[50,17],[84,33],[88,77]],bet:[[50,73],[32,68],[37,35],[50,32],[63,35],[68,68]]},
+  5:{seat:[[50,90],[12,77],[22,25],[78,25],[88,77]],bet:[[50,73],[32,68],[26,42],[74,42],[68,68]]},
+  4:{seat:[[50,90],[12,77],[50,17],[88,77]],bet:[[50,73],[32,68],[50,33],[68,68]]},
+  3:{seat:[[50,90],[16,34],[84,34]],bet:[[50,73],[37,36],[63,36]]},
   2:{seat:[[50,90],[50,17]],bet:[[50,73],[50,33]]}};
 const POS_BY_N={6:['BTN','SB','BB','UTG','HJ','CO'],5:['BTN','SB','BB','HJ','CO'],4:['BTN','SB','BB','CO'],3:['BTN','SB','BB'],2:['BTN','BB']};
 const LEVELS=[[10,20,0],[15,30,0],[20,40,0],[30,60,0],[50,100,10],[75,150,15],[100,200,25],[150,300,30],[200,400,50],[300,600,75],[400,800,100],[500,1000,125],[700,1400,175],[1000,2000,250],[1500,3000,400],[2000,4000,500],[3000,6000,750]];
@@ -1255,19 +1376,23 @@ function alive(){return G.players.filter(p=>!p.folded);}
 function canAct(){return G.players.filter(p=>!p.folded&&!p.allIn);}
 function v(p,w){return p.isHero?w:{fold:'folds',check:'checks',call:'calls',bet:'bets','raise to':'raises to'}[w];}
 function log(s){G.log.push(s);const el=$('#log');el.innerHTML=G.log.slice(-6).join('<br>');el.scrollTop=el.scrollHeight;}
+function avatarOf(p,size){return HC.avatarSVG(p.isHero?HC.heroAvatar():HC.botAvatar(p.name,p.style),size);}
+function chipUnits(bb){return mode==='tourney'?Math.round(bb*BB()):Math.round(bb);}
 function styleTag(p){return p.style&&p.style!=='normal'&&p.style!=='hero'?` <span class="style">${p.style}</span>`:'';}
 
 /* ---------- rendering ---------- */
 function render(){
   const t=$('#table');const h=hero();const n=G.n;const L=LAYOUT[n];
   let html=`<div class="felt"></div><div class="center"><div class="pot">Pot ${money(totalPot())}${mode==='tourney'?` <span style="opacity:.75">(${P.fmt(totalPot())}bb)</span>`:''}</div><div class="board">${G.board.map(c=>P.cardHTML(c)).join('')}${G.board.length<5?Array(5-G.board.length).fill('<span class="card faded back"></span>').join(''):''}</div></div>`;
-  G.players.forEach((p,i)=>{const [x,y]=L.seat[i];const [bx,by]=L.bet[i];const isD=p.pos==='BTN';
+  const chipRef=mode==='tourney'?Math.max(1,G.players.reduce((a,p)=>a+chipUnits(p.startStack),0)/n):100;
+  G.players.forEach((p,i)=>{const [x,y]=L.seat[i];const [bx,by]=L.bet[i];const isD=p.pos==='BTN';const side=x>50?'l':'r';const below=y<50&&x!==50; /* upper side seats keep their chips under the box, clear of the pot line */
     html+=`<div class="seat ${G.acting===i?'acting':''} ${p.folded?'folded':''}" style="left:${x}%;top:${y}%">
-      ${!p.isHero?`<div class="hc">${p.folded?'':p.show?p.cards.map(c=>P.cardHTML(c,'sm')).join(''):'<span class="card sm back"></span><span class="card sm back"></span>'}</div>`:''}
+      <div class="top">${avatarOf(p,36)}${!p.isHero&&!p.folded?`<div class="hc ${p.show?'up':''}">${p.show?p.cards.map(c=>P.cardHTML(c,'sm')).join(''):'<span class="card sm back"></span><span class="card sm back"></span>'}</div>`:''}</div>
       <div class="box"><div class="n">${p.name}${styleTag(p)}</div><div class="st">${p.allIn?'all in':money(p.stack)}</div><div class="p">${p.pos}${mode==='tourney'&&!p.allIn?` · ${p.stack<10?P.fmt(p.stack):Math.round(p.stack)}bb`:''}</div></div>
-      ${isD?`<div class="btnmark" style="position:absolute;right:-6px;top:${p.isHero?'-8px':'18px'}">D</div>`:''}
+      ${p.stack>0?`<div class="chips ${below?'b'+side:side}">${HC.chipStackSVG(Math.max(1,chipUnits(p.stack)),chipRef)}</div>`:''}
+      ${isD?`<div class="btnmark" style="position:absolute;${(side==='r')!==below?'left':'right'}:-7px;bottom:-7px">D</div>`:''}
     </div>`;
-    if(p.bet>0)html+=`<div class="seat" style="left:${bx}%;top:${by}%;width:auto"><span class="bet" style="position:static">${money(p.bet)}</span></div>`;
+    if(p.bet>0)html+=`<div class="seat" style="left:${bx}%;top:${by}%;width:auto"><span class="bet" style="position:static">${HC.chipDot(chipUnits(p.bet))}${money(p.bet)}</span></div>`;
   });
   if(G.msg)html+=`<div class="msg">${G.msg}</div>`;
   t.innerHTML=html;
@@ -1613,12 +1738,12 @@ ${handContext(full)}`;
 /* ---------- showdown ---------- */
 async function finish(check){
   const live=alive();const h=hero();
-  if(live.length===1){const w=live[0];w.stack=r1(w.stack+G.pot);log(`${w.name} wins ${money(G.pot)}`);G.msg=`${w.name} wins ${money(G.pot)}`;G.winners=[w.seat];G.resultText=`${w.name} won ${P.fmt(G.pot)}bb uncontested.`;}
+  if(live.length===1){const w=live[0];w.stack=r1(w.stack+G.pot);log(`${w.name} ${w.isHero?'win':'wins'} ${money(G.pot)}`);G.msg=`${w.name} ${w.isHero?'win':'wins'} ${money(G.pot)}`;G.winners=[w.seat];G.resultText=`${w.name} won ${P.fmt(G.pot)}bb uncontested.`;}
   else{
     for(const p of live)p.show=true;render();await sleep(delay());check();
     const levels=[...new Set(live.map(p=>p.total))].sort((a,b)=>a-b);let prev=0;const won={};
     for(const L of levels){let share=0;for(const p of G.players)share+=Math.max(0,Math.min(p.total,L)-prev);const elig=live.filter(p=>p.total>=L);let best=-1,ws=[];for(const p of elig){const sc=P.evaluate(p.cards.concat(G.board));if(sc>best){best=sc;ws=[p];}else if(sc===best)ws.push(p);}const each=r1(share/ws.length);for(const w of ws){w.stack=r1(w.stack+each);won[w.seat]=r1((won[w.seat]||0)+each);}prev=L;}
-    const parts=Object.keys(won).map(s=>{const p=G.players[s];return `${p.name} wins ${money(won[s])} with ${P.describeHand(p.cards,G.board).desc}`;});
+    const parts=Object.keys(won).map(s=>{const p=G.players[s];return `${p.name} ${p.isHero?'win':'wins'} ${money(won[s])} with ${P.describeHand(p.cards,G.board).desc}`;});
     log(parts.join('; '));G.msg=parts[0];G.winners=Object.keys(won).map(Number);G.resultText='Showdown: '+live.map(p=>`${p.name} ${p.cards.map(P.cardStr).join(' ')} (${P.describeHand(p.cards,G.board).desc})`).join('; ')+'. '+parts.join('; ')+'.';
   }
   G.pot=0;G.finished=true;render();
@@ -1679,7 +1804,7 @@ function reviewHTML(){
   const everyone=G.players.map(p=>{const cls=P.handClass(p.cards[0],p.cards[1]);const openable=P.OPEN.BTN.has(cls)?(P.OPEN.UTG.has(cls)?'premium-ish, playable anywhere':'playable in late position'):'junk';
     const fate=winners.has(p.seat)?'<b>won</b>':p.folded?`folded ${p.foldedOn==='preflop'?'preflop':'on the '+p.foldedOn}`:'lost at showdown';
     const final=board.length>=3&&!p.folded?P.describeHand(p.cards,board).desc:board.length>=3?`would have had ${P.describeHand(p.cards,board).desc}`:'';
-    return `<div class="d" style="align-items:center"><span class="cards">${p.cards.map(c=>P.cardHTML(c,'sm')).join('')}</span><div><b>${p.name}</b>${styleTag(p)} <span class="chip pos" style="font-size:11px">${p.pos}</span> ${cls} <span class="muted">(${openable})</span><div class="muted" style="font-size:12.5px">${fate}${final?' · '+final:''}</div></div></div>`;}).join('');
+    return `<div class="d" style="align-items:center"><span style="line-height:0;flex:none">${avatarOf(p,26)}</span><span class="cards">${p.cards.map(c=>P.cardHTML(c,'sm')).join('')}</span><div><b>${p.name}</b>${styleTag(p)} <span class="chip pos" style="font-size:11px">${p.pos}</span> ${cls} <span class="muted">(${openable})</span><div class="muted" style="font-size:12.5px">${fate}${final?' · '+final:''}</div></div></div>`;}).join('');
   const streets=['preflop','flop','turn','river'];let rows='';
   for(const st of streets){const items=G.history.filter(h=>h.street===st);if(!items.length)continue;
     const b=items[0].board;rows+=`<div style="margin:10px 0 4px" class="row"><span class="eyebrow">${st}</span>${b.length?`<span class="cards">${b.map(c=>P.cardHTML(c,'sm')).join('')}</span>`:''}</div>`;
