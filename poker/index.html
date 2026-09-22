@@ -225,6 +225,7 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
 .seat .box .p{font-size:9.5px;color:var(--muted);letter-spacing:.04em}
 .seat.acting .box{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
 .seat.folded .box{opacity:.4}
+.seat.folded .hc{opacity:.75}
 .seat .hc{display:flex;margin-left:-7px}
 .seat .hc .card+.card{margin-left:-13px}
 .seat .hc.up{margin-left:-9px}
@@ -316,6 +317,7 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
       <div class="panel tight">
         <div class="opt"><span>Your avatar</span><span class="row"><span id="opt-avatar-preview" style="line-height:0"></span><button class="btn sm ghost" id="btn-avatar" type="button">Change</button></span></div>
         <div id="avatar-editor" hidden></div>
+        <div class="opt"><span>Check with the coach before each action</span><input type="checkbox" id="opt-coach-check" checked></div>
         <div class="opt"><span>Coach note after every decision</span><input type="checkbox" id="opt-coach-live" checked></div>
         <div class="opt"><span>Bot speed</span>
           <span class="seg" id="opt-speed"><button type="button" data-v="fast">Fast</button><button type="button" data-v="normal" class="active">Normal</button><button type="button" data-v="slow">Slow</button></span></div>
@@ -954,7 +956,7 @@ Object.assign(P,{oppSpec,assignRange,vsKey,preflopSituation,botDecide,totalPot})
 'use strict';
 const P=window.Poker;const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
 const KEY='holdem-coach-v1';
-const DEFAULT={preflop:{n:0,c:0,byScenario:{},byPos:{},streak:0,best:0},math:{n:0,c:0},reading:{n:0,c:0},play:{hands:0,bb:0,decisions:0,good:0,ok:0,bad:0},tourney:{bankroll:200,played:0,cashes:0,wins:0,best:0,active:null},lessons:{},settings:{coachLive:true,speed:'normal',theme:null}};
+const DEFAULT={preflop:{n:0,c:0,byScenario:{},byPos:{},streak:0,best:0},math:{n:0,c:0},reading:{n:0,c:0},play:{hands:0,bb:0,decisions:0,good:0,ok:0,bad:0},tourney:{bankroll:200,played:0,cashes:0,wins:0,best:0,active:null},lessons:{},settings:{coachLive:true,coachCheck:true,speed:'normal',theme:null}};
 let S=load();
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);return Object.assign({},JSON.parse(JSON.stringify(DEFAULT)),o,{settings:Object.assign({},DEFAULT.settings,o.settings||{})});}}catch(e){}return JSON.parse(JSON.stringify(DEFAULT));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -1022,11 +1024,12 @@ function renderHome(){
   $('#curriculum').innerHTML=STEPS.map((s,i)=>{const d=s.done();const isNext=s===next;const pr=s.progress?s.progress():0;return `<div class="step ${d?'done':''} ${isNext?'next':''}" data-i="${i}"><div class="dot">${d?'✓':i+1}</div><div class="t">${s.title}<small>${s.sub}</small>${!d&&s.progress&&pr>0?`<div class="bar"><i style="width:${Math.round(pr*100)}%"></i></div>`:''}</div><button class="btn sm ${isNext?'primary':''}" type="button">${d?'Again':'Go'}</button></div>`;}).join('');
   $$('#curriculum .step button').forEach(b=>b.addEventListener('click',()=>STEPS[+b.closest('.step').dataset.i].go()));
   $('#opt-table-row').hidden=!(SERVER&&tablePass());
-  $('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;$('#opt-ai-review-home').checked=!!S.settings.aiReviewHome;
+  $('#opt-coach-check').checked=S.settings.coachCheck!==false;$('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;$('#opt-ai-review-home').checked=!!S.settings.aiReviewHome;
   $$('#opt-speed button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.settings.speed));
   renderAvatarSettings();
 }
 $('#opt-coach-live').addEventListener('change',e=>{S.settings.coachLive=e.target.checked;save();});
+$('#opt-coach-check').addEventListener('change',e=>{S.settings.coachCheck=e.target.checked;save();});
 $('#opt-ai-review').addEventListener('change',e=>{S.settings.aiReview=e.target.checked;save();});
 $('#opt-ai-review-home').addEventListener('change',e=>{S.settings.aiReviewHome=e.target.checked;save();});
 (function(){const inp=$('#opt-api-key');try{inp.value=localStorage.getItem('holdem-coach-api-key')||'';}catch(e){}
@@ -1533,7 +1536,7 @@ function render(){
   G.players.forEach((p,i)=>{const [x,y]=L.seat[i];const [bx,by]=L.bet[i];const isD=p.pos==='BTN';const side=x>50?'l':'r';const below=y<50&&x!==50; /* upper side seats keep their chips under the box, clear of the pot line */
     html+=`<div class="seat ${G.acting===i?'acting':''} ${p.folded?'folded':''}" style="left:${x}%;top:${y}%">
       ${G.remote&&!p.isHero&&R.bubbles[p.sid]&&R.bubbles[p.sid].until>Date.now()?`<div class="bubble ${x<30?'bl':x>70?'br':''}">${esc(R.bubbles[p.sid].text)}</div>`:''}
-      <div class="top">${avatarOf(p,36)}${!p.isHero&&!p.folded?`<div class="hc ${p.show?'up':''}">${p.show?p.cards.map(c=>P.cardHTML(c,'sm')).join(''):'<span class="card sm back"></span><span class="card sm back"></span>'}</div>`:''}</div>
+      <div class="top">${avatarOf(p,36)}${!p.isHero&&(!p.folded||p.show)?`<div class="hc ${p.show?'up':''}">${p.show?p.cards.map(c=>P.cardHTML(c,'sm')).join(''):'<span class="card sm back"></span><span class="card sm back"></span>'}</div>`:''}</div>
       <div class="box"><div class="n">${p.name}${styleTag(p)}</div><div class="st">${p.allIn?'all in':money(p.stack)}</div><div class="p">${p.pos}${mode==='tourney'&&!p.allIn?` · ${p.stack<10?P.fmt(p.stack):Math.round(p.stack)}bb`:''}</div></div>
       ${p.stack>0?`<div class="chips ${below?'b'+side:side}">${HC.chipStackSVG(Math.max(1,chipUnits(p.stack)),chipRef)}</div>`:''}
       ${isD?`<div class="btnmark" style="position:absolute;${(side==='r')!==below?'left':'right'}:-7px;bottom:-7px">D</div>`:''}
@@ -1595,7 +1598,7 @@ async function bettingRound(street,startIdx,check){
       if(G.currentBet>before){need=new Set(canAct().filter(q=>q.seat!==idx).map(q=>q.seat));}
       G.acting=-1;render();
       if(alive().length===1)return;
-      if(p.isHero&&act.coach&&HC.S.settings.coachLive){await showCoach(act.coach,check);}
+      if(p.isHero&&act.coach&&HC.S.settings.coachLive&&!act.previewed){await showCoach(act.coach,check);}
     }
     idx=(idx+1)%n;
   }
@@ -1648,7 +1651,14 @@ function heroAct(check){
     $('#size-presets').innerHTML=presets.map(([l,val])=>`<button class="btn" type="button" data-v="${val}">${l}</button>`).join('');
     $$('#size-presets .btn').forEach(b=>b.onclick=()=>setAmt(+b.dataset.v));
     range.oninput=()=>setAmt(+range.value);
-    const done=act=>{area.hidden=true;closeSheet();resolve(decorate(p,act,toCall,pot));};
+    const commit=act=>{area.hidden=true;closeSheet();resolve(decorate(p,act,toCall,pot));};
+    /* with "check with the coach" on, the choice is graded first and can still be changed */
+    const done=act=>{if(HC.S.settings.coachCheck===false)return commit(act);
+      const c=decorate(p,act,toCall,pot,true);area.hidden=true;closeSheet();const el=$('#coach-area');el.hidden=false;
+      el.innerHTML=`<div class="eyebrow" style="margin-bottom:4px">Before you act</div>`+coachHTML(c,false)+`<div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="coach-keep" style="flex:1">${c.grade==='good'?'Do it':'Do it anyway'}: ${c.you}</button><button class="btn ghost" type="button" id="coach-change">Change</button></div>`;
+      $('#coach-keep').onclick=()=>{el.hidden=true;el.innerHTML='';commit(Object.assign(act,{previewed:true}));};
+      $('#coach-change').onclick=()=>{G.hintRevealed=true;el.hidden=true;el.innerHTML='';area.hidden=false;sizeArea.hidden=true;};
+      el.scrollIntoView({block:'nearest',behavior:'smooth'});};
     $('#act-fold').onclick=()=>done({type:'fold'});
     $('#act-fold').style.visibility=toCall>0?'':'hidden';
     $('#act-check').onclick=()=>done(toCall>0?{type:'call'}:{type:'check'});
@@ -1660,7 +1670,7 @@ function heroAct(check){
 }
 function postflopSituation(p,toCall,pot){const opps=alive().filter(q=>q!==p);const one=opps.length===1?opps[0]:null;
   return {street:G.street,pot,toCall,heroIsPFR:G.pfr===0,nOpp:opps.length,board:G.board,hero:p.cards,oppRanges:opps.map(oppSpec),heroStack:p.stack,lastBet:G.currentBet,heroBetThisStreet:p.bet,oppStyle:one?one.style:null,oppName:one?one.name:null};}
-function decorate(p,act,toCall,pot){
+function decorate(p,act,toCall,pot,preview){
   const opps=alive().filter(q=>q!==p);let base,grade,label,scenario='',cls='',tier=null,outs=0;
   const action={type:act.type,amount:act.to?r1(act.to):0};
   if(G.street==='preflop'){const s=preflopSituation(p);base=P.preflopBaseline(s);scenario=base.scenario;cls=s.cls;
@@ -1674,6 +1684,7 @@ function decorate(p,act,toCall,pot){
   const bestWord=base.best==='raise'?(G.street==='preflop'&&base.label?base.label.raise:'Raise'):base.best==='bet'?(base.allIn?'Bet all in':`Bet ~${Math.round(base.sizeFrac*100)}% pot`):base.best==='call'?(G.street==='preflop'&&base.label?base.label.call:'Call'):base.best==='check'?'Check':'Fold';
   const youWord=action.type==='fold'?'Fold':action.type==='check'?'Check':action.type==='call'?'Call':`${action.type==='bet'?'Bet':'Raise to'} ${P.fmt(act.to)}bb`;
   const coach={grade:grade.grade,label,you:youWord,best:bestWord,ok:base.ok||[],why:base.why+(grade.note||''),hinted:!!G.hintRevealed,numbers:G.street==='preflop'?null:{eq:Math.round(base.eq*100),potOdds:toCall>0?Math.round(base.potOdds*100):null,outs:base.info.outs,pot:P.fmt(pot),toCall:toCall>0?P.fmt(toCall):null}};
+  if(preview)return coach;
   act.coach=coach;G.decisions.push(coach);
   if(!G.practice){const pl=HC.S.play;pl.decisions++;pl[grade.grade]++;if(G.hintRevealed)pl.hinted=(pl.hinted||0)+1;
     const dl=HC.S.dlog=HC.S.dlog||[];dl.push({m:mode,st:G.street,pos:p.pos,sc:scenario,cls,tier,outs,a:action.type,b:base.best,g:grade.grade,f:toCall>0?1:0,sz:grade.note?1:0,h:G.hintRevealed?1:0,t:Date.now()});if(dl.length>600)dl.splice(0,dl.length-600);HC.save();}
@@ -1773,6 +1784,10 @@ Reading the table: for each opponent who mattered, what the student could reason
 Lesson: one sentence to remember.
 Under 260 words total. Plain text, no markdown headers other than the section names.`;
   const txt=await askClaudeOnce(true,null,q);G.aiReview=txt;return txt;}
+async function aiWalkthrough(){
+  if(G.aiWalk)return G.aiWalk;
+  const q=`Walk me through this hand street by street from my seat, as if you were sitting in it. For each street where I had a decision, in two or three plain sentences: what you would be thinking at that moment (my hand, what the opponents' actions suggest, the pot and the price, the plan) and what you would do, using only what I could see at that point. If I folded, stop there and add one sentence on what happened after. End with one sentence on what the showdown revealed and whether it changes the reasoning. Under 250 words. Format: one short paragraph per street, starting with the street name in bold, no bullets.`;
+  const txt=await askClaudeOnce(true,null,q);G.aiWalk=txt;return txt;}
 function openChat(full,liveCoach){
   const key=apiKey();
   const onArtifact=/claude\.ai$/.test(location.hostname)||location.hostname.endsWith('.claude.ai');
@@ -1821,7 +1836,8 @@ async function finish(check){
     const parts=Object.keys(won).map(s=>{const p=G.players[s];return `${p.name} ${p.isHero?'win':'wins'} ${money(won[s])} with ${P.describeHand(p.cards,G.board).desc}`;});
     log(parts.join('; '));G.msg=parts[0];G.winners=Object.keys(won).map(Number);G.resultText='Showdown: '+live.map(p=>`${p.name} ${p.cards.map(P.cardStr).join(' ')} (${P.describeHand(p.cards,G.board).desc})`).join('; ')+'. '+parts.join('; ')+'.';
   }
-  G.pot=0;G.finished=true;render();
+  G.pot=0;G.finished=true;for(const p of G.players)p.show=true; /* the whole table is shown once the hand is over */
+  render();
   const heroNet=r1(h.stack-h.startStack);G.heroNet=heroNet;
   let tEnd=null;
   if(G.practice){}
@@ -1856,12 +1872,13 @@ function showSummary(net,tEnd){
   <p style="margin-top:6px">${outcome} ${live.length>1&&!h.folded?live.filter(p=>!p.isHero).map(p=>`${p.name}: ${P.handClass(p.cards[0],p.cards[1])} (${P.describeHand(p.cards,G.board).desc})`).join('. ')+'.':''}${busted.length?` <b>${busted.join(' and ')} ${busted.length>1?'are':'is'} out.</b>`:''}${G.offBusts?` ${G.offBusts} player${G.offBusts>1?'s':''} busted at other tables.`:''}</p>
   <div class="summary">${decs.length?decs.map(d=>`<div class="d"><span class="chip ${d.grade}">${{good:'Good',ok:'Okay',bad:'Miss'}[d.grade]}</span><div><b>${d.label}</b>${d.hinted?' <span class="muted">(hint)</span>':''} · you: ${d.you}; baseline: ${d.best}${HC.S.settings.coachLive?'':'<div class="muted" style="font-size:12.5px;margin-top:2px">'+d.why+'</div>'}</div></div>`).join(''):'<p class="muted">No decisions this hand.</p>'}</div>
   <div id="ai-review" style="margin-top:10px"></div>
+  <div id="ai-walk" style="margin-top:8px"></div>
   <div class="row" style="margin-top:10px"><button class="btn sm" type="button" id="sum-ask">Ask the coach about this hand</button>${streets.length?'<span class="muted" style="font-size:12px">Replay from:</span>':''}${streets.map(s=>`<button class="btn sm ghost" type="button" data-replay="${s}">${s}</button>`).join('')}</div>
   ${reviewHTML()}
   <p class="muted" style="font-size:12.5px;margin-top:8px">Grade decisions, not results. A good decision that loses is still good; a mistake that wins is still a mistake.</p>
   <div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="sum-next" style="flex:1">${tEnd?'Back to Play':G.practice?'Back to the game':'Next hand'}</button>${tEnd?'':'<button class="btn ghost" type="button" id="sum-close">Look at the table</button>'}</div>`;
   openSheet(html);
-  renderAiReview();
+  renderAiReview();renderAiWalk();
   $('#sum-next').onclick=()=>{closeSheet();if(tEnd){token++;G=null;$('#play-table').hidden=true;$('#play-intro').hidden=false;renderIntro();}else nextHand();};
   $('#sum-ask').onclick=()=>openChat(true,null);
   $$('#sheet [data-replay]').forEach(btn=>btn.onclick=()=>replayFrom(btn.dataset.replay));
@@ -1874,6 +1891,11 @@ function renderAiReview(){const el=$('#ai-review');if(!el)return;
   const run=async()=>{el.innerHTML='<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Reviewing the hand…</span></div></div>';try{show(await aiReview());}catch(e){el.innerHTML=`<p class="muted">AI review failed: ${e.message||e}</p>`;}};
   if(aiAuto()&&!G.practice&&G.decisions.length)run();
   else{el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-review-btn">AI review of this hand</button>`;$('#ai-review-btn').onclick=run;}}
+function renderAiWalk(){const el=$('#ai-walk');if(!el||!aiAvailable())return;
+  const show=txt=>{R.aiWalk=G.aiWalk;el.innerHTML=`<div class="grade ok" style="border-left-color:var(--gold)"><div class="head"><span class="chip info">Hand walkthrough</span><span class="muted" style="font-size:12px">how the coach would think it through, street by street</span></div><div class="why">${md(txt)}</div></div>`;};
+  if(G.aiWalk){show(G.aiWalk);return;}
+  el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-walk-btn">Walk me through the hand</button>`;
+  $('#ai-walk-btn').onclick=async()=>{el.innerHTML='<div class="grade ok" style="border-left-color:var(--gold)"><div class="head"><span class="chip info">Hand walkthrough</span><span class="muted" style="font-size:12px">Thinking it through…</span></div></div>';try{show(await aiWalkthrough());}catch(e){el.innerHTML=`<p class="muted">Walkthrough failed: ${e.message||e}</p>`;}};}
 function reviewHTML(){
   const board=G.board;const winners=new Set(G.winners||[]);
   const back2='<span class="card sm back"></span><span class="card sm back"></span>';
@@ -1969,9 +1991,9 @@ $$('.tchat-form').forEach(f=>f.addEventListener('submit',e=>{e.preventDefault();
 /* ---------- the hand, as the server shows it to this player ---------- */
 function onState(m){
   if(!m.G||!R.room||R.room.phase!=='playing')return;const v=m.G;
-  if(v.hand!==R.hand){R.hand=v.hand;R.decisions=[];R.heroCoaches=[];R.aichat=[];R.aiReview=null;R.summaryShown=false;closeSheet();$('#coach-area').hidden=true;$('#coach-area').innerHTML='';}
+  if(v.hand!==R.hand){R.hand=v.hand;R.decisions=[];R.heroCoaches=[];R.aichat=[];R.aiReview=null;R.aiWalk=null;R.summaryShown=false;closeSheet();$('#coach-area').hidden=true;$('#coach-area').innerHTML='';}
   mode=v.format==='sng'?'tourney':'cash';T=v.T?{level:v.T.level,remote:v.T}:null;
-  G=Object.assign(v,{remote:true,decisions:R.decisions,chat:R.aichat,aiReview:R.aiReview,snapshots:{},practice:false,rng:Math.random,hint:false});
+  G=Object.assign(v,{remote:true,decisions:R.decisions,chat:R.aichat,aiReview:R.aiReview,aiWalk:R.aiWalk,snapshots:{},practice:false,rng:Math.random,hint:false});
   let k=0;for(const h of G.history)h.coach=h.isHero?(R.heroCoaches[k++]||null):null;
   for(const p of G.players)assignRange(p);
   const el=$('#log');el.innerHTML=G.log.slice(-6).map(esc).join('<br>');el.scrollTop=el.scrollHeight;
@@ -1980,7 +2002,7 @@ function onState(m){
   if(m.turn&&G.acting===0&&!G.spectator&&!G.finished){
     if(R.turnSeq!==m.turn.seq){R.turnSeq=m.turn.seq;token++;const my=token,seq=m.turn.seq;startTurnTimer(m.turn.ms);
       heroAct(()=>{}).then(act=>{if(my!==token)return;stopTurnTimer();R.turnSeq=null;rsend({t:'act',seq,type:act.type,to:act.to});
-        if(act.coach){R.heroCoaches.push(act.coach);if(HC.S.settings.coachLive)showCoachRemote(act.coach);}});}
+        if(act.coach){R.heroCoaches.push(act.coach);if(HC.S.settings.coachLive&&!act.previewed)showCoachRemote(act.coach);}});}
     else startTurnTimer(m.turn.ms);}
   else if(R.turnSeq!==null){R.turnSeq=null;token++;stopTurnTimer();$('#action-area').hidden=true;closeSheet();}
   if(G.finished&&!R.summaryShown&&!G.spectator){R.summaryShown=true;const h=hero();const net=r1(h.stack-h.startStack);G.heroNet=net;

@@ -114,8 +114,13 @@ export default {
         body: JSON.stringify(body),
       });
       /* a 401 from this worker means "wrong table password", so a rejected API key must not look like one */
-      if (upstream.status === 401 || upstream.status === 403) return json({ error: { message: 'The shared AI key was refused by Anthropic. Tell the host.' } }, 502, h);
       const text = await upstream.text();
+      if (upstream.status === 401 || upstream.status === 403) {
+        let why = ''; try { why = JSON.parse(text).error.message || ''; } catch (e) {}
+        console.log(`anthropic refused the shared key: HTTP ${upstream.status} ${why}`);
+        return json({ error: { message: `The shared AI key was refused by Anthropic (${why || 'HTTP ' + upstream.status}). Tell the host.` } }, 502, h);
+      }
+      if (!upstream.ok) console.log(`anthropic error: HTTP ${upstream.status} ${text.slice(0, 300)}`);
       return new Response(text, { status: upstream.status, headers: { 'Content-Type': 'application/json', ...h } });
     }
     return json({ error: 'not found' }, 404, h);

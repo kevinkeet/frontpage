@@ -27,6 +27,14 @@ Live at **https://kevinkeet.com/poker/** (GitHub Pages, served from `main` of th
   each bot's reasoning), rule-based opponent "reads", replay-from-any-street practice,
   and, when the AI coach is enabled, an AI review (Well done / To improve / Reading the
   table / Lesson) plus an "Ask the coach" chat.
+- Check with the coach before acting (Settings, on by default): a chosen action is graded
+  first ("Before you act" card with Do it / Change). Changing after seeing the verdict
+  marks the decision as hinted. `decorate(p,act,toCall,pot,preview=true)` grades without
+  recording; the after-decision coach note is skipped for previewed actions.
+- When a hand is over every seat's cards are shown (solo: all bots; home game: bots only,
+  people's mucked cards stay private).
+- Summary also offers "Walk me through the hand": a street-by-street AI walkthrough from
+  the student's seat (`aiWalkthrough`, cached in `G.aiWalk` / `R.aiWalk`).
 - Hint button during play: your spot, the exact range chart for the situation with your
   hand outlined, pot-odds and outs tables, opponent reads, optional AI read, and an
   optional reveal of the coach's advice (marks the decision as hinted).

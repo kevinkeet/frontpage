@@ -281,6 +281,7 @@ export class Room {
       for (const p of busted) { R.out.push(p.name); R.seats[p.sid].out = true; this.say(null, `${p.name} is out.`); }
       R.T.hands++; R.T.handsAtLevel++; if (R.T.handsAtLevel >= SNG.handsPerLevel) { R.T.handsAtLevel = 0; R.T.level++; }
     }
+    for (const p of players) if (p.isBot) p.show = true;   /* bots show their cards once the hand is over; people's mucked cards stay private */
     G.finished = true; G.acting = -1; await this.save(); this.broadcastRoom(); this.broadcastState();
     /* next hand when every connected player at the table is ready, or after a pause */
     const waitFor = () => R.seats.filter(s => s.kind === 'human' && s.connected && !s.leaving && players.some(p => p.sid === s.id));
