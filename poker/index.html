@@ -200,6 +200,11 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
 .seat .chips.bl{right:6px}
 .seat.folded .chips{opacity:.7}
 .chipdot{vertical-align:-1.5px;margin-right:3px}
+a.term{color:inherit;text-decoration:underline dotted var(--gold);text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:help}
+#gloss{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+#gloss .box{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);font-size:14px}
+.grade details.why-more summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:4px}
+#size-num{width:110px;margin:0;font-family:var(--mono);font-size:16px;padding:8px}
 .field{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;margin-top:6px}
 .tchat .tchat-list{max-height:132px;overflow-y:auto;font-size:13.5px;line-height:1.4;margin:4px 0 8px}
 .tchat .tc{padding:2px 0;overflow-wrap:anywhere}
@@ -313,6 +318,12 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
       <h2>Curriculum</h2>
       <p class="muted">Work through these in order. A step is checked off once your accuracy on it is solid. Nothing is locked, so jump ahead any time.</p>
       <div class="curriculum" id="curriculum"></div>
+      <h2>Coaching level</h2>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between"><b id="level-name">Novice</b><span class="seg" id="level-seg"><button type="button" data-v="auto" class="active">Auto</button><button type="button" data-v="novice">Novice</button><button type="button" data-v="improving">Improving</button><button type="button" data-v="advanced">Advanced</button></span></div>
+        <p id="level-blurb" style="font-size:14px;margin:8px 0 4px"></p>
+        <p class="muted" id="level-progress" style="font-size:12.5px;margin:0"></p>
+      </div>
       <h2>Settings</h2>
       <div class="panel tight">
         <div class="opt"><span>Your avatar</span><span class="row"><span id="opt-avatar-preview" style="line-height:0"></span><button class="btn sm ghost" id="btn-avatar" type="button">Change</button></span></div>
@@ -435,7 +446,7 @@ table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:va
           </div>
           <div id="size-area" class="stack" hidden>
             <div class="sizes" id="size-presets"></div>
-            <div class="sizer"><input type="range" id="size-range" min="1" max="100" step="0.5"><span class="amt" id="size-amt"></span></div>
+            <div class="sizer"><input type="range" id="size-range" min="1" max="100" step="0.5"><input type="number" id="size-num" class="field" step="0.5" inputmode="decimal" aria-label="Bet size in big blinds" hidden><span class="amt" id="size-amt"></span></div>
             <div class="row"><button class="btn gold" id="act-confirm" type="button" style="flex:1">Raise to 3bb</button><button class="btn ghost" id="act-cancel" type="button">Back</button></div>
           </div>
         </div>
@@ -1026,7 +1037,7 @@ function renderHome(){
   $('#opt-table-row').hidden=!(SERVER&&tablePass());
   $('#opt-coach-check').checked=S.settings.coachCheck!==false;$('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;$('#opt-ai-review-home').checked=!!S.settings.aiReviewHome;
   $$('#opt-speed button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.settings.speed));
-  renderAvatarSettings();
+  renderAvatarSettings();renderLevel();
 }
 $('#opt-coach-live').addEventListener('change',e=>{S.settings.coachLive=e.target.checked;save();});
 $('#opt-coach-check').addEventListener('change',e=>{S.settings.coachCheck=e.target.checked;save();});
@@ -1422,6 +1433,93 @@ function renderAvatarSettings(){const a=heroAvatar();$('#opt-avatar-preview').in
 $('#btn-avatar').addEventListener('click',()=>{const ed=$('#avatar-editor');ed.hidden=!ed.hidden;$('#btn-avatar').textContent=ed.hidden?'Change':'Done';renderAvatarSettings();});
 Object.assign(window.HC,{avatarSVG,botAvatar,heroAvatar,cleanAvatar,chipStackSVG,chipDot});
 
+
+/* ---------- coaching level and glossary ---------- */
+/* The level decides how much is explained and how much is handed to the student. "Auto"
+   follows the graded-decision record; the student can pin a level in Settings. */
+const LEVELS_INFO={novice:{name:'Novice',blurb:'Everything is explained, bet sizes are suggested, and you can check with the coach before you act.'},
+  improving:{name:'Improving',blurb:'The math is shown after you decide, not before. Bet-size buttons are there but nothing is pre-selected.'},
+  advanced:{name:'Advanced',blurb:'Short verdicts with the reasoning one tap away. You type your own bet sizes; the coach grades them.'}};
+const LEVEL_GATES={improving:{n:60,rate:0.7},advanced:{n:200,rate:0.8}};
+function levelFromStats(){const p=S.play;const n=p.decisions||0,rate=n?(p.good||0)/n:0;
+  if(n>=LEVEL_GATES.advanced.n&&rate>=LEVEL_GATES.advanced.rate)return 'advanced';if(n>=LEVEL_GATES.improving.n&&rate>=LEVEL_GATES.improving.rate)return 'improving';return 'novice';}
+function coachLevel(){const pin=S.settings.level;return pin&&pin!=='auto'&&LEVELS_INFO[pin]?pin:levelFromStats();}
+function levelProgressText(){const p=S.play;const n=p.decisions||0,rate=n?Math.round((p.good||0)/n*100):0;const lv=levelFromStats();
+  const next=lv==='novice'?['Improving',LEVEL_GATES.improving]:lv==='improving'?['Advanced',LEVEL_GATES.advanced]:null;
+  return `${n} graded decision${n===1?'':'s'}, ${rate}% good.`+(next?` ${next[0]} unlocks at ${next[1].n} decisions with ${Math.round(next[1].rate*100)}% good.`:' You are at the top level.');}
+function renderLevel(){const lv=coachLevel(),auto=!S.settings.level||S.settings.level==='auto';
+  $('#level-name').textContent=LEVELS_INFO[lv].name+(auto?' (auto)':'');$('#level-blurb').textContent=LEVELS_INFO[lv].blurb;$('#level-progress').textContent=levelProgressText();
+  $$('#level-seg button').forEach(b=>b.classList.toggle('active',b.dataset.v===(S.settings.level||'auto')));}
+$$('#level-seg button').forEach(b=>b.addEventListener('click',()=>{S.settings.level=b.dataset.v;S.settings.levelSeen=coachLevel();save();renderLevel();}));
+/* called after every graded decision: announce a step up */
+function checkLevelUp(){const lv=coachLevel();const seen=S.settings.levelSeen||'novice';if(lv===seen)return;S.settings.levelSeen=lv;save();
+  const order=['novice','improving','advanced'];if(order.indexOf(lv)>order.indexOf(seen))toast(`Level up: ${LEVELS_INFO[lv].name}. ${lv==='improving'?'Bet sizes are no longer pre-selected.':'You now type your own bet sizes.'}`);}
+
+/* Glossary: terms in coach text become links that open a short definition and the lesson. */
+const GLOSSARY={
+  equity:{d:'Your share of the pot if the hand were dealt out many times: the chance your hand wins (ties count half). Compare it with the price you are offered.',l:'l5'},
+  'pot odds':{d:'The price of a call as a percentage: to call ÷ (pot + to call). Bet half the pot and the caller needs 25% equity; a pot-sized bet needs 33%.',l:'l5'},
+  outs:{d:'Cards still in the deck that would improve your hand to a likely winner. Rule of thumb: outs × 4 = your % to hit by the river with two cards to come, outs × 2 with one card to come.',l:'l5'},
+  'rule of 4 and 2':{d:'Multiply your outs by 4 on the flop, or by 2 on the turn, to estimate your chance of hitting by the river.',l:'l5'},
+  range:{d:'All the hands a player could hold given their seat and actions. You never know the exact hand; you play against the range.',l:'l3'},
+  'opening range':{d:'The set of hands worth raising first-in from a given seat. Tight from early seats, wide from the button.',l:'l3'},
+  position:{d:'Where you sit relative to the dealer button. Acting last (in position) is a large advantage, so later seats play more hands.',l:'l2'},
+  'in position':{d:'Acting after your opponent on every street. You see what they do before deciding.',l:'l2'},
+  'out of position':{d:'Acting before your opponent. Play fewer hands and bigger ones.',l:'l2'},
+  button:{d:'The dealer seat (BTN): last to act after the flop, the best seat at the table.',l:'l2'},
+  blinds:{d:'Forced bets from the two seats left of the button (small blind, big blind). They put money in before seeing cards, which is why blind hands are played carefully.',l:'l2'},
+  'big blind':{d:'The larger forced bet, and the unit the app measures money in ("bb"). 100bb means a hundred big blinds.',l:'l2'},
+  bb:{d:'Big blinds, the unit for stacks and bets here. Thinking in big blinds makes advice work at any stakes.',l:'l4'},
+  open:{d:'To raise when nobody has entered the pot yet (an "open-raise"). Enter pots by raising, not by limping.',l:'l4'},
+  'open-raise':{d:'The first raise in an unopened pot, normally 2.5bb (3bb from the small blind).',l:'l4'},
+  limp:{d:'Calling the big blind instead of raising. It gives the blinds a cheap look and wins nothing outright; raise or fold instead.',l:'l7'},
+  isolate:{d:'Raising over one or more limpers to play the pot against a weak hand, usually 3bb plus 1bb per limper.',l:'l4'},
+  '3-bet':{d:'A re-raise over the first raise (the blind is bet one, the open is bet two). Made with premium hands and a few bluffs.',l:'l4'},
+  '4-bet':{d:'A re-raise over a 3-bet. Almost always a premium hand: QQ+ and AK.',l:'l4'},
+  'continuation bet':{d:'A bet on the flop by the preflop raiser, whether or not the flop helped. About ⅓ pot on dry boards; it often wins at once.',l:'l6'},
+  'c-bet':{d:'Short for continuation bet: the preflop raiser betting the flop.',l:'l6'},
+  'value bet':{d:'A bet made because a worse hand can call it. Top pair, overpairs and two pair usually want value.',l:'l6'},
+  bluff:{d:'A bet with a hand that cannot win at showdown, made to make better hands fold. Works against few players, not against stations.',l:'l6'},
+  'semi-bluff':{d:'A bet with a draw: it can win now if they fold, or later if the draw hits.',l:'l6'},
+  'bluff-catcher':{d:'A modest hand that only beats bluffs. Call with it against players who bluff a lot; fold it against players who do not.',l:'l6'},
+  kicker:{d:'The side card that breaks ties between equal pairs. AK beats AQ on an ace-high board because of the kicker.',l:'l1'},
+  'top pair':{d:'A pair made with the highest card on the board. Usually a good hand, best with a strong kicker.',l:'l6'},
+  overpair:{d:'A pocket pair higher than every card on the board, for example QQ on a J-7-2 flop.',l:'l6'},
+  'two pair':{d:'Two different pairs. Strong on most boards; bet it for value.',l:'l1'},
+  set:{d:'Three of a kind made with a pocket pair, well hidden and very strong.',l:'l1'},
+  trips:{d:'Three of a kind using one card from your hand and a pair on the board.',l:'l1'},
+  'flush draw':{d:'Four cards of one suit with cards still to come: nine outs, about 35% to hit by the river from the flop.',l:'l5'},
+  'open-ender':{d:'An open-ended straight draw: four in a row, eight outs, about 32% from the flop.',l:'l5'},
+  gutshot:{d:'An inside straight draw, four outs. Weak; chase it only at a very cheap price.',l:'l5'},
+  'wet board':{d:'A board with flush or straight draws, where hands change a lot on later cards. Bet bigger.',l:'l6'},
+  'dry board':{d:'A board with few draws, like K-7-2 rainbow. Small bets do the job.',l:'l6'},
+  'pot control':{d:'Keeping the pot small with a medium hand by checking or calling instead of raising.',l:'l6'},
+  'all in':{d:'Betting your whole stack. Once all in you cannot be bluffed off the hand.',l:'l8'},
+  shove:{d:'To go all in. With 10 big blinds or fewer, the only moves are shove or fold.',l:'l8'},
+  'short stack':{d:'A stack of about 20bb or less. Raises become all-ins and postflop play mostly disappears.',l:'l8'},
+  'stack-to-pot ratio':{d:'Stack divided by pot. When it is low, commit with strong hands; when it is high, play carefully.',l:'l8'},
+  'calling station':{d:'A player who calls far too much and rarely raises. Bet for value more thinly; never bluff them.',l:'l6'},
+  nit:{d:'A very tight player. Their raises mean strength, so fold hands you would normally call with.',l:'l6'},
+  maniac:{d:'A player who raises and bluffs constantly. Call down lighter and let them bluff into your strong hands.',l:'l6'},
+  showdown:{d:'When the remaining players show their cards after the last bet on the river. Best five-card hand wins.',l:'l1'},
+  baseline:{d:'The tight-aggressive strategy the app grades you against. It is solid and simple, not perfect.',l:'l3'},
+  'implied odds':{d:'Money you expect to win on later streets if your draw hits, which can justify a call the pot odds alone would not.',l:'l5'},
+  'check-raise':{d:'Checking, then raising after an opponent bets. A strong move in position with big hands or good draws.',l:'l6'},
+  slowplay:{d:'Checking or calling with a very strong hand to keep the opponent in. Mostly costs money against beginners; bet instead.',l:'l7'},
+  'fold equity':{d:'The chance a bet makes the opponent fold. It is what makes bluffs and semi-bluffs profitable.',l:'l6'},
+};
+const GLOSS_RE=new RegExp('\\b('+Object.keys(GLOSSARY).sort((a,b)=>b.length-a.length).map(t=>t.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&').replace(/ /g,'[ -]')).join('|')+')(s|es)?\\b','gi');
+function glossKey(w){w=w.toLowerCase().replace(/-/g,' ');const k=Object.keys(GLOSSARY).find(t=>t.replace(/-/g,' ')===w||t.replace(/-/g,' ')+'s'===w||t.replace(/-/g,' ')+'es'===w);return k||null;}
+/* wrap the first mention of each glossary term in a block; only touches text between tags */
+function linkTerms(html){if(!html)return html;const seen=new Set();
+  return html.split(/(<[^>]+>)/).map(part=>part.startsWith('<')?part:part.replace(GLOSS_RE,(m,term,suf)=>{const k=glossKey(term+(suf||''))||glossKey(term);if(!k||seen.has(k))return m;seen.add(k);return `<a class="term" href="#" data-term="${k}">${m}</a>`;})).join('');}
+function openGloss(key){const g=GLOSSARY[key];if(!g)return;let el=$('#gloss');if(!el){el=document.createElement('div');el.id='gloss';document.body.appendChild(el);}
+  const lesson=LESSONS.find(l=>l.id===g.l);
+  el.innerHTML=`<div class="box"><div class="row" style="justify-content:space-between;align-items:flex-start"><b style="font-size:16px;text-transform:capitalize">${key}</b><button class="btn sm ghost" type="button" id="gloss-close">Close</button></div><p style="margin:8px 0">${g.d}</p><button class="btn sm" type="button" id="gloss-lesson">Read lesson ${lesson?lesson.title:''}</button></div>`;
+  el.hidden=false;$('#gloss-close').onclick=()=>{el.hidden=true;};el.onclick=e=>{if(e.target===el)el.hidden=true;};
+  $('#gloss-lesson').onclick=()=>{el.hidden=true;const sh=$('#sheet'),ov=$('#overlay');if(sh)sh.hidden=true;if(ov)ov.hidden=true;go('learn');openLesson(g.l);};}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a.term');if(!a)return;e.preventDefault();openGloss(a.dataset.term);});
+Object.assign(window.HC,{coachLevel,renderLevel,checkLevelUp,linkTerms,openGloss,GLOSSARY});
 /* ---------- boot ---------- */
 renderLessons();renderHome();
 let startTab='home';try{startTab=localStorage.getItem(KEY+':tab')||'home';}catch(e){}
@@ -1645,12 +1743,15 @@ function heroAct(check){
       else presets=[['2.2x',r1(last*2.2)],['2.5x',r1(last*2.5)],['3x',r1(last*3)]];
     }else if(!isRaise)presets=[['⅓ pot',r1(pot/3)],['½ pot',r1(pot/2)],['⅔ pot',r1(pot*2/3)],['¾ pot',r1(pot*.75)],['Pot',r1(pot)]].map(([l,a])=>[l,r1(p.bet+a)]);
     else presets=[['2.5x',r1(G.currentBet*2.5)],['3x',r1(G.currentBet*3)],['Pot',r1(p.bet+toCall+pot+toCall)]];
-    presets=presets.map(([l,val])=>[l,Math.min(stackTo,Math.max(minTo,val))]).filter(([l,val],i,arr)=>val<stackTo&&arr.findIndex(x=>x[1]===val)===i);presets.push(['All in',stackTo]);
-    const range=$('#size-range');range.min=minTo;range.max=stackTo;range.step=0.5;
-    const setAmt=val=>{val=Math.min(stackTo,Math.max(minTo,r1(val)));range.value=val;$('#size-amt').textContent=money(val);const extra=G.street!=='preflop'?` (${Math.round((val-p.bet)/Math.max(0.5,pot)*100)}% pot)`:mode==='tourney'?` (${P.fmt(val)}bb)`:'';$('#act-confirm').textContent=`${isRaise?'Raise to':'Bet'} ${money(val)}${val>=stackTo?' (all in)':extra}`;$$('#size-presets .btn').forEach(b=>b.classList.toggle('active',+b.dataset.v===val));};
+    presets=presets.map(([l,val])=>[l,Math.min(stackTo,Math.max(minTo,val))]).filter(([l,val],i,arr)=>val<stackTo&&arr.findIndex(x=>x[1]===val)===i);
+    const lv=HC.coachLevel();const suggested=presets[Math.min(1,presets.length-1)]?presets[Math.min(1,presets.length-1)][1]:minTo;
+    if(lv==='advanced')presets=[]; /* advanced: you work out the size yourself */
+    presets.push(['All in',stackTo]);
+    const range=$('#size-range'),num=$('#size-num');range.min=minTo;range.max=stackTo;range.step=0.5;num.hidden=lv!=='advanced';num.min=minTo;num.max=stackTo;num.placeholder=`${minTo}–${stackTo}`;
+    const setAmt=val=>{val=Math.min(stackTo,Math.max(minTo,r1(val)));range.value=val;if(document.activeElement!==num)num.value=val;$('#size-amt').textContent=money(val);const extra=G.street!=='preflop'?` (${Math.round((val-p.bet)/Math.max(0.5,pot)*100)}% pot)`:mode==='tourney'?` (${P.fmt(val)}bb)`:'';$('#act-confirm').textContent=`${isRaise?'Raise to':'Bet'} ${money(val)}${val>=stackTo?' (all in)':extra}`;$$('#size-presets .btn').forEach(b=>b.classList.toggle('active',+b.dataset.v===val));};
     $('#size-presets').innerHTML=presets.map(([l,val])=>`<button class="btn" type="button" data-v="${val}">${l}</button>`).join('');
     $$('#size-presets .btn').forEach(b=>b.onclick=()=>setAmt(+b.dataset.v));
-    range.oninput=()=>setAmt(+range.value);
+    range.oninput=()=>setAmt(+range.value);num.oninput=()=>{const v=+num.value;if(isFinite(v)&&v>=minTo)setAmt(v);};num.onblur=()=>setAmt(+num.value||minTo);
     const commit=act=>{area.hidden=true;closeSheet();resolve(decorate(p,act,toCall,pot));};
     /* with "check with the coach" on, the choice is graded first and can still be changed */
     const done=act=>{if(HC.S.settings.coachCheck===false)return commit(act);
@@ -1662,7 +1763,7 @@ function heroAct(check){
     $('#act-fold').onclick=()=>done({type:'fold'});
     $('#act-fold').style.visibility=toCall>0?'':'hidden';
     $('#act-check').onclick=()=>done(toCall>0?{type:'call'}:{type:'check'});
-    $('#act-bet').onclick=()=>{sizeArea.hidden=false;setAmt(presets[Math.min(1,presets.length-1)][1]);};
+    $('#act-bet').onclick=()=>{sizeArea.hidden=false;setAmt(lv==='novice'?suggested:minTo);if(lv!=='novice')$$('#size-presets .btn').forEach(b=>b.classList.remove('active'));if(lv==='advanced'){num.value='';num.focus();}};
     $('#act-cancel').onclick=()=>{sizeArea.hidden=true;};
     $('#act-confirm').onclick=()=>done({type:isRaise?'raise':'bet',to:+range.value});
     $('#btn-hint').onclick=()=>openHint(p,toCall,pot);
@@ -1687,14 +1788,17 @@ function decorate(p,act,toCall,pot,preview){
   if(preview)return coach;
   act.coach=coach;G.decisions.push(coach);
   if(!G.practice){const pl=HC.S.play;pl.decisions++;pl[grade.grade]++;if(G.hintRevealed)pl.hinted=(pl.hinted||0)+1;
-    const dl=HC.S.dlog=HC.S.dlog||[];dl.push({m:mode,st:G.street,pos:p.pos,sc:scenario,cls,tier,outs,a:action.type,b:base.best,g:grade.grade,f:toCall>0?1:0,sz:grade.note?1:0,h:G.hintRevealed?1:0,t:Date.now()});if(dl.length>600)dl.splice(0,dl.length-600);HC.save();}
+    const dl=HC.S.dlog=HC.S.dlog||[];dl.push({m:mode,st:G.street,pos:p.pos,sc:scenario,cls,tier,outs,a:action.type,b:base.best,g:grade.grade,f:toCall>0?1:0,sz:grade.note?1:0,h:G.hintRevealed?1:0,t:Date.now()});if(dl.length>600)dl.splice(0,dl.length-600);HC.save();HC.checkLevelUp();}
   return act;
 }
-function coachHTML(c,withBtn){const chip={good:'Good',ok:'Okay',bad:'Mistake'}[c.grade];
+function coachHTML(c,withBtn){const chip={good:'Good',ok:'Okay',bad:'Mistake'}[c.grade];const lv=HC.coachLevel();
+  const numbers=c.numbers?`<div class="numbers"><div><div class="k">Equity</div><div class="v">${c.numbers.eq}%</div></div>${c.numbers.potOdds!==null?`<div><div class="k">Need</div><div class="v">${c.numbers.potOdds}%</div></div>`:''}<div><div class="k">Pot</div><div class="v">${c.numbers.pot}bb</div></div>${c.numbers.toCall?`<div><div class="k">To call</div><div class="v">${c.numbers.toCall}bb</div></div>`:''}${c.numbers.outs?`<div><div class="k">Outs</div><div class="v">${c.numbers.outs}</div></div>`:''}</div>`:'';
+  const why=HC.linkTerms(c.why);
+  /* novice: everything up front. improving: the reasoning, math underneath. advanced: the verdict, reasoning one tap away. */
+  const body=lv==='advanced'?`<details class="why-more"><summary>Why</summary>${numbers}<div class="why">${why}</div></details>`:lv==='improving'?`<div class="why">${why}</div>${numbers}`:`${numbers}<div class="why">${why}</div>`;
   return `<div class="grade ${c.grade}"><div class="head"><span class="chip ${c.grade}">${chip}${c.hinted?' · hint used':''}</span><span class="muted" style="font-size:12px">${c.label}</span></div>
   <div class="best">You: ${c.you}. Baseline: ${c.best}${c.ok.length?` <span class="muted" style="font-weight:400">(also fine: ${c.ok.join(', ')})</span>`:''}</div>
-  ${c.numbers?`<div class="numbers"><div><div class="k">Equity</div><div class="v">${c.numbers.eq}%</div></div>${c.numbers.potOdds!==null?`<div><div class="k">Need</div><div class="v">${c.numbers.potOdds}%</div></div>`:''}<div><div class="k">Pot</div><div class="v">${c.numbers.pot}bb</div></div>${c.numbers.toCall?`<div><div class="k">To call</div><div class="v">${c.numbers.toCall}bb</div></div>`:''}${c.numbers.outs?`<div><div class="k">Outs</div><div class="v">${c.numbers.outs}</div></div>`:''}</div>`:''}
-  <div class="why">${c.why}</div></div>${withBtn?'<div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="coach-continue" style="flex:1">Continue</button><button class="btn ghost" type="button" id="coach-ask">Ask the coach</button></div>':''}`;}
+  ${body}</div>${withBtn?'<div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="coach-continue" style="flex:1">Continue</button><button class="btn ghost" type="button" id="coach-ask">Ask the coach</button></div>':''}`;}
 function showCoach(c,check){return new Promise(resolve=>{const el=$('#coach-area');el.hidden=false;el.innerHTML=coachHTML(c,true);const my=token;
   $('#coach-continue').onclick=()=>{el.hidden=true;el.innerHTML='';if(my!==token)return;resolve();};
   $('#coach-ask').onclick=()=>openChat(false,c);
@@ -1743,6 +1847,7 @@ function openHint(p,toCall,pot){
   const html=`<div class="handle"></div><div class="row" style="justify-content:space-between"><h2 style="margin:0">Hint</h2><button class="btn sm ghost" type="button" id="hint-close">Close</button></div>${spot}${body}${readsHTML(p.cards,false)}
   <div id="hint-ai-area">${aiAvailable()?'<button class="btn block ghost" type="button" id="hint-ai">AI read of the table (Claude)</button>':''}</div>
   <div id="hint-reveal-area" style="margin-top:8px"><button class="btn block" type="button" id="hint-reveal">Reveal the coach's advice (marks this decision as hinted)</button></div>`;
+  html=HC.linkTerms(html);
   openSheet(html);$('#hint-close').onclick=closeSheet;
   const ai=$('#hint-ai');if(ai)ai.onclick=async()=>{ai.disabled=true;ai.textContent='Thinking…';try{const txt=await askClaudeOnce(false,null,'Based only on what the student can see, what is each opponent probably holding and thinking right now, and what does that mean for the decision the student faces? Give reads, not a direct instruction. Under 160 words.');$('#hint-ai-area').innerHTML=`<div class="grade ok"><div class="head"><span class="chip ok">AI read</span></div><div class="why">${md(txt)}</div></div>`;}catch(e){$('#hint-ai-area').innerHTML=`<p class="muted">${e.message||e}</p>`;}};
   $('#hint-reveal').onclick=()=>{G.hintRevealed=true;const base=G.street==='preflop'?P.preflopBaseline(preflopSituation(p)):P.postflopBaseline(postflopSituation(p,toCall,pot));
@@ -1771,7 +1876,8 @@ function handContext(full){
 }
 function useServer(){return !!(HC.SERVER&&HC.tablePass());}
 function aiAvailable(){const onArtifact=/claude\.ai$/.test(location.hostname);return !onArtifact&&(useServer()||!!apiKey());}
-function md(t){const esc=x=>x.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));const lines=esc(t).split('\n');let h='',inList=false;
+function md(t){return HC.linkTerms(mdRaw(t));}
+function mdRaw(t){const esc=x=>x.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));const lines=esc(t).split('\n');let h='',inList=false;
   for(let l of lines){l=l.trim();if(!l){if(inList){h+='</ul>';inList=false;}continue;}
     const bold=x=>x.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
     if(/^[-•*] /.test(l)){if(!inList){h+='<ul style="margin:2px 0 6px">';inList=true;}h+=`<li>${bold(l.slice(2))}</li>`;continue;}
@@ -1814,7 +1920,7 @@ function openChat(full,liveCoach){
 }
 async function askClaude(full,liveCoach){
   const system=`You are a patient, direct Texas Hold'em coach for a beginner who is learning through a training app. The app plays 6-max no-limit hold'em against bots and grades the student's decisions against a tight-aggressive baseline (opening ranges by seat, 3-bet/call/fold charts, pot odds and outs after the flop, bet sizing in fractions of the pot, shove-or-fold under 10bb).
-Answer the student's question about the hand below. Be concrete: name players, cite the actual cards, pot sizes, pot odds and rough equities. Explain the reasoning a strong player would use, and where the app's baseline is simplified say so briefly. Keep answers under 220 words unless asked for more. Plain prose, no headers, no bullet lists longer than three items.${liveCoach?`\nThe student just made this decision and the app said: ${liveCoach.label}. You: ${liveCoach.you}. Baseline: ${liveCoach.best}. ${liveCoach.why}`:''}
+Answer the student's question about the hand below. Be concrete: name players, cite the actual cards, pot sizes, pot odds and rough equities. Explain the reasoning a strong player would use, and where the app's baseline is simplified say so briefly. Keep answers under 220 words unless asked for more. Plain prose, no headers, no bullet lists longer than three items.\n${{novice:'The student is a novice: explain each poker term the first time you use it (equity, pot odds, outs, range, position), keep the arithmetic explicit and simple, and prefer one clear rule over nuance.',improving:'The student is improving: assume they know pot odds, outs, position and opening ranges; introduce ranges, bet sizing logic and the reasons behind the chart; show the key numbers.',advanced:'The student is advanced: be terse and precise, assume the vocabulary, reason in ranges, frequencies, blockers, stack-to-pot ratio and sizing theory, and point out where the app\'s simplified baseline differs from a strong player\'s play.'}[HC.coachLevel()]}${liveCoach?`\nThe student just made this decision and the app said: ${liveCoach.label}. You: ${liveCoach.you}. Baseline: ${liveCoach.best}. ${liveCoach.why}`:''}
 ${full?(G.remote?'The hand is over. This was a home game with real people and bots, so only the student\'s own cards and the cards shown at showdown are known; do not state hidden cards as facts.':'The hand is over and all hole cards are known.'):'The hand is still in progress: you only know the student\'s own cards and the public action. Do not guess hidden cards as facts.'}
 
 HAND
@@ -1876,7 +1982,7 @@ function showSummary(net,tEnd){
   const streets=['preflop','flop','turn','river'].filter(s=>G.snapshots[s]);
   const html=`<div class="handle"></div><div class="row" style="justify-content:space-between">${top}<span class="muted" style="font-size:13px">${g} good · ${o} okay · ${b} mistakes</span></div>
   <p style="margin-top:6px">${outcome} ${live.length>1&&!h.folded?live.filter(p=>!p.isHero).map(p=>`${p.name}: ${P.handClass(p.cards[0],p.cards[1])} (${P.describeHand(p.cards,G.board).desc})`).join('. ')+'.':''}${busted.length?` <b>${busted.join(' and ')} ${busted.length>1?'are':'is'} out.</b>`:''}${G.offBusts?` ${G.offBusts} player${G.offBusts>1?'s':''} busted at other tables.`:''}</p>
-  <div class="summary">${decs.length?decs.map(d=>`<div class="d"><span class="chip ${d.grade}">${{good:'Good',ok:'Okay',bad:'Miss'}[d.grade]}</span><div><b>${d.label}</b>${d.hinted?' <span class="muted">(hint)</span>':''} · you: ${d.you}; baseline: ${d.best}${HC.S.settings.coachLive?'':'<div class="muted" style="font-size:12.5px;margin-top:2px">'+d.why+'</div>'}</div></div>`).join(''):'<p class="muted">No decisions this hand.</p>'}</div>
+  <div class="summary">${decs.length?decs.map(d=>`<div class="d"><span class="chip ${d.grade}">${{good:'Good',ok:'Okay',bad:'Miss'}[d.grade]}</span><div><b>${d.label}</b>${d.hinted?' <span class="muted">(hint)</span>':''} · you: ${d.you}; baseline: ${d.best}${HC.S.settings.coachLive?'':'<div class="muted" style="font-size:12.5px;margin-top:2px">'+HC.linkTerms(d.why)+'</div>'}</div></div>`).join(''):'<p class="muted">No decisions this hand.</p>'}</div>
   <div id="ai-review" style="margin-top:10px"></div>
   <div id="ai-walk" style="margin-top:8px"></div>
   <div class="row" style="margin-top:10px"><button class="btn sm" type="button" id="sum-ask">Ask the coach about this hand</button>${streets.length?'<span class="muted" style="font-size:12px">Replay from:</span>':''}${streets.map(s=>`<button class="btn sm ghost" type="button" data-replay="${s}">${s}</button>`).join('')}</div>

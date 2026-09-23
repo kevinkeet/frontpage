@@ -35,6 +35,17 @@ Live at **https://kevinkeet.com/poker/** (GitHub Pages, served from `main` of th
   people's mucked cards stay private).
 - Summary also offers "Walk me through the hand": a street-by-street AI walkthrough from
   the student's seat (`aiWalkthrough`, cached in `G.aiWalk` / `R.aiWalk`).
+- Coaching level (Home): Novice / Improving / Advanced, "Auto" by default from the graded
+  record (`levelFromStats`: Improving at 60 decisions and 70% good, Advanced at 200 and
+  80%; a toast announces a step up via `checkLevelUp`). Effects: bet-size buttons with the
+  standard size pre-selected (novice), buttons but nothing pre-selected (improving), no
+  buttons, type the size yourself in `#size-num` (advanced); coach cards show everything
+  (novice), reasoning then math (improving), verdict with "Why" folded (advanced); the AI
+  system prompt gets a level line. `HC.coachLevel()` is the single source of truth.
+- Glossary: `GLOSSARY` in the HC block; `HC.linkTerms(html)` wraps the first mention of
+  each term in a block (coach cards, hint sheet, AI output, summary) in `a.term`, which
+  opens a definition popover (`#gloss`, z-index 60, above sheets) with a "Read lesson"
+  button. Add terms there; each needs a lesson id.
 - Hint button during play: your spot, the exact range chart for the situation with your
   hand outlined, pot-odds and outs tables, opponent reads, optional AI read, and an
   optional reveal of the coach's advice (marks the decision as hinted).
