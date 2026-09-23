@@ -1452,7 +1452,7 @@ const POS_BY_N={6:['BTN','SB','BB','UTG','HJ','CO'],5:['BTN','SB','BB','HJ','CO'
 const LEVELS=[[10,20,0],[15,30,0],[20,40,0],[30,60,0],[50,100,10],[75,150,15],[100,200,25],[150,300,30],[200,400,50],[300,600,75],[400,800,100],[500,1000,125],[700,1400,175],[1000,2000,250],[1500,3000,400],[2000,4000,500],[3000,6000,750]];
 const FORMATS={sng:{name:'Sit & go',players:6,chips:1500,handsPerLevel:8,buyin:20,payouts:[60,36,24],desc:'Six players, 1,500 chips, blinds up every 8 hands, top 3 paid ($60 / $36 / $24).'},
   mtt:{name:'Multi-table',players:18,chips:3000,handsPerLevel:10,buyin:20,payouts:[144,100,65,51],desc:'18 players on three tables, 3,000 chips, blinds up every 10 hands, antes from level 5. Players from other tables join yours as tables break; top 4 paid ($144 / $100 / $65 / $51).'}};
-let G=null,dealer=-1,token=0,session={hands:0,bb:0},mode='cash',T=null,fmtChoice='sng';
+let G=null,handCounter=0,dealer=-1,token=0,session={hands:0,bb:0},mode='cash',T=null,fmtChoice='sng';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function delay(){return {fast:220,normal:650,slow:1100}[HC.S.settings.speed||'normal'];}
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -1510,7 +1510,7 @@ function newGame(){
   }else{roster=[{name:'You',isHero:true,style:'hero',stack:100}].concat(BOTS.map(b=>({name:b.n,style:b.style,isHero:false,stack:100})));dealer=(dealer+1)%6;}
   const n=roster.length;const seed=Math.floor(Math.random()*2**31);const deck=P.shuffle(P.makeDeck());
   roster.forEach((p,i)=>{p.seat=i;p.bet=0;p.total=0;p.folded=false;p.allIn=false;p.cards=[deck.pop(),deck.pop()];p.range=null;p.pfAction='';p.pos=POS_BY_N[n][(i-dealer+n)%n];p.show=false;p.startStack=p.stack;p.agg=false;p.calledPost=false;p.raisedPost=false;p.foldedOn='';});
-  G={players:roster,n,deck,dealer,seed,rng:mulberry(seed),board:[],pot:0,street:'preflop',currentBet:0,minRaise:1,pf:{raises:[],callers:0,limpers:0},pfr:null,decisions:[],log:[],msg:'',acting:-1,winners:[],history:[],snapshots:{},practice:false,chat:[],hint:false};
+  G={handNo:++handCounter,players:roster,n,deck,dealer,seed,rng:mulberry(seed),board:[],pot:0,street:'preflop',currentBet:0,minRaise:1,pf:{raises:[],callers:0,limpers:0},pfr:null,decisions:[],log:[],msg:'',acting:-1,winners:[],history:[],snapshots:{},practice:false,chat:[],hint:false};
   const sbIdx=n===2?dealer:(dealer+1)%n,bbIdx=(sbIdx+1)%n;G.sbIdx=sbIdx;G.bbIdx=bbIdx;
   if(mode==='tourney'&&level()[2]){const ante=r1(level()[2]/BB());for(const p of roster){const a=Math.min(ante,p.stack);p.stack=r1(p.stack-a);p.total=r1(p.total+a);G.pot=r1(G.pot+a);if(p.stack<=0){p.stack=0;p.allIn=true;}}}
   post(roster[sbIdx],0.5);post(roster[bbIdx],1);G.currentBet=1;G.minRaise=1;
@@ -1753,13 +1753,19 @@ function openHint(p,toCall,pot){
 /* ---------- AI coach chat ---------- */
 function apiKey(){try{return localStorage.getItem('holdem-coach-api-key')||'';}catch(e){return '';}}
 function handContext(full){
-  const h=hero();const F=mode==='tourney'?fmtOf():null;
-  const lines=[];lines.push(mode==='tourney'?`Format: ${F.name} tournament, level ${T.level+1}, blinds ${level()[0]}/${level()[1]}${level()[2]?' ante '+level()[2]:''}, ${T.players.filter(p=>p.chips>0).length+T.offCount} of ${F.players} players left. Amounts below are in big blinds.`:'Format: 6-max cash game, 100bb stacks, blinds 0.5/1. Amounts in big blinds.');
-  lines.push('Players (seat order, hero = You):');
-  for(const p of G.players)lines.push(`- ${p.name} (${p.pos}, ${P.fmt(p.startStack)}bb, ${p.isHero?'the student':STYLE_DESC[p.style]||'straightforward'})${(full||p.isHero)&&p.cards?`: holds ${p.cards.map(P.cardStr).join(' ')} (${P.handClass(p.cards[0],p.cards[1])})`:''}`);
-  lines.push(`Board: ${G.board.length?G.board.map(P.cardStr).join(' '):'(no flop yet)'}`);
-  lines.push('Action:');
-  for(const x of G.history){lines.push(`- [${x.street}] ${x.name} ${x.text}${x.coach?` | app coach graded this "${x.coach.grade}" (baseline: ${x.coach.best}). Reason: ${x.coach.why}`:(full&&x.reason)?` | thinking: ${x.reason}`:''}`);}
+  const h=hero();const lines=[];
+  if(mode==='tourney'&&G.remote){const t=G.T;lines.push(`Format: sit & go tournament with friends, level ${t.level+1}, blinds ${t.blinds[0]}/${t.blinds[1]}${t.blinds[2]?' ante '+t.blinds[2]:''}, ${t.left} of ${t.total} players left. Amounts below are in big blinds.`);}
+  else if(mode==='tourney'){const F=fmtOf();lines.push(`Format: ${F.name} tournament, level ${T.level+1}, blinds ${level()[0]}/${level()[1]}${level()[2]?' ante '+level()[2]:''}, ${T.players.filter(p=>p.chips>0).length+T.offCount} of ${F.players} players left. Amounts below are in big blinds.`);}
+  else lines.push(`Format: 6-max cash game${G.remote?' with friends':''}, 100bb stacks, blinds 0.5/1. Amounts in big blinds.`);
+  lines.push(`This is one single hand (hand #${G.remote?G.hand:G.handNo}). Everything below is about this hand only; nothing from any earlier hand applies.`);
+  lines.push(`The student ("You") is in the ${h.pos} with ${h.cards.map(P.cardStr).join(' ')} (${P.handClass(h.cards[0],h.cards[1])}), ${P.fmt(h.startStack)}bb to start.`);
+  lines.push('Players in seat order:');
+  for(const p of G.players)lines.push(`- ${p.name} (${p.pos}, ${P.fmt(p.startStack)}bb, ${p.isHero?'the student':STYLE_DESC[p.style]||'straightforward'})${(full||p.isHero)&&p.cards?`: holds ${p.cards.map(P.cardStr).join(' ')} (${P.handClass(p.cards[0],p.cards[1])})`:full?': cards not shown':''}`);
+  lines.push('Action, street by street:');
+  let cur=null;
+  for(const x of G.history){if(x.street!==cur){cur=x.street;lines.push(`${cur.toUpperCase()}${x.board&&x.board.length?` — board ${x.board.map(P.cardStr).join(' ')}`:''}`);}
+    lines.push(`- ${x.name} ${x.text}${x.coach?` | app coach graded this "${x.coach.grade}" (baseline: ${x.coach.best}). Reason: ${x.coach.why}`:(full&&x.reason)?` | thinking: ${x.reason}`:''}`);}
+  if(G.board.length&&(!G.history.length||G.history[G.history.length-1].board.length<G.board.length))lines.push(`Final board: ${G.board.map(P.cardStr).join(' ')}`);
   if(full&&G.finished)lines.push(`Result: ${G.resultText}`);
   return lines.join('\n');
 }
@@ -1774,7 +1780,7 @@ function md(t){const esc=x=>x.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'
     if(m){h+=`<div class="eyebrow" style="margin-top:8px">${m[2]}</div>${m[3]?`<p style="margin:2px 0 4px">${bold(m[3])}</p>`:''}`;continue;}
     h+=`<p style="margin:2px 0 6px">${bold(l.replace(/^#+\s*/,''))}</p>`;}
   if(inList)h+='</ul>';return h;}
-async function askClaudeOnce(full,liveCoach,question){const saved=G.chat;G.chat=[{role:'user',content:question}];try{return await askClaude(full,liveCoach);}finally{G.chat=saved;}}
+async function askClaudeOnce(full,liveCoach,question){const g=G;const saved=g.chat;g.chat=[{role:'user',content:question}];try{return await askClaude(full,liveCoach);}finally{g.chat=saved;}}
 async function aiReview(){
   if(G.aiReview)return G.aiReview;
   const q=`Write a post-hand review for the student with exactly these four sections, each as a heading line followed by one to three short sentences or up to three short bullets:
@@ -1783,11 +1789,11 @@ To improve: the one or two most costly mistakes, the better line, and a number (
 Reading the table: for each opponent who mattered, what the student could reasonably have inferred about their hand from position, player type and actions at the key moment, and what they actually had.
 Lesson: one sentence to remember.
 Under 260 words total. Plain text, no markdown headers other than the section names.`;
-  const txt=await askClaudeOnce(true,null,q);G.aiReview=txt;return txt;}
+  const g=G;const txt=await askClaudeOnce(true,null,q);g.aiReview=txt;return txt;}
 async function aiWalkthrough(){
   if(G.aiWalk)return G.aiWalk;
   const q=`Walk me through this hand street by street from my seat, as if you were sitting in it. For each street where I had a decision, in two or three plain sentences: what you would be thinking at that moment (my hand, what the opponents' actions suggest, the pot and the price, the plan) and what you would do, using only what I could see at that point. If I folded, stop there and add one sentence on what happened after. End with one sentence on what the showdown revealed and whether it changes the reasoning. Under 250 words. Format: one short paragraph per street, starting with the street name in bold, no bullets.`;
-  const txt=await askClaudeOnce(true,null,q);G.aiWalk=txt;return txt;}
+  const g=G;const txt=await askClaudeOnce(true,null,q);g.aiWalk=txt;return txt;}
 function openChat(full,liveCoach){
   const key=apiKey();
   const onArtifact=/claude\.ai$/.test(location.hostname)||location.hostname.endsWith('.claude.ai');
@@ -1799,9 +1805,9 @@ function openChat(full,liveCoach){
   if(onArtifact||(!key&&!useServer()))return;
   const thread=$('#chat-thread');const renderThread=()=>{thread.innerHTML=G.chat.map(m=>`<div class="grade ${m.role==='user'?'':'ok'}" style="border-left-color:${m.role==='user'?'var(--line)':'var(--accent)'}"><div class="eyebrow">${m.role==='user'?'You':'Coach'}</div><div class="why" style="white-space:pre-wrap">${m.content.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div></div>`).join('')+(G.chatBusy?'<div class="muted">Thinking…</div>':'');thread.scrollTop=thread.scrollHeight;};
   renderThread();
-  const send=async q=>{if(!q||G.chatBusy)return;G.chat.push({role:'user',content:q});G.chatBusy=true;renderThread();$('#chat-input').value='';
-    try{const answer=await askClaude(full,liveCoach);G.chat.push({role:'assistant',content:answer});}catch(e){G.chat.push({role:'assistant',content:'Error: '+(e.message||e)});}
-    G.chatBusy=false;renderThread();};
+  const send=async q=>{if(!q||G.chatBusy)return;const g=G;g.chat.push({role:'user',content:q});g.chatBusy=true;renderThread();$('#chat-input').value='';
+    try{const answer=await askClaude(full,liveCoach);g.chat.push({role:'assistant',content:answer});}catch(e){g.chat.push({role:'assistant',content:'Error: '+(e.message||e)});}
+    g.chatBusy=false;if(G===g&&$('#chat-thread'))renderThread();};
   $$('#chat-quick button').forEach(b=>b.onclick=()=>send(b.dataset.q));
   $('#chat-send').onclick=()=>send($('#chat-input').value.trim());
   $('#chat-input').onkeydown=e=>{if(e.key==='Enter')send($('#chat-input').value.trim());};
@@ -1888,14 +1894,14 @@ function renderAiReview(){const el=$('#ai-review');if(!el)return;
   if(!aiAvailable()){el.innerHTML=/claude\.ai$/.test(location.hostname)?'':`<p class="muted" style="font-size:12.5px">${HC.SERVER?'Enter the table password in Settings for an AI review of every hand.':'Add an API key in Settings for an AI review of every hand.'}</p>`;return;}
   const show=txt=>{R.aiReview=G.aiReview;el.innerHTML=`<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">${G.remote?'Claude, from what you could see':'Claude, with all cards known'}</span></div><div class="why">${md(txt)}</div></div>`;};
   if(G.aiReview){show(G.aiReview);return;}
-  const run=async()=>{el.innerHTML='<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Reviewing the hand…</span></div></div>';try{show(await aiReview());}catch(e){el.innerHTML=`<p class="muted">AI review failed: ${e.message||e}</p>`;}};
+  const run=async()=>{const g=G;el.innerHTML='<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Reviewing the hand…</span></div></div>';try{const txt=await aiReview();if(G!==g||!document.body.contains(el))return;show(txt);}catch(e){if(G===g&&document.body.contains(el))el.innerHTML=`<p class="muted">AI review failed: ${e.message||e}</p>`;}};
   if(aiAuto()&&!G.practice&&G.decisions.length)run();
   else{el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-review-btn">AI review of this hand</button>`;$('#ai-review-btn').onclick=run;}}
 function renderAiWalk(){const el=$('#ai-walk');if(!el||!aiAvailable())return;
   const show=txt=>{R.aiWalk=G.aiWalk;el.innerHTML=`<div class="grade ok" style="border-left-color:var(--gold)"><div class="head"><span class="chip info">Hand walkthrough</span><span class="muted" style="font-size:12px">how the coach would think it through, street by street</span></div><div class="why">${md(txt)}</div></div>`;};
   if(G.aiWalk){show(G.aiWalk);return;}
   el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-walk-btn">Walk me through the hand</button>`;
-  $('#ai-walk-btn').onclick=async()=>{el.innerHTML='<div class="grade ok" style="border-left-color:var(--gold)"><div class="head"><span class="chip info">Hand walkthrough</span><span class="muted" style="font-size:12px">Thinking it through…</span></div></div>';try{show(await aiWalkthrough());}catch(e){el.innerHTML=`<p class="muted">Walkthrough failed: ${e.message||e}</p>`;}};}
+  $('#ai-walk-btn').onclick=async()=>{const g=G;el.innerHTML='<div class="grade ok" style="border-left-color:var(--gold)"><div class="head"><span class="chip info">Hand walkthrough</span><span class="muted" style="font-size:12px">Thinking it through…</span></div></div>';try{const txt=await aiWalkthrough();if(G!==g||!document.body.contains(el))return;show(txt);}catch(e){if(G===g&&document.body.contains(el))el.innerHTML=`<p class="muted">Walkthrough failed: ${e.message||e}</p>`;}};}
 function reviewHTML(){
   const board=G.board;const winners=new Set(G.winners||[]);
   const back2='<span class="card sm back"></span><span class="card sm back"></span>';
@@ -1940,7 +1946,7 @@ function hgJoin(code){const name=hgName();if(!name)return;code=(code||$('#hg-cod
 
 function connect(code){
   if(R.ws){R.closing=true;try{R.ws.close();}catch(e){}}
-  R.active=true;R.closing=false;R.code=code;hgStatus(R.retry?'Reconnecting…':'Connecting…');
+  R.active=true;R.closing=false;R.code=code;if(!R.retry){R.hand=0;R.aiReview=null;R.aiWalk=null;}hgStatus(R.retry?'Reconnecting…':'Connecting…');
   const ws=new WebSocket(HC.SERVER.replace(/^http/,'ws')+'/rooms/'+code+'/ws');R.ws=ws;
   ws.onopen=()=>{ws.send(JSON.stringify({t:'hello',pass:HC.tablePass(),pid:myPid(),name:lsGet('holdem-coach-name')||'Player',avatar:HC.heroAvatar()}));};
   ws.onmessage=e=>{if(ws!==R.ws)return;let m;try{m=JSON.parse(e.data);}catch(err){return;}
