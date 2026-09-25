@@ -50,7 +50,7 @@ Live at **https://kevinkeet.com/poker/** (GitHub Pages, served from `main` of th
   hand outlined, pot-odds and outs tables, opponent reads, optional AI read, and an
   optional reveal of the coach's advice (marks the decision as hinted).
 - Home: curriculum, stats, leak report built from a log of graded decisions, settings
-  (avatar, coach note timing, bot speed, AI review toggle, personal API key, reset).
+  (avatar, coach note timing, bot speed, personal API key, reset).
 - Avatars and chip stacks: every seat shows an inline-SVG avatar and a chip stack.
   An avatar is a small spec object `{bg,skin,hair,hc,acc,eyes,mouth,shirt}` drawn by
   `HC.avatarSVG(spec,size)`. The five regular bots are hand-made (`AV_BOTS`); other bots
@@ -91,9 +91,9 @@ Live at **https://kevinkeet.com/poker/** (GitHub Pages, served from `main` of th
   (`esc`, `HC.cleanAvatar`). The table password travels in the first WebSocket message
   (`hello`), never in the URL. Player identity is a random `pid` kept in localStorage
   (`holdem-coach-pid`); reconnecting with it returns you to your seat.
-- AI cost: at a home game the automatic AI review runs for the host only; guests get a
-  button per hand, or can opt in under Settings. The AI is told that hidden cards are
-  unknown.
+- AI cost: nothing calls the API automatically. The review, walkthrough, hint read and
+  chat all run on a click (Kevin asked for this on 2026-09-25 after the bill). The AI
+  is told that hidden cards are unknown at home games.
 - Room state (seats, stacks, level, chat) is saved to Durable Object storage between
   hands; a hand interrupted by a restart is void and stacks return to their pre-hand
   values. Rooms delete themselves 24h after the last hand.

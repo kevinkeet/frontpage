@@ -333,8 +333,6 @@ a.term{color:inherit;text-decoration:underline dotted var(--gold);text-decoratio
         <div class="opt"><span>Bot speed</span>
           <span class="seg" id="opt-speed"><button type="button" data-v="fast">Fast</button><button type="button" data-v="normal" class="active">Normal</button><button type="button" data-v="slow">Slow</button></span></div>
         <div class="opt" id="opt-table-row" hidden><span>Table password</span><span class="row"><span class="muted" id="opt-table-state">saved</span><button class="btn sm ghost" id="btn-table-forget" type="button">Forget</button></span></div>
-        <div class="opt"><span>AI review after every hand</span><input type="checkbox" id="opt-ai-review" checked></div>
-        <div class="opt"><span>…also when I am a guest at a home game</span><input type="checkbox" id="opt-ai-review-home"></div>
         <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>AI coach: Anthropic API key</span><input id="opt-api-key" type="password" placeholder="sk-ant-…" autocomplete="off" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted" style="font-size:12px" id="opt-api-note">Stored only in this browser. Enables "Ask the coach" on any hand: a conversation with Claude about what happened and why, a few cents per question. Get a key at console.anthropic.com. Not needed when this site has a shared coach server and you have entered the table password.</span></div>
         <div class="opt" style="border:0"><span>Reset all progress</span><button class="btn sm danger" id="btn-reset" type="button">Reset</button></div>
       </div>
@@ -1035,14 +1033,12 @@ function renderHome(){
   $('#curriculum').innerHTML=STEPS.map((s,i)=>{const d=s.done();const isNext=s===next;const pr=s.progress?s.progress():0;return `<div class="step ${d?'done':''} ${isNext?'next':''}" data-i="${i}"><div class="dot">${d?'✓':i+1}</div><div class="t">${s.title}<small>${s.sub}</small>${!d&&s.progress&&pr>0?`<div class="bar"><i style="width:${Math.round(pr*100)}%"></i></div>`:''}</div><button class="btn sm ${isNext?'primary':''}" type="button">${d?'Again':'Go'}</button></div>`;}).join('');
   $$('#curriculum .step button').forEach(b=>b.addEventListener('click',()=>STEPS[+b.closest('.step').dataset.i].go()));
   $('#opt-table-row').hidden=!(SERVER&&tablePass());
-  $('#opt-coach-check').checked=S.settings.coachCheck!==false;$('#opt-coach-live').checked=!!S.settings.coachLive;$('#opt-ai-review').checked=S.settings.aiReview!==false;$('#opt-ai-review-home').checked=!!S.settings.aiReviewHome;
+  $('#opt-coach-check').checked=S.settings.coachCheck!==false;$('#opt-coach-live').checked=!!S.settings.coachLive;
   $$('#opt-speed button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.settings.speed));
   renderAvatarSettings();renderLevel();
 }
 $('#opt-coach-live').addEventListener('change',e=>{S.settings.coachLive=e.target.checked;save();});
 $('#opt-coach-check').addEventListener('change',e=>{S.settings.coachCheck=e.target.checked;save();});
-$('#opt-ai-review').addEventListener('change',e=>{S.settings.aiReview=e.target.checked;save();});
-$('#opt-ai-review-home').addEventListener('change',e=>{S.settings.aiReviewHome=e.target.checked;save();});
 (function(){const inp=$('#opt-api-key');try{inp.value=localStorage.getItem('holdem-coach-api-key')||'';}catch(e){}
   inp.addEventListener('change',()=>{try{if(inp.value.trim())localStorage.setItem('holdem-coach-api-key',inp.value.trim());else localStorage.removeItem('holdem-coach-api-key');toast(inp.value.trim()?'API key saved':'API key removed');}catch(e){}});
   if(/claude\.ai$/.test(location.hostname)){$('#opt-api-note').textContent='The AI coach works on the kevinkeet.com version of this app; this preview cannot reach the Claude API.';inp.disabled=true;}})();
@@ -2001,8 +1997,8 @@ function renderAiReview(){const el=$('#ai-review');if(!el)return;
   const show=txt=>{R.aiReview=G.aiReview;el.innerHTML=`<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">${G.remote?'Claude, from what you could see':'Claude, with all cards known'}</span></div><div class="why">${md(txt)}</div></div>`;};
   if(G.aiReview){show(G.aiReview);return;}
   const run=async()=>{const g=G;el.innerHTML='<div class="grade ok" style="border-left-color:var(--accent)"><div class="head"><span class="chip info">AI review</span><span class="muted" style="font-size:12px">Reviewing the hand…</span></div></div>';try{const txt=await aiReview();if(G!==g||!document.body.contains(el))return;show(txt);}catch(e){if(G===g&&document.body.contains(el))el.innerHTML=`<p class="muted">AI review failed: ${e.message||e}</p>`;}};
-  if(aiAuto()&&!G.practice&&G.decisions.length)run();
-  else{el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-review-btn">AI review of this hand</button>`;$('#ai-review-btn').onclick=run;}}
+  /* AI calls cost money, so the review is always on demand */
+  {el.innerHTML=`<button class="btn sm ghost" type="button" id="ai-review-btn">AI review of this hand</button>`;$('#ai-review-btn').onclick=run;}}
 function renderAiWalk(){const el=$('#ai-walk');if(!el||!aiAvailable())return;
   const show=txt=>{R.aiWalk=G.aiWalk;el.innerHTML=`<div class="grade ok" style="border-left-color:var(--gold)"><div class="head"><span class="chip info">Hand walkthrough</span><span class="muted" style="font-size:12px">how the coach would think it through, street by street</span></div><div class="why">${md(txt)}</div></div>`;};
   if(G.aiWalk){show(G.aiWalk);return;}
@@ -2085,7 +2081,7 @@ function renderLobby(){const on=R.active&&R.room;$('#hg-entry').hidden=!!on;$('#
   if(m.phase==='lobby')h+=m.host?`<p class="muted" style="font-size:13px;margin-top:8px">${humans.length<2?'You can start now and friends can still join a cash game later, or wait for them here.':'Everyone here?'} Empty seats are filled by bots.</p><button class="btn primary block" type="button" id="hg-start">Start the game</button>`:`<p class="muted" style="margin-top:8px">Waiting for the host to start the game.</p>`;
   else if(m.phase==='over')h+=m.host?`<button class="btn primary block" type="button" id="hg-again" style="margin-top:10px">Back to the lobby for another</button>`:`<p class="muted" style="margin-top:8px">The host can start another game.</p>`;
   else h+=`<button class="btn primary block" type="button" id="hg-back" style="margin-top:10px">Back to the table</button>`;
-  h+=`<p class="muted" style="font-size:12.5px;margin-top:10px">Everyone sees only their own cards. Coach notes, hints and hand reviews are private to each player.${m.host?'':' As a guest, the AI review runs when you ask for it (or turn it on in Settings).'}</p>`;
+  h+=`<p class="muted" style="font-size:12.5px;margin-top:10px">Everyone sees only their own cards. Coach notes, hints and hand reviews are private to each player.${' The AI review and walkthrough run only when you ask for them.'}</p>`;
   $('#hg-room').innerHTML=h;
   $('#hg-copy').onclick=async()=>{try{await navigator.clipboard.writeText(link);HC.toast('Invite link copied');}catch(e){prompt('Copy this link',link);}};
   const st=$('#hg-start');if(st)st.onclick=()=>rsend({t:'start'});const ag=$('#hg-again');if(ag)ag.onclick=()=>rsend({t:'again'});const bk=$('#hg-back');if(bk)bk.onclick=()=>HC.go('play');}
@@ -2129,7 +2125,6 @@ function showCoachRemote(c){const el=$('#coach-area');el.hidden=false;el.innerHT
   $('#coach-continue').onclick=()=>{el.hidden=true;el.innerHTML='';};$('#coach-ask').onclick=()=>openChat(false,c);}
 function remoteNext(){closeSheet();rsend({t:'next'});const el=$('#coach-area');el.hidden=false;el.innerHTML='<p class="muted" style="text-align:center;margin:6px 0">Waiting for the next hand…</p>';}
 function nextHand(){if(G&&G.remote)remoteNext();else startHand();}
-function aiAuto(){return HC.S.settings.aiReview!==false&&(!G.remote||(R.room&&R.room.host)||!!HC.S.settings.aiReviewHome);}
 
 $('#hg-create').addEventListener('click',hgCreate);$('#hg-join').addEventListener('click',()=>hgJoin());$('#hg-rejoin').addEventListener('click',()=>hgJoin(lsGet('holdem-coach-room')));
 $('#hg-code').addEventListener('keydown',e=>{if(e.key==='Enter')hgJoin();});$('#hg-leave').addEventListener('click',hgLeave);
