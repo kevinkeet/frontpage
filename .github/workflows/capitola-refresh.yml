@@ -1,0 +1,78 @@
+# Reruns the Capitola flood model (capitola/model) every morning and publishes its CSVs to
+# kevinkeet.com/capitola. The model pulls live NOAA tides, CDIP waves, NWS rain and USGS creek data.
+# Only the built-in GITHUB_TOKEN is used, so there are no secrets to set up.
+name: Refresh Capitola flood data
+
+on:
+  schedule:
+    - cron: '23 13 * * *'   # 6:23 AM PDT / 5:23 AM PST, ahead of the morning king tides
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capitola-refresh
+  cancel-in-progress: false
+
+jobs:
+  season:
+    runs-on: ubuntu-latest
+    outputs:
+      active: ${{ steps.check.outputs.active }}
+    steps:
+      - id: check
+        # the model covers winter 2026-27; stop quietly after April instead of failing every day
+        run: echo "active=$([ "$(date -u +%Y%m%d)" -le 20270430 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  refresh:
+    needs: season
+    if: needs.season.outputs.active == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: capitola/model
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: capitola/model/requirements.txt
+
+      - name: Install the model's packages
+        run: pip install -r requirements.txt
+
+      - name: Restore the CDIP wave hindcast (2000-2025, never changes)
+        uses: actions/cache@v4
+        with:
+          path: capitola/model/data/*_hindcast.csv.gz
+          key: cdip-mop-hindcast-SC111-SC113-v1
+
+      - name: Fetch nearshore waves and recent Monterey water levels
+        run: python fetch_data.py mop wlrecent
+
+      - name: Rebuild the coastal tables
+        run: python build_tables.py coastal
+
+      - name: Run the forecast and outlook
+        run: |
+          python run_weekly.py | tee run.log
+          { echo '### Capitola flood model'; echo '```'; cat run.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish the new numbers
+        run: |
+          cp dash/*.csv ../data/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ../data
+          if git diff --cached --quiet; then echo "Nothing changed"; exit 0; fi
+          run=$(sed -n '2p' dash/forecast_daily.csv | awk -F, '{print $NF}')
+          git commit -q -m "Capitola: model run $run UTC"
+          for attempt in 1 2 3; do
+            git pull -q --rebase --autostash && git push -q && exit 0
+            sleep 10
+          done
+          exit 1

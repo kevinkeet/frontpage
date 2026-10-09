@@ -1,0 +1,14 @@
+# Inputs fetched on every run (fetch_data.py mop / fetch_rain.py) and everything the model builds
+.venv/
+__pycache__/
+*.pkl
+data/*_hindcast.csv.gz
+data/*_nowcast.csv.gz
+data/merged_hourly.csv.gz
+data/soquel_iv.csv.gz
+dash/
+forecast.json
+rain_forecast.json
+season_calendar.csv
+season_summary.json
+run.log
