@@ -34,9 +34,9 @@ jobs:
       run:
         working-directory: capitola/model
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
           cache: pip
@@ -46,7 +46,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Restore the CDIP wave hindcast (2000-2025, never changes)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: capitola/model/data/*_hindcast.csv.gz
           key: cdip-mop-hindcast-SC111-SC113-v1

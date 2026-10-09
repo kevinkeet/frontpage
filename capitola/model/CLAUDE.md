@@ -27,14 +27,23 @@ superseded). The repo is public and GitHub Pages serves this folder, so keep per
 
 ## The page (../index.html)
 
-Plain HTML + d3 v7.9.0 (vendored in `../vendor/`). Two kinds of data:
+Plain HTML + d3 v7.9.0 (vendored in `../vendor/`), one file. Top to bottom: NWS alerts → two summary cards (next 10 days
+with day chips; this winter) → sticky section nav → "Right now" live cards → maps and cams → the model deep dive
+(forecast chart, Kelvin chart, winter calendar, creek, track record, method). Two kinds of data:
 - **Model CSVs** in `../data/` (this folder's output), fetched with `cache: 'no-cache'`.
-- **Live data fetched in the visitor's browser** (all CORS-enabled, checked Oct 9, 2026): NWS active alerts for the
-  Capitola point, NOAA CO-OPS 9413450 water level + predictions, CDIP MOP nowcast SC112 via OPeNDAP ASCII
-  (`thredds.cdip.ucsd.edu/thredds/dodsC/…/SC112_nowcast.nc.ascii`), USGS 11160000 IV JSON, NWPS SOQC1 stage/flow,
-  NWS gridpoint QPF. NDBC realtime files are NOT CORS-enabled. Each live card fails on its own.
-- The live flood index = latest observed Monterey water level + 0.14 + Stockdon runup from the latest CDIP nowcast,
-  i.e. the same formula as `model.py` (the page carries a JS port; keep the two in step).
+- **Live data fetched in the visitor's browser**, refreshed every 5 min while the tab is visible (rain every 30 min). All
+  CORS-enabled (checked Oct 9, 2026): NWS active alerts for the Capitola point (combined NWS statements are merged into one
+  banner, led by the "* WHAT..." paragraph), NOAA CO-OPS 9413450 water level (`range=72`) + 6-minute and hi/lo predictions,
+  CDIP MOP nowcast SC111-113 via OPeNDAP (`.dds` for the time length, then `.ascii?waveTime[a:1:b],...`), USGS 11160000 IV
+  JSON, NWPS `gauges/SOQC1/stageflow/forecast` (only has data when the NWS issues a creek forecast), NWS gridpoint MTR/91,73
+  (Ben Lomond QPF, the creek model's gauge) and MTR/94,67/forecast (Capitola). NDBC realtime files are NOT CORS-enabled.
+  CDIP's NCSS endpoint is not available (404). Each live card fails on its own and keeps its last good value.
+- The live flood index = latest observed Monterey water level + 0.14 + Stockdon runup from the latest CDIP nowcast (mean of
+  the three points, direction from SC112), i.e. the forecast's formula on live inputs. `runupFt()` in the page is a JS port of
+  `model.runup_ft` (verified equal to 6 decimals); keep the two in step.
+- Local testing: on localhost, `?today=YYYY-MM-DD` makes the page act as if it were that day (past days gray out in the
+  winter calendar, observed overtopping days get red dots, chips/tables list only days ahead); `window.__capitola` exposes
+  the live state. Preview: `holdem-site` launch entry (serves `frontpage/` on :8090).
 
 ## Files
 
