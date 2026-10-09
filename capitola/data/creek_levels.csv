@@ -1,0 +1,5 @@
+level,stage_ft,flow_cfs,impact,p_winter_all,p_winter_elnino
+Action,13.0,3930,Three feet below flood stage; NWS may issue a Flash Flood Watch.,0.263,0.417
+Minor,16.0,5830,"Water reaches creekside properties in Soquel; flooding possible in Capitola, especially at high tide.",0.079,0.167
+Moderate,18.0,7280,Several feet of water in downtown Soquel; creekside areas of Capitola and the Esplanade flood.,0.039,0.0
+Major,22.0,10600,"Capitola and the Esplanade flooded (1955, 1982 levels).",0.013,0.0

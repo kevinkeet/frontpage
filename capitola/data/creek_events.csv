@@ -1,0 +1,9 @@
+date,what_happened,peak_stage_ft,rain_peak_day_in,rain_day_before_in,wetness_in,model_stage_ft,p_action,p_minor
+2022-12-31,Creek overtopped in downtown Soquel; third-highest crest on record,19.8,7.15,1.58,17.4,17.6,0.77,0.59
+2023-01-09,Moderate flood stage,18.6,4.75,2.16,25.3,15.9,0.69,0.49
+2023-01-14,Minor flood stage,17.0,3.08,1.12,27.7,10.9,0.33,0.17
+2023-03-10,Minor flood stage,16.8,5.99,0.63,8.7,10.6,0.3,0.15
+2016-03-05,Minor flood from a dry start; heavier mountain rain than Ben Lomond caught (model missed it),16.0,3.7,1.2,1.1,4.0,0.0,0.0
+2012-12-23,Near flood stage,15.0,4.51,1.25,16.4,11.6,0.39,0.21
+2011-03-24,Noble Gulch pipe failed; Capitola Village flooded and closed (Mar 24 and 26),14.0,3.0,2.39,10.2,8.0,0.11,0.04
+2023-01-04,Capitola Village and Riverview evacuation ordered as the creek rose,7.7,1.21,1.16,22.5,5.6,0.01,0.0
