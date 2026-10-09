@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   season:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       active: ${{ steps.check.outputs.active }}
     steps:
@@ -28,7 +28,7 @@ jobs:
   refresh:
     needs: season
     if: needs.season.outputs.active == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
       run:
