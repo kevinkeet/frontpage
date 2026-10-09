@@ -27,41 +27,44 @@ superseded). The repo is public and GitHub Pages serves this folder, so keep per
 
 ## The page (../index.html)
 
-Plain HTML + d3 v7.9.0 (vendored in `../vendor/`), one file. Top to bottom: NWS alerts → two summary cards (next 10 days
-with day chips; this winter) → sticky section nav → "Right now" live cards → maps and cams → the model deep dive
-(forecast chart, Kelvin chart, winter calendar, creek, track record, method). Two kinds of data:
-- **Model CSVs** in `../data/` (this folder's output), fetched with `cache: 'no-cache'`.
+One dense dashboard (consolidated on Oct 9, 2026 at Kevin's request: "information dense"), plain HTML + d3 v7.9.0 vendored
+in `../vendor/`. Order: NWS alert banner → 12-column grid. At ≥1080 px: **Next 10 days** (8 cols: status line + one table
+merging `forecast_daily` with `creek_forecast`, index bars with Watch/Flood ticks) beside **Right now** (4 cols: live flood
+index + meter, key-value rows for next high tide, tide, waves, creek, rain, and a tide sparkline); **This winter** (8: headline
+numbers, scenario line, calendar heatmap, riskiest windows + swell needed, direction shares, creek odds) beside **Live
+views** (4: webcam + radar, links); **How it works and how it has done** (12: method, limits, documented floods). Below
+1080 px everything stacks; phones hide the Tide/Period/Rain columns.
+- **Model CSVs it reads** (from `../data/`, `cache: 'no-cache'`): forecast_daily, creek_forecast, scenarios, winter_calendar,
+  thresholds, validation_events, creek_levels, creek_rain_needed, direction_ratio. The model still writes the others
+  (outlook_*, forecast_hourly, kelvin_paths, offsets, offset_monthly, swell_climate, creek_events, creek_annual_peaks); the
+  longer page that charted them is in git history (commit af4d1f4) if any of it should come back.
 - **Live data fetched in the visitor's browser**, refreshed every 5 min while the tab is visible (rain every 30 min). All
-  CORS-enabled (checked Oct 9, 2026): NWS active alerts for the Capitola point (combined NWS statements are merged into one
-  banner, led by the "* WHAT..." paragraph), NOAA CO-OPS 9413450 water level (`range=72`) + 6-minute and hi/lo predictions,
-  CDIP MOP nowcast SC111-113 via OPeNDAP (`.dds` for the time length, then `.ascii?waveTime[a:1:b],...`), USGS 11160000 IV
-  JSON, NWPS `gauges/SOQC1/stageflow/forecast` (only has data when the NWS issues a creek forecast), NWS gridpoint MTR/91,73
-  (Ben Lomond QPF, the creek model's gauge) and MTR/94,67/forecast (Capitola). NDBC realtime files are NOT CORS-enabled.
-  CDIP's NCSS endpoint is not available (404). Each live card fails on its own and keeps its last good value.
+  CORS-enabled (checked Oct 9, 2026): NWS active alerts for the Capitola point (combined statements merged into one banner, led
+  by the "* WHAT..." paragraph), NOAA CO-OPS 9413450 water level (`range=72`) + 6-minute and hi/lo predictions, CDIP MOP nowcast
+  SC111-113 via OPeNDAP (`.dds` for the time length, then `.ascii?waveTime[a:1:b],...`), USGS 11160000 IV JSON, NWPS
+  `gauges/SOQC1/stageflow/forecast` (only has data when the NWS issues a creek forecast), NWS gridpoint MTR/91,73 (Ben Lomond
+  QPF, the creek model's gauge). NDBC realtime files are NOT CORS-enabled; CDIP's NCSS endpoint 404s. Each live row fails on
+  its own and keeps its last good value.
 - The live flood index = latest observed Monterey water level + 0.14 + Stockdon runup from the latest CDIP nowcast (mean of
   the three points, direction from SC112), i.e. the forecast's formula on live inputs. `runupFt()` in the page is a JS port of
   `model.runup_ft` (verified equal to 6 decimals); keep the two in step.
 - Local testing: on localhost, `?today=YYYY-MM-DD` makes the page act as if it were that day (past days gray out in the
-  winter calendar, observed overtopping days get red dots, chips/tables list only days ahead); `window.__capitola` exposes
-  the live state. Preview: `holdem-site` launch entry (serves `frontpage/` on :8090).
+  winter calendar, observed overtopping days get red dots, only days ahead count as riskiest); `window.__capitola` exposes the
+  live state. Preview: `holdem-site` launch entry (serves `frontpage/` on :8090).
 
-### Maps and cams (embeds, checked Oct 9, 2026)
+### Live views and links (checked Oct 9, 2026)
 
 No working public camera shows Capitola itself: the old Capitola streams (YouTube 2rnC_GihBKg, JYIyiZFv5sE, the Venetian
-hotel cam, LiveBeaches) are dead or can't be embedded. What the page embeds, with the terms that allow it:
-- Windy map: `embed.windy.com/embed2.html?...overlay=waves&product=ecmwfWaves` (Windy's embed widget format; `embed.html`
-  sometimes came up on the wind layer). Covered by a "Click to use the map" shield so page scrolling doesn't zoom it.
+hotel cam, LiveBeaches) are dead or can't be embedded. Embedded now:
 - Windy webcam 1793912252, Rio Del Mar / Soquel Cove (Pixie Deli cam): iframe `webcams.windy.com/webcams/public/embed/player/1793912252/live`.
   Windy terms: keep the Windy logo visible and clickable; not for commercial weather apps (a personal site is fine).
-- USGS CoastCam, Dream Inn, Santa Cruz: `cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg` (public domain, credit USGS).
-- NWS radar loop `radar.weather.gov/ridge/standard/KMUX_loop.gif` and SOQC1 hydrograph `water.noaa.gov/resources/hydrographs/soqc1_record.png` (public domain).
-- CDIP `recent/model_images/monterey.png` and `recent/forecast/mop_water_level.gd?SC117+web` (CDIP's experimental flooding index for
-  Pleasure Point). CDIP terms: free if unaltered, and the page must say "Data courtesy of CDIP" with a link.
-- Images with `data-refresh` reload every 10 minutes with a cache-busting `_=` parameter (all of those servers ignore it; the
-  CDIP `.gd?SC117+web` URL has a raw query string, so it is left out).
-- Link only: Scripps Seacliff live video + water-level forecast (no published terms; ask Scripps CPG before embedding),
-  santacruz.onerain.com (blocks framing), Rio Sands YouTube cam (embedding disabled), HDOnTap Seascape (X-Frame-Options DENY).
-  Surfline offers no free embeds.
+- NWS radar loop `radar.weather.gov/ridge/standard/KMUX_loop.gif` (public domain), reloaded every 10 minutes with a `_=` parameter.
+Linked only: Windy swell map; CDIP's experimental flooding index for Pleasure Point (`recent/forecast/mop_water_level.gd?SC117+web`;
+CDIP terms: free if unaltered, credit "Data courtesy of CDIP" with a link, if it is ever embedded); Scripps Seacliff live video +
+water-level forecast (no published terms; ask Scripps CPG before embedding); NWS SOQC1 hydrograph (public domain,
+`water.noaa.gov/resources/hydrographs/soqc1_record.png`); santacruz.onerain.com (blocks framing); USGS CoastCam at the Dream Inn
+(public domain, `cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg`). Rio Sands' YouTube cam has
+embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers no free embeds.
 
 ## Files
 

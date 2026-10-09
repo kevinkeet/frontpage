@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Capitola Flood Risk</title>
-<meta name="description" content="When is Capitola Village most likely to flood this El Niño winter? Tide, swell and Soquel Creek forecasts with a November to March outlook. A personal model, not an official forecast.">
+<meta name="description" content="Capitola Village flood risk: live tide, waves, Soquel Creek and NWS alerts, a 10-day forecast and the outlook for this El Niño winter. A personal model, not an official forecast.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://kevinkeet.com/capitola/">
 <meta property="og:title" content="Capitola flood risk, winter 2026–27">
-<meta property="og:description" content="Tide, swell and Soquel Creek forecasts for Capitola Village, with a November to March outlook for this El Niño winter.">
+<meta property="og:description" content="Live tide, waves and Soquel Creek, a 10-day forecast and the November to March outlook for Capitola Village.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f4f1">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0d0d">
@@ -17,31 +17,27 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
 <style>
-/* Tokens. Chart colors come from the dataviz reference palette: blue ordinal steps for the
-   swell scenarios, orange for this year's measurements and forecasts, fixed status colors for levels. */
+/* Tokens. Chart colors come from the dataviz reference palette: a blue sequential ramp for the winter calendar,
+   orange for this year's measurements, fixed status colors for the Watch / Flood / Severe levels. */
 :root{
   color-scheme:light;
   --page:#f4f4f1; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --line:rgba(11,11,11,.10);
   --grid:#e1e0d9; --axis:#c3c2b7; --ref:#898781; --muted-mark:#a8a69e; --link:#1c5cab;
-  --accent:#eb6834; --series-1:#2a78d6;
-  --ord-1:#86b6ef; --ord-2:#2a78d6; --ord-3:#104281;
+  --accent:#eb6834; --series-1:#2a78d6; --ord-2:#2a78d6;
   --heat-lo:#e3eefc; --heat-hi:#0d366b;
   --low:#a8a69e; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b; --good:#0ca30c;
   --stale-bg:#fdf3dc; --stale-line:#e2b85a;
   --shadow:0 6px 24px rgba(11,11,11,.12);
   --sans:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
-  --fs-caption:.8125rem; --fs-small:.875rem; --fs-note:.9375rem;
-  --gap-sm:8px; --gap-md:16px; --gap-lg:24px; --gap-xl:48px;
-  --pad:20px; --radius:12px;
+  --fs-caption:.75rem; --fs-small:.8125rem; --fs-body:.9375rem;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --page:#0d0d0d; --surface:#1a1a19; --ink:#ffffff; --ink-2:#c3c2b7; --line:rgba(255,255,255,.10);
     --grid:#2c2c2a; --axis:#383835; --ref:#898781; --muted-mark:#6b6a64; --link:#86b6ef;
-    --accent:#d95926; --series-1:#3987e5;
-    --ord-1:#184f95; --ord-2:#3987e5; --ord-3:#9ec5f4;
+    --accent:#d95926; --series-1:#3987e5; --ord-2:#3987e5;
     --heat-lo:#172334; --heat-hi:#cde2fb;
     --low:#6b6a64;
     --stale-bg:#33290f; --stale-line:#7a6020;
@@ -52,8 +48,7 @@
   color-scheme:dark;
   --page:#0d0d0d; --surface:#1a1a19; --ink:#ffffff; --ink-2:#c3c2b7; --line:rgba(255,255,255,.10);
   --grid:#2c2c2a; --axis:#383835; --ref:#898781; --muted-mark:#6b6a64; --link:#86b6ef;
-  --accent:#d95926; --series-1:#3987e5;
-  --ord-1:#184f95; --ord-2:#3987e5; --ord-3:#9ec5f4;
+  --accent:#d95926; --series-1:#3987e5; --ord-2:#3987e5;
   --heat-lo:#172334; --heat-hi:#cde2fb;
   --low:#6b6a64;
   --stale-bg:#33290f; --stale-line:#7a6020;
@@ -62,87 +57,127 @@
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--page);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.5;}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--sans);font-size:var(--fs-body);line-height:1.45}
 a{color:var(--link);text-underline-offset:2px}
-.page{max-width:1200px;margin:0 auto;padding:clamp(20px,4vw,40px) max(16px,env(safe-area-inset-right)) var(--gap-xl) max(16px,env(safe-area-inset-left));}
-@media (min-width:700px){ .page{padding-left:32px;padding-right:32px} }
+.page{max-width:1320px;margin:0 auto;padding:clamp(14px,2.5vw,28px) max(14px,env(safe-area-inset-right)) 32px max(14px,env(safe-area-inset-left))}
+@media (min-width:760px){ .page{padding-left:24px;padding-right:24px} }
 
-.eyebrow{font-size:var(--fs-small);color:var(--ink-2);margin:0 0 var(--gap-sm)}
+/* ---- header */
+.eyebrow{font-size:var(--fs-small);color:var(--ink-2);margin:0}
 .eyebrow a{color:inherit}
-.eyebrow .sep{margin:0 .45em;opacity:.6}
-h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,1.5rem + 2.2vw,2.75rem);line-height:1.1;letter-spacing:-.01em;margin:0 0 var(--gap-sm)}
-.stamp{font-size:var(--fs-small);color:var(--ink-2);margin:0}
-.unofficial{font-size:var(--fs-small);color:var(--ink-2);margin:4px 0 0}
-.stale{margin:var(--gap-md) 0 0;padding:12px 16px;border:1px solid var(--stale-line);background:var(--stale-bg);border-radius:var(--radius);font-size:var(--fs-note);max-width:62rem}
-.lede{font-size:clamp(1.0625rem,1rem + .35vw,1.25rem);line-height:1.5;max-width:48rem;margin:var(--gap-lg) 0}
-.lede b{font-weight:700}
+.eyebrow .sep{margin:0 .4em;opacity:.6}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.625rem,1.3rem + 1.4vw,2.125rem);line-height:1.1;letter-spacing:-.01em;margin:2px 0 0}
+.stamp{font-size:var(--fs-small);color:var(--ink-2);margin:4px 0 0}
 
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:var(--gap-md)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr));gap:var(--gap-md);margin-top:var(--gap-md)}
-.tile,.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);position:relative;min-width:0}
-.card+.card{margin-top:var(--gap-md)}
-.grid .card+.card,.hero .card+.card,.live-grid .card+.card,.embeds .card+.card{margin-top:0}
-.lab{font-size:var(--fs-small);color:var(--ink-2);line-height:1.35}
-.big{font-size:1.875rem;font-weight:600;line-height:1.15;margin:6px 0 4px}
-.sub{font-size:var(--fs-caption);color:var(--ink-2);line-height:1.4}
-.is-stale [data-live] .lab::after,.is-stale [data-live] > h3::after{content:"Out of date";display:inline-block;margin-left:8px;padding:0 6px;border-radius:4px;background:var(--stale-bg);border:1px solid var(--stale-line);color:var(--ink);font-size:.75rem;font-weight:600;vertical-align:2px}
+/* ---- alerts and staleness */
+.alerts{display:grid;gap:8px;margin:12px 0 0}
+.alert{border:1px solid var(--line);border-left:4px solid var(--warning);background:color-mix(in srgb,var(--warning) 10%,var(--surface));border-radius:8px;padding:8px 12px;font-size:var(--fs-small)}
+.alert.sev-serious{border-left-color:var(--serious);background:color-mix(in srgb,var(--serious) 12%,var(--surface))}
+.alert.sev-critical{border-left-color:var(--critical);background:color-mix(in srgb,var(--critical) 12%,var(--surface))}
+.alert .ah{font-weight:700;font-size:var(--fs-body)}
+.alert .aw{color:var(--ink-2)}
+.alert p{margin:2px 0 0;max-width:80rem}
+.alert summary{cursor:pointer;color:var(--link);width:max-content;max-width:100%;margin-top:2px}
+.alert pre{white-space:pre-wrap;font:inherit;line-height:1.5;margin:6px 0 0;max-width:70rem}
+.alerts-none,.also{font-size:var(--fs-small);color:var(--ink-2);margin:0}
+.alerts-none::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:8px;vertical-align:1px}
+.alerts-none.off::before{background:var(--low)}
+.stale{margin:10px 0 0;padding:8px 12px;border:1px solid var(--stale-line);background:var(--stale-bg);border-radius:8px;font-size:var(--fs-small)}
+.is-stale [data-live] > h2::after{content:"Out of date";margin-left:4px;padding:0 6px;border-radius:4px;background:var(--stale-bg);border:1px solid var(--stale-line);color:var(--ink);font-size:.6875rem;letter-spacing:0;text-transform:none}
 
-.toc{position:sticky;top:0;z-index:20;display:flex;flex-wrap:nowrap;gap:4px 20px;overflow-x:auto;scrollbar-width:none;white-space:nowrap;margin:var(--gap-lg) 0 0;padding:12px 0;border-bottom:1px solid var(--line);font-size:var(--fs-note);background:color-mix(in srgb,var(--page) 92%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-.toc::-webkit-scrollbar{display:none}
-.toc a{color:var(--ink-2);text-decoration:none}
-.toc a:hover{color:var(--ink);text-decoration:underline}
-section{scroll-margin-top:60px}
-h2{font-size:1.375rem;font-weight:700;line-height:1.25;margin:var(--gap-xl) 0 var(--gap-md)}
-h3{font-size:1.125rem;font-weight:600;line-height:1.3;margin:0 0 4px}
-.take{font-size:1.0625rem;max-width:48rem;margin:0 0 var(--gap-md)}
-.note{color:var(--ink-2);font-size:var(--fs-note);line-height:1.5;margin:0 0 var(--gap-md);max-width:62rem}
+/* ---- dashboard grid */
+.dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;margin-top:12px}
+.c8{grid-column:span 8} .c4{grid-column:span 4} .c12{grid-column:span 12}
+@media (max-width:1080px){ .c8,.c4{grid-column:span 12} }
+@media (min-width:700px) and (max-width:1080px){ .media{display:grid;grid-template-columns:1fr 1fr;gap:12px} }
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px 14px;position:relative;min-width:0}
+.card > h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0 0 8px}
+.line{font-size:var(--fs-small);margin:6px 0 0}
+.line b{font-weight:600}
+.note{font-size:var(--fs-caption);color:var(--ink-2);margin:6px 0 0;line-height:1.4}
+.sep-dot{color:var(--ink-2);margin:0 .35em}
 
-.ctrls{display:flex;flex-wrap:wrap;gap:var(--gap-sm) var(--gap-md);margin-bottom:12px}
-.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{font:inherit;font-size:var(--fs-small);min-height:36px;background:transparent;color:var(--ink-2);border:0;border-right:1px solid var(--line);padding:6px 12px;cursor:pointer}
-.seg button:last-child{border-right:0}
-.seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--page);color:var(--ink);font-weight:600}
-.seg button:focus-visible,svg:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--series-1);outline-offset:2px}
-svg:focus-visible{border-radius:4px}
-.chart svg:focus:not(:focus-visible){outline:none}
+/* ---- level dots */
+.lv{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.lv::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--low);flex:none}
+.lv-Watch::before{background:var(--warning)}
+.lv-Flood::before{background:var(--serious)}
+.lv-Severe::before{background:var(--critical)}
+.lv-Watch,.lv-Flood,.lv-Severe{font-weight:700}
+.status{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.status .lv{font-size:1.375rem;font-weight:700;line-height:1.1}
+.status .lv::before{width:12px;height:12px}
+.status p{margin:0;font-size:var(--fs-body)}
 
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:var(--fs-caption);color:var(--ink-2);margin-bottom:var(--gap-sm)}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{display:inline-block;width:18px;height:0;border-top:2px solid var(--ink-2)}
-.sw.thick{border-top-width:3px}
-.sw.dash{border-top-style:dashed}
-.sw.box{width:10px;height:10px;border:0;border-radius:2px}
-.scale{display:flex;align-items:center;gap:8px;font-size:var(--fs-caption);color:var(--ink-2);margin-bottom:var(--gap-sm)}
-.scale .ramp{display:inline-block;width:120px;height:10px;border-radius:2px;background:linear-gradient(90deg,var(--heat-lo),var(--heat-hi))}
-
-.chart{width:100%;min-height:120px}
-.chart svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
-.fail{display:flex;align-items:center;justify-content:center;gap:8px;min-height:120px;color:var(--ink-2);font-size:var(--fs-small)}
-.fail::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--critical)}
-.msg{display:flex;align-items:center;justify-content:center;min-height:120px;color:var(--ink-2);font-size:var(--fs-small)}
-
+/* ---- dense tables */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:var(--fs-small);font-variant-numeric:tabular-nums}
-th{text-align:left;font-weight:600;color:var(--ink-2);padding:6px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1;vertical-align:bottom}
-td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{text-align:left;font-weight:600;color:var(--ink-2);font-size:var(--fs-caption);padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:bottom;white-space:nowrap}
+td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
 th:first-child,td:first-child{padding-left:0}
 th:last-child,td:last-child{padding-right:0}
 td.n,th.n{text-align:right}
-tr.em td{font-weight:600}
 td.nowrap{white-space:nowrap}
+tr.peak td{font-weight:700}
+tr.far td{color:var(--ink-2)}
+td.ix{width:40%;min-width:128px}
+.ixw{display:flex;align-items:center;gap:8px}
+.ixw b{min-width:2.4em;text-align:right;font-weight:inherit}
+.ib{position:relative;flex:1;height:8px;border-radius:4px;background:var(--grid)}
+.ib i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--low)}
+.ib.Watch i{background:var(--warning)} .ib.Flood i{background:var(--serious)} .ib.Severe i{background:var(--critical)}
+.ib s{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--ink-2);text-decoration:none}
+.yes{color:var(--critical);font-weight:700}
 
-.lv{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.lv::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--low);flex:none}
-.lv-Watch::before,.lv-Action::before{background:var(--warning)}
-.lv-Flood::before,.lv-Minor::before{background:var(--serious)}
-.lv-Severe::before,.lv-Moderate::before,.lv-Major::before,.lv-Yes::before{background:var(--critical)}
-.lv-Watch,.lv-Flood,.lv-Action,.lv-Minor,.lv-Yes{font-weight:600}
-.lv-Severe,.lv-Moderate,.lv-Major{font-weight:700}
-.big .lv{gap:10px}
-.big .lv::before{width:12px;height:12px}
+/* ---- right now */
+.livestamp{font-size:var(--fs-caption);font-weight:400;letter-spacing:0;text-transform:none}
+.livestamp::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px;vertical-align:1px;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.livestamp::before{animation:none}}
+.nowval{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+.nowval .big{font-size:1.75rem;font-weight:700;line-height:1.1}
+.nowval .lbl{font-size:var(--fs-small);color:var(--ink-2)}
+.meter{position:relative;height:8px;border-radius:4px;margin:8px 0 20px;background:var(--grid)}
+.meter .mk{position:absolute;top:-5px;width:4px;height:18px;border-radius:2px;background:var(--ink);box-shadow:0 0 0 2px var(--surface);transform:translateX(-50%)}
+.meter .tk{position:absolute;top:12px;font-size:.6875rem;color:var(--ink-2);white-space:nowrap;padding-left:3px;border-left:1px solid var(--ink-2);line-height:1}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:3px 10px;margin:0;font-size:var(--fs-small)}
+.kv dt{color:var(--ink-2);white-space:nowrap}
+.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.kv dd b{font-weight:700}
+.spark{margin-top:8px;position:relative}
+.spark svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+.src{font-size:var(--fs-caption);color:var(--ink-2);margin:6px 0 0}
+.lerr{color:var(--ink-2)}
 
-.tip{position:absolute;z-index:5;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:8px 10px;font-size:var(--fs-caption);line-height:1.45;min-width:11rem;max-width:19rem}
+/* ---- winter */
+.figs{display:flex;flex-wrap:wrap;gap:6px 24px;margin:0 0 4px}
+.figs div{display:flex;align-items:baseline;gap:6px}
+.fig{font-size:1.5rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.figlab{font-size:var(--fs-small);color:var(--ink-2);line-height:1.25}
+.scale{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:var(--fs-caption);color:var(--ink-2);margin:8px 0 4px}
+.scale .ramp{display:inline-block;width:90px;height:8px;border-radius:2px;background:linear-gradient(90deg,var(--heat-lo),var(--heat-hi))}
+.scale .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--critical)}
+.chips{display:inline-flex;flex-wrap:wrap;gap:4px;vertical-align:middle}
+.chip{border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:var(--fs-small);font-weight:600;background:var(--page);white-space:nowrap}
+.chart{width:100%;min-height:100px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+.fail{display:flex;align-items:center;justify-content:center;gap:8px;min-height:100px;color:var(--ink-2);font-size:var(--fs-small)}
+.fail::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--critical)}
+
+/* ---- views */
+.frame{position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:var(--grid)}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.shot{display:block;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.shot img{display:block;width:100%;height:auto}
+.cap{font-size:var(--fs-caption);color:var(--ink-2);margin:4px 0 10px}
+
+/* ---- about */
+.about{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,30rem),1fr));gap:12px 28px}
+.about p{font-size:var(--fs-small);margin:0 0 6px;line-height:1.5}
+.about h3{font-size:var(--fs-small);font-weight:700;margin:0 0 4px}
+
+/* ---- tooltip */
+.tip{position:absolute;z-index:5;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:6px 9px;font-size:var(--fs-caption);line-height:1.45;min-width:10rem;max-width:18rem}
 .tip .h{font-weight:600;margin-bottom:2px}
 .tip .r{display:flex;align-items:center;gap:8px}
 .tip .r .l{color:var(--ink-2);flex:1}
@@ -150,117 +185,20 @@ td.nowrap{white-space:nowrap}
 .tip .k{width:12px;flex:none;border-top:2px solid transparent}
 .tip .k.dash{border-top-style:dashed}
 
-.dt{margin-top:var(--gap-sm)}
-.dt summary{cursor:pointer;color:var(--ink-2);font-size:var(--fs-caption);width:max-content;padding:4px 0}
-.dt summary:hover{color:var(--ink)}
-.dt .tw{margin-top:var(--gap-sm);max-height:20rem;overflow:auto}
+details.dt{margin-top:6px}
+details.dt summary{cursor:pointer;color:var(--ink-2);font-size:var(--fs-caption);width:max-content}
+details.dt .tw{margin-top:6px;max-height:18rem;overflow:auto}
+details.dt th{position:sticky;top:0;background:var(--surface)}
+summary:focus-visible,a:focus-visible,svg:focus-visible{outline:2px solid var(--series-1);outline-offset:2px}
+svg:focus-visible{border-radius:4px}
+.chart svg:focus:not(:focus-visible){outline:none}
+footer{margin-top:14px;color:var(--ink-2);font-size:var(--fs-caption);line-height:1.5}
+footer p{margin:0 0 4px}
+noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
 
-.method p,.method li{font-size:1rem;line-height:1.55;max-width:62rem}
-.method p{margin:0 0 12px}
-.method ul{padding-left:1.2rem;margin:0}
-.method li+li{margin-top:6px}
-footer{margin-top:var(--gap-xl);padding-top:var(--gap-lg);border-top:1px solid var(--line);color:var(--ink-2);font-size:var(--fs-small);line-height:1.6}
-footer p{margin:0 0 6px;max-width:62rem}
-noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius)}
-
-/* ---- NWS alerts */
-.alerts{display:grid;gap:8px;margin:var(--gap-md) 0 0}
-.alert{border:1px solid var(--line);border-left:4px solid var(--warning);background:color-mix(in srgb,var(--warning) 10%,var(--surface));border-radius:10px;padding:12px 16px}
-.alert.sev-serious{border-left-color:var(--serious);background:color-mix(in srgb,var(--serious) 12%,var(--surface))}
-.alert.sev-critical{border-left-color:var(--critical);background:color-mix(in srgb,var(--critical) 12%,var(--surface))}
-.alert .ah{font-weight:700;font-size:1.0625rem}
-.alert .aw{color:var(--ink-2);font-size:var(--fs-small)}
-.alert p{margin:4px 0 0;max-width:62rem}
-.alert details{margin-top:6px}
-.alert summary{cursor:pointer;font-size:var(--fs-small);color:var(--link);width:max-content;max-width:100%}
-.alert pre{white-space:pre-wrap;font:inherit;font-size:var(--fs-small);line-height:1.5;margin:8px 0 0;max-width:62rem}
-.alerts-none,.also{font-size:var(--fs-small);color:var(--ink-2);margin:0}
-.alerts-none::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:8px;vertical-align:1px}
-.alerts-none.off::before{background:var(--low)}
-
-/* ---- summary cards */
-.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,28rem),1fr));gap:var(--gap-md);margin-top:var(--gap-lg)}
-.kicker{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);line-height:1.3;margin:0 0 8px}
-.status-big{font-size:2.25rem;font-weight:700;line-height:1.1;margin:0}
-.status-big .lv{gap:12px}
-.status-big .lv::before{width:16px;height:16px}
-.status-text{font-size:1.0625rem;line-height:1.45;margin:8px 0 16px;max-width:40rem}
-.days{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
-.day{position:relative;border:1px solid var(--line);border-radius:8px;padding:6px 8px 10px;font-size:var(--fs-caption);line-height:1.35;min-width:0;overflow:hidden;background:var(--surface)}
-.day b{display:block;font-weight:600;white-space:nowrap}
-.day .lvl{display:block;font-weight:700}
-.day .x{display:block;font-size:.9375rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-.day .tm{display:block;color:var(--ink-2);white-space:nowrap}
-.day .bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--grid)}
-.day .bar i{display:block;height:100%;background:var(--low)}
-.day.d-Watch{background:color-mix(in srgb,var(--warning) 14%,var(--surface))}
-.day.d-Flood{background:color-mix(in srgb,var(--serious) 16%,var(--surface))}
-.day.d-Severe{background:color-mix(in srgb,var(--critical) 16%,var(--surface))}
-.day.d-Watch .bar i{background:var(--warning)}
-.day.d-Flood .bar i{background:var(--serious)}
-.day.d-Severe .bar i{background:var(--critical)}
-.day.peak{border-color:var(--ink-2)}
-.foot{font-size:var(--fs-small);color:var(--ink-2);margin:12px 0 0;max-width:40rem}
-.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:12px 24px;margin:0 0 16px}
-.fig{display:block;font-size:2.25rem;font-weight:700;line-height:1.1}
-.figlab{display:block;font-size:var(--fs-small);color:var(--ink-2);margin:4px 0 0}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;padding:0;list-style:none}
-.chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:var(--fs-small);font-weight:600;background:var(--page)}
-.is-stale [data-live] .kicker::after{content:"Out of date";display:inline-block;margin-left:8px;padding:0 6px;border-radius:4px;background:var(--stale-bg);border:1px solid var(--stale-line);color:var(--ink);font-size:.75rem;font-weight:600}
-
-/* ---- live conditions */
-.live-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin:var(--gap-xl) 0 var(--gap-md)}
-.live-head h2{margin:0}
-.livestamp{font-size:var(--fs-small);color:var(--ink-2)}
-.livestamp::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:1px;animation:pulse 2.4s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.3}}
-@media (prefers-reduced-motion:reduce){.livestamp::before{animation:none}}
-.live-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:var(--gap-md)}
-@media (min-width:960px){.lcard.wide{grid-column:span 2}}
-.lcard{display:flex;flex-direction:column}
-.lval{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;font-size:2rem;font-weight:700;line-height:1.15;margin:4px 0}
-.lval small{font-size:1rem;font-weight:600;color:var(--ink-2)}
-.lval .lv{font-size:1.125rem}
-.lsub{font-size:var(--fs-small);color:var(--ink-2);margin:0 0 4px;max-width:40rem}
-.lsub b{color:var(--ink);font-weight:600}
-.spark{margin-top:10px;position:relative}
-.spark svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
-.src{font-size:var(--fs-caption);color:var(--ink-2);margin:auto 0 0;padding-top:12px}
-.src a{color:inherit}
-.meter{position:relative;height:10px;border-radius:5px;margin:14px 0 28px}
-.meter .mk{position:absolute;top:-5px;width:4px;height:20px;border-radius:2px;background:var(--ink);box-shadow:0 0 0 2px var(--surface);transform:translateX(-50%)}
-.meter .tk{position:absolute;top:16px;font-size:.75rem;color:var(--ink-2);white-space:nowrap;padding-left:3px;border-left:1px solid var(--ink-2);line-height:1}
-.tides{list-style:none;padding:0;margin:10px 0 0;font-size:var(--fs-small)}
-.tides li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
-.tides li span:last-child{color:var(--ink-2);text-align:right}
-.wx{list-style:none;padding:0;margin:10px 0 0;font-size:var(--fs-small)}
-.wx li{padding:4px 0;border-top:1px solid var(--line)}
-.wx b{font-weight:600}
-.lerr{font-size:var(--fs-small);color:var(--ink-2);margin:6px 0}
-
-/* ---- maps and cams */
-.embeds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr));gap:var(--gap-md)}
-.frame{position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:var(--grid)}
-.frame.wide{aspect-ratio:16/9}
-.frame iframe,.frame img{position:absolute;inset:0;width:100%;height:100%;border:0}
-.frame img{object-fit:contain;background:#fff}
-.frame .shield{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;justify-content:center;padding:12px;border:0;background:transparent;cursor:pointer;font:inherit;font-size:var(--fs-small);color:transparent}
-.frame .shield:hover,.frame .shield:focus-visible{color:#fff;background:linear-gradient(transparent 60%,rgba(0,0,0,.45))}
-.frame.live .shield{display:none}
-@media (hover:none){.frame .shield{color:#fff;background:linear-gradient(transparent 70%,rgba(0,0,0,.4))}}
-.shot{display:block;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#fff}
-.shot img{display:block;width:100%;height:auto}
-.links{margin:0;padding-left:1.1rem;font-size:var(--fs-note);line-height:1.5}
-.links li+li{margin-top:8px}
-
-/* phones */
 @media (max-width:640px){
-  :root{--pad:16px;--gap-xl:40px}
-  .tiles{gap:12px} .tile .big{font-size:1.625rem}
-  .seg{display:flex;width:100%} .seg button{flex:1 1 auto;padding:6px 8px}
-  table{font-size:.8125rem} th,td{padding-left:6px;padding-right:6px}
-  th:first-child,td:first-child{padding-left:0} th:last-child,td:last-child{padding-right:0}
   .hide-narrow{display:none}
+  td.ix{min-width:80px}
 }
 </style>
 </head>
@@ -269,369 +207,101 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
   <header>
     <p class="eyebrow"><a href="/">kevinkeet.com</a><span class="sep" aria-hidden="true">/</span>Capitola Village, Santa Cruz County</p>
     <h1>Capitola flood risk</h1>
-    <p class="stamp" id="stamp">Loading the latest model run…</p>
-    <p class="unofficial">A personal model, not an official forecast. For flood warnings, follow the <a href="https://www.weather.gov/mtr/">National Weather Service</a> and local emergency alerts.</p>
+    <p class="stamp"><span id="stamp">Loading…</span> A personal model, not an official forecast; for warnings, follow the <a href="https://www.weather.gov/mtr/">National Weather Service</a>.</p>
   </header>
-  <noscript><p>This page draws its charts with JavaScript. Turn it on to see the forecast.</p></noscript>
+  <noscript><p>This page needs JavaScript to draw its forecast.</p></noscript>
   <div class="alerts" id="alerts" aria-live="polite"><p class="alerts-none off">Checking National Weather Service alerts…</p></div>
   <div class="stale" id="stale" hidden></div>
 
-  <div class="hero">
-    <div class="card" id="hero-now" data-live>
-      <h2 class="kicker">Next 10 days</h2>
-      <p class="status-big" id="status-level">—</p>
-      <p class="status-text" id="status-text">Loading the forecast…</p>
-      <ol class="days" id="days" aria-label="Daily peak flood index for the next 10 days"></ol>
-      <p class="foot" id="creek-line"></p>
-      <p class="foot" id="nws-note" hidden></p>
-    </div>
-    <div class="card" id="hero-winter">
-      <h2 class="kicker">This winter, November to March</h2>
+  <main class="dash">
+    <section class="card c8" id="ten" data-live aria-labelledby="h-ten">
+      <h2 id="h-ten">Next 10 days</h2>
+      <div class="status"><span id="status-level">—</span><p id="status-text">Loading the forecast…</p></div>
+      <div class="tw">
+        <table id="t10" aria-describedby="t10-note">
+          <thead><tr>
+            <th scope="col">Day</th><th scope="col">Peak</th><th scope="col">Flood index<span class="hide-narrow"> at peak</span> (ft)</th>
+            <th scope="col" class="n hide-narrow">Tide (ft)</th><th scope="col" class="n">Waves (ft)</th><th scope="col" class="n hide-narrow">Period (s)</th>
+            <th scope="col" class="n hide-narrow">Rain (in)</th><th scope="col" class="n">Creek</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="note" id="t10-note">Bars run 6 to 16 ft, with ticks at Watch (waves reach the seawall) and Flood (water over it). Tide is the tide table at the peak, in ft above mean lower low water; the index adds the <span data-k="offset">—</span> offset and wave runup. Waves are at the 15 m depth line. Rain is the NWS forecast for the watershed; Creek is the chance of flood stage. Gray rows use a coarser offshore swell forecast.</p>
+      <p class="note" id="nws-note" hidden></p>
+    </section>
+
+    <section class="card c4" id="now" aria-labelledby="h-now">
+      <h2 id="h-now">Right now <span class="livestamp" id="livestamp">fetching…</span></h2>
+      <div class="nowval"><span class="big" id="li-val">—</span><span id="li-lvl"></span><span class="lbl">flood index from the live gauge and waves</span></div>
+      <div class="meter" id="li-meter" aria-hidden="true"></div>
+      <dl class="kv">
+        <dt>Index</dt><dd id="li-sub">—</dd>
+        <dt>Next high</dt><dd id="li-next">—</dd>
+        <dt>Tide</dt><dd id="lt-sub">—</dd>
+        <dt>Waves</dt><dd id="lw-sub">—</dd>
+        <dt>Creek</dt><dd id="lc-sub">—</dd>
+        <dt>Rain</dt><dd id="lr-sub">—</dd>
+      </dl>
+      <div class="spark" id="lt-spark"></div>
+      <p class="src" id="li-src">NOAA Monterey tide gauge, CDIP nearshore waves, USGS Soquel Creek gauge, NWS.</p>
+    </section>
+
+    <section class="card c8" id="winter" aria-labelledby="h-winter">
+      <h2 id="h-winter">This winter, November to March</h2>
       <div class="figs">
-        <div><span class="fig" data-k="central_days">—</span><span class="figlab">of waves over the seawall expected, about <b data-k="ratio">—</b> an average winter<span data-k="so_far"></span></span></div>
-        <div><span class="fig" data-k="central_p">—</span><span class="figlab">chance of at least one damaging flood (<span data-k="avg_p">—</span> in an average winter)</span></div>
+        <div><span class="fig" data-k="central_days">—</span><span class="figlab">days of waves over the seawall expected<br><span data-k="vs_avg">—</span></span></div>
+        <div><span class="fig" data-k="central_p">—</span><span class="figlab">chance of a damaging flood<br><span data-k="vs_avg_p">—</span></span></div>
+        <div><span class="fig" data-k="offset_fig">—</span><span class="figlab">Kelvin-wave offset now<br>above the tide tables</span></div>
       </div>
-      <p class="figlab" id="windows-lab">Riskiest stretches, the morning king tides of</p>
-      <ul class="chips" id="windows"></ul>
-      <p class="foot">That assumes the Kelvin wave, now holding Monterey Bay about <b data-k="offset_lede">—</b> above the tide tables, fades the way it did in past strong El Niños. <a href="#winter">Winter outlook</a></p>
-    </div>
-  </div>
-
-  <nav class="toc" aria-label="Sections">
-    <a href="#now">Right now</a><a href="#cams">Maps and cams</a><a href="#forecast">Forecast</a><a href="#winter">This winter</a>
-    <a href="#rain">Soquel Creek</a><a href="#calibration">Track record</a><a href="#method">Method</a>
-  </nav>
-
-  <main>
-  <section id="now" aria-labelledby="h-now">
-    <div class="live-head"><h2 id="h-now">Right now</h2><span class="livestamp" id="livestamp">Fetching live data…</span></div>
-    <div class="live-grid">
-      <div class="card lcard wide" id="live-index">
-        <h3>Flood index now</h3>
-        <div class="lval" id="li-val">—</div>
-        <div class="meter" id="li-meter" aria-hidden="true"></div>
-        <p class="lsub" id="li-sub">The live tide gauge plus the latest nearshore waves, run through the same formula as the forecast.</p>
-        <p class="lsub" id="li-next"></p>
-        <p class="src" id="li-src">NOAA Monterey tide gauge and CDIP nearshore wave model</p>
-      </div>
-      <div class="card lcard" id="live-tide">
-        <h3>Tide at Monterey</h3>
-        <div class="lval" id="lt-val">—</div>
-        <p class="lsub" id="lt-sub"></p>
-        <div class="spark" id="lt-spark"></div>
-        <ul class="tides" id="lt-next" aria-label="Next high and low tides"></ul>
-        <p class="src"><a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=9413450">NOAA tide gauge 9413450</a>, <span id="lt-time">—</span></p>
-      </div>
-      <div class="card lcard" id="live-waves">
-        <h3>Waves off Capitola</h3>
-        <div class="lval" id="lw-val">—</div>
-        <p class="lsub" id="lw-sub"></p>
-        <div class="spark" id="lw-spark"></div>
-        <p class="src"><a href="https://cdip.ucsd.edu/">CDIP</a> nearshore model at the 15 m depth line, <span id="lw-time">—</span></p>
-      </div>
-      <div class="card lcard" id="live-creek">
-        <h3>Soquel Creek</h3>
-        <div class="lval" id="lc-val">—</div>
-        <p class="lsub" id="lc-sub"></p>
-        <div class="spark" id="lc-spark"></div>
-        <p class="src"><a href="https://waterdata.usgs.gov/monitoring-location/USGS-11160000/">USGS gauge at Soquel</a> and <a href="https://water.noaa.gov/gauges/SOQC1">NWS</a>, <span id="lc-time">—</span></p>
-      </div>
-      <div class="card lcard" id="live-rain">
-        <h3>Rain and weather</h3>
-        <div class="lval" id="lr-val">—</div>
-        <p class="lsub" id="lr-sub"></p>
-        <div class="spark" id="lr-spark"></div>
-        <ul class="wx" id="lr-wx" aria-label="National Weather Service forecast for Capitola"></ul>
-        <p class="src"><a href="https://forecast.weather.gov/MapClick.php?lat=36.972&amp;lon=-121.952">National Weather Service</a>, <span id="lr-time">—</span></p>
-      </div>
-    </div>
-  </section>
-
-  <section id="cams" aria-labelledby="h-cams">
-    <h2 id="h-cams">Maps and cams</h2>
-    <p class="take">No public camera looks at Capitola itself right now, so these are the closest live views of the bay, plus live maps and official graphs. The images refresh every 10 minutes while the page is open.</p>
-    <div class="embeds">
-      <div class="card">
-        <h3>Swell across Monterey Bay</h3>
-        <p class="note">Wave height and direction from Windy (ECMWF wave model). Drag the time slider to see the next few days.</p>
-        <div class="frame shielded">
-          <button type="button" class="shield">Click to use the map</button>
-          <iframe title="Windy wave map of Monterey Bay" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
-            src="https://embed.windy.com/embed2.html?lat=36.75&amp;lon=-122.15&amp;detailLat=36.96&amp;detailLon=-121.95&amp;zoom=8&amp;level=surface&amp;overlay=waves&amp;product=ecmwfWaves&amp;menu=&amp;message=true&amp;marker=true&amp;calendar=now&amp;pressure=&amp;type=map&amp;location=coordinates&amp;detail=&amp;metricWind=kt&amp;metricTemp=%C2%B0F&amp;radarRange=-1"></iframe>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Soquel Cove from Rio Del Mar</h3>
-        <p class="note">Looking southwest across the cove toward the Seacliff cement ship, about 3 miles east of Capitola. A still that updates every few minutes, via Windy webcams.</p>
-        <div class="frame">
-          <iframe title="Webcam: Rio Del Mar Beach, Soquel Cove" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
-            src="https://webcams.windy.com/webcams/public/embed/player/1793912252/live"></iframe>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Santa Cruz Main Beach and the wharf</h3>
-        <p class="note">USGS CoastCam on the Dream Inn, looking east, about 4 miles west of Capitola. Updates every 30 minutes in daylight.</p>
-        <a class="shot" href="https://cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg"><img loading="lazy" data-refresh alt="USGS CoastCam view of Santa Cruz Main Beach and the wharf"
-          src="https://cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg" width="2448" height="2048"></a>
-        <p class="src">U.S. Geological Survey</p>
-      </div>
-      <div class="card">
-        <h3>Rain radar</h3>
-        <p class="note">The last hour of the National Weather Service radar at Mount Umunhum. Capitola sits on the coast just south of the radar.</p>
-        <a class="shot" href="https://radar.weather.gov/station/kmux/standard"><img loading="lazy" data-refresh alt="Animated NWS radar loop for the Bay Area and Monterey Bay"
-          src="https://radar.weather.gov/ridge/standard/KMUX_loop.gif" width="600" height="550"></a>
-        <p class="src">National Weather Service</p>
-      </div>
-      <div class="card">
-        <h3>Swell inside the bay</h3>
-        <p class="note">CDIP's wave model across Monterey Bay, with height in color and direction as arrows. It lags real time by a couple of hours, and its color scale changes with conditions.</p>
-        <a class="shot" href="https://cdip.ucsd.edu/"><img loading="lazy" data-refresh alt="CDIP wave model map of Monterey Bay"
-          src="https://cdip.ucsd.edu/recent/model_images/monterey.png" width="639" height="790"></a>
-        <p class="src">Data courtesy of <a href="https://cdip.ucsd.edu/">CDIP</a></p>
-      </div>
-      <div class="card">
-        <h3>CDIP's flooding index for Pleasure Point</h3>
-        <p class="note">CDIP's own experimental forecast for the nearest model point, about a mile west: tide plus wave runup over the next 3 days. It uses the same runup formula as this page but a different beach and datum (feet above mean lower low water), so compare its timing, not its numbers.</p>
-        <a class="shot" href="https://cdip.ucsd.edu/"><img loading="lazy" alt="CDIP potential flooding index for Pleasure Point, next 3 days"
-          src="https://cdip.ucsd.edu/recent/forecast/mop_water_level.gd?SC117+web" width="560" height="420"></a>
-        <p class="src">Data courtesy of <a href="https://cdip.ucsd.edu/">CDIP</a></p>
-      </div>
-      <div class="card">
-        <h3>Soquel Creek, last week</h3>
-        <p class="note">The creek at the Soquel gauge over the past 7 days, with the flood levels shaded. The National Weather Service adds a forecast here during storms.</p>
-        <a class="shot" href="https://water.noaa.gov/gauges/SOQC1"><img loading="lazy" data-refresh alt="NWS hydrograph for Soquel Creek at Soquel"
-          src="https://water.noaa.gov/resources/hydrographs/soqc1_record.png" width="600" height="465"></a>
-        <p class="src">National Weather Service and USGS</p>
-      </div>
-      <div class="card">
-        <h3>More live views</h3>
-        <ul class="links">
-          <li><a href="https://siocpg.ucsd.edu/coastal-focus/streamtest.html">Seacliff State Beach live video</a> and its <a href="https://ccciaweb.ucsd.edu/imperial-beach/siocpg/stacked_highchart_seacliff.html">water-level forecast</a>, from Scripps Institution of Oceanography</li>
-          <li><a href="https://santacruz.onerain.com/">Santa Cruz County flood-warning gauges</a>: rain and stream levels across the county</li>
-          <li><a href="https://www.youtube.com/watch?v=hXtYKDio1rQ">Rio Sands beach cam</a> in Aptos</li>
-          <li><a href="https://forecast.weather.gov/MapClick.php?lat=36.972&amp;lon=-121.952">National Weather Service forecast for Capitola</a> and the <a href="https://www.weather.gov/mtr/">Bay Area office</a></li>
-          <li><a href="https://tidesandcurrents.noaa.gov/waterlevels.html?id=9413450">Monterey tide gauge</a>, observed against predicted</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section id="forecast" aria-labelledby="h-forecast">
-    <h2 id="h-forecast">Forecast and outlook</h2>
-    <div class="card">
-      <h3>Flood index through March</h3>
-      <p class="note">For the first 10 days the orange line uses actual swell forecasts. Beyond that only the tide and the offset are known. The offset buttons choose how the Kelvin wave fades (see below), and the blue lines show what an average swell day, or a big swell day (the top 10% of days in past El Niño winters), would add on top of still water. Wherever the big-swell line crosses Flood, a big swell that day would likely put water over the seawall.</p>
-      <div class="ctrls">
-        <div class="seg" id="seg-win" role="group" aria-label="Time window">
-          <button type="button" data-win="14">2 weeks</button><button type="button" data-win="31">1 month</button><button type="button" data-win="92">3 months</button><button type="button" data-win="999">All winter</button>
-        </div>
-        <div class="seg" id="seg-off" role="group" aria-label="How the offset fades"></div>
-      </div>
-      <div class="legend">
-        <span><i class="sw thick" style="border-color:var(--accent)"></i>Flood index, swell forecast</span>
-        <span><i class="sw" style="border-color:var(--ord-3)"></i>With a big swell</span>
-        <span><i class="sw" style="border-color:var(--ord-2)"></i>With an average swell</span>
-        <span><i class="sw" style="border-color:var(--ord-1)"></i>Still water (tide + offset)</span>
-        <span><i class="sw dash" style="border-color:var(--ref)"></i>Watch, Flood and Severe lines</span>
-      </div>
-      <div id="hourly" class="chart"></div>
-      <details class="dt"><summary>Show the numbers</summary><div class="tw" id="dt-outlook"></div></details>
-    </div>
-    <div class="card">
-      <h3 id="recede">Will the Kelvin wave recede?</h3>
-      <p class="note">Water above a normal year at Monterey, by month. In the two strongest El Niños on record (1982–83 and 1997–98) the offset kept climbing into November and stayed up through February before fading in March. This year is already higher than either was in October. The dashed lines are the three offset scenarios, starting from this week's level; the blue one is the scenario picked above.</p>
-      <div class="legend">
-        <span><i class="sw thick" style="border-color:var(--accent)"></i>This year</span>
-        <span><i class="sw dash" style="border-color:var(--series-1)"></i>Scenario picked above</span>
-        <span><i class="sw dash" style="border-color:var(--muted-mark)"></i>Other scenarios</span>
-        <span><i class="sw" style="border-color:var(--muted-mark)"></i>1982–83, 1997–98, 2015–16</span>
-      </div>
-      <div id="kelvin" class="chart"></div>
-      <details class="dt"><summary>Show the numbers</summary><div class="tw" id="dt-kelvin"></div></details>
-    </div>
-    <div class="card">
-      <h3>What "average" and "big" swell mean</h3>
-      <p class="note">Wave runup on Capitola Beach by month in past El Niño winters. Average is a typical hour; big is the top 10% of days. Wave height and period are for a typical hour at the 15 m depth line.</p>
-      <div class="tw">
-        <table id="tbl-clim">
-          <thead><tr><th scope="col">Month</th><th scope="col" class="n">Average runup (ft)</th><th scope="col" class="n">Big-day runup (ft)</th><th scope="col" class="n">Typical waves (ft)</th><th scope="col" class="n">Typical period (s)</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card" data-live>
-      <h3>Next 10 days, daily peak</h3>
-      <p class="note">Each day's highest flood index and the conditions behind it. Wave height is at the 15 m depth line off Capitola.</p>
-      <div class="tw">
-        <table id="tbl-daily">
-          <thead><tr><th scope="col">Day</th><th scope="col">Peak</th><th scope="col">Level</th><th scope="col" class="n">Index (ft)</th><th scope="col" class="n hide-narrow">Tide (ft)</th><th scope="col" class="n">Waves (ft)</th><th scope="col" class="n">Period (s)</th><th scope="col" class="hide-narrow">Wave source</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section id="winter" aria-labelledby="h-winter">
-    <h2 id="h-winter">Winter outlook, November to March</h2>
-    <div class="card">
-      <h3>Daily chance of waves over the seawall</h3>
-      <p class="note">Each square is a day, shaded by its chance of overtopping, given that day's highest tide, an offset that recedes like past strong El Niños, and the swell and storm surge seen in past El Niño winters. Days already past turn gray, with a red dot where waves actually went over the seawall. Hover or tap for the swell it would take.</p>
-      <div class="scale" aria-hidden="true"><span>0%</span><i class="ramp"></i><span id="heat-max">—</span></div>
+      <p class="line" id="scen-line"></p>
+      <div class="scale" aria-hidden="true"><span>Daily chance of overtopping: 0%</span><i class="ramp"></i><span id="heat-max">—</span><span class="sep-dot">·</span><span>gray = past</span><span class="sep-dot">·</span><i class="dot"></i><span>observed overtopping</span></div>
       <div id="heat" class="chart"></div>
-      <details class="dt"><summary>Show the numbers</summary><div class="tw" id="dt-heat"></div></details>
-    </div>
-    <div class="grid">
-      <div class="card">
-        <h3>Highest-risk days</h3>
-        <p class="note">Swell needed is the offshore wave height (an 18-second swell) that would push water over the seawall at that day's high tide, by direction.</p>
-        <div class="tw">
-          <table id="tbl-top">
-            <thead><tr><th scope="col">Day</th><th scope="col">High tide</th><th scope="col" class="n hide-narrow">Tide (ft)</th><th scope="col" class="n">Chance</th><th scope="col" class="n">SW swell</th><th scope="col" class="n">W swell</th><th scope="col" class="n">WNW swell</th></tr></thead>
-            <tbody></tbody>
-          </table>
+      <p class="line"><b>Riskiest:</b> <span class="chips" id="windows"></span> <span id="need-line"></span></p>
+      <p class="line" id="dir-line"></p>
+      <p class="line" id="creek-winter"></p>
+      <details class="dt"><summary>Show every day</summary><div class="tw" id="dt-heat"></div></details>
+    </section>
+
+    <section class="card c4" id="views" aria-labelledby="h-views">
+      <h2 id="h-views">Live views</h2>
+      <div class="media"><div>
+      <div class="frame">
+        <iframe title="Webcam: Rio Del Mar Beach, Soquel Cove" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+          src="https://webcams.windy.com/webcams/public/embed/player/1793912252/live"></iframe>
+      </div>
+      <p class="cap">Soquel Cove from Rio Del Mar, 3 miles east (Windy webcams). No public camera shows Capitola itself.</p>
+      </div><div>
+      <a class="shot" href="https://radar.weather.gov/station/kmux/standard"><img loading="lazy" data-refresh alt="Animated NWS radar loop for the Bay Area and Monterey Bay"
+        src="https://radar.weather.gov/ridge/standard/KMUX_loop.gif" width="600" height="550"></a>
+      <p class="cap">NWS radar, last hour.</p>
+      </div></div>
+      <p class="line">More: <a href="https://www.windy.com/36.96/-121.95/waves?waves,36.75,-122.15,9">Windy swell map</a><span class="sep-dot">·</span><a href="https://cdip.ucsd.edu/recent/forecast/mop_water_level.gd?SC117+web">CDIP flooding forecast, Pleasure Point</a><span class="sep-dot">·</span><a href="https://siocpg.ucsd.edu/coastal-focus/streamtest.html">Seacliff live cam</a> and <a href="https://ccciaweb.ucsd.edu/imperial-beach/siocpg/stacked_highchart_seacliff.html">water-level forecast</a> (Scripps)<span class="sep-dot">·</span><a href="https://water.noaa.gov/gauges/SOQC1">Soquel Creek graph</a><span class="sep-dot">·</span><a href="https://santacruz.onerain.com/">County flood gauges</a><span class="sep-dot">·</span><a href="https://cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg">Santa Cruz Main Beach cam</a></p>
+    </section>
+
+    <section class="card c12" id="about" aria-labelledby="h-about">
+      <h2 id="h-about">How it works and how it has done</h2>
+      <div class="about">
+        <div>
+          <p>The <b>flood index</b> is still water at the Monterey tide gauge plus wave runup on Capitola Beach (Stockdon 2006), fed by CDIP's nearshore wave model just off the beach, so swell direction and period are built in. <span id="levels-text">Levels come from documented floods: Watch 11 ft (waves reach the seawall), Flood 12.5 ft (water over it onto the Esplanade), Severe 15.5 ft (damaging flooding of Esplanade businesses).</span></p>
+          <p>The <b>winter outlook</b> pairs this winter's predicted tides and Kelvin-wave offset with swell and storm surge from the El Niño winters of 2002–03, 2009–10, 2015–16 and 2023–24; run on past winters it closely matches the days that actually crossed each line. The <b>creek</b> model predicts the peak at the Soquel gauge from the day's rain, the day before and the past month's rain at Ben Lomond; it caught the Dec 2022 and Jan 2023 floods as more likely than not and missed March 2016, when far more rain fell in the hills than the gauge saw.</p>
+          <p><b>Not modeled:</b> storm-drain flooding (the 2011 Noble Gulch culvert failure), beach sand (a stripped beach lets waves reach the seawall more easily) and new Kelvin-wave pulses. The model reruns every morning; the "Right now" numbers load straight from NOAA, CDIP, USGS and the NWS. <a href="https://github.com/kevinkeet/frontpage/tree/main/capitola/model">Model code and notes</a>.</p>
+        </div>
+        <div>
+          <h3>Documented Capitola floods, ranked among <span data-k="of_days">—</span> days since 2000</h3>
+          <div class="tw">
+            <table id="t-ev">
+              <thead><tr><th scope="col">Day</th><th scope="col">What happened</th><th scope="col" class="n">Index</th><th scope="col" class="n hide-narrow">Waves</th><th scope="col" class="n">Rank</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div class="card">
-        <h3>How much the offset matters</h3>
-        <p class="note">Expected days over each line for the whole winter, with the offset averaged over November to March. "Chance of a damaging flood" is the chance of at least one Severe day.</p>
-        <div class="tw">
-          <table id="tbl-scen">
-            <thead><tr><th scope="col">Scenario</th><th scope="col" class="n hide-narrow">Avg offset (ft)</th><th scope="col" class="n">Overtopping days</th><th scope="col" class="n">Severe days</th><th scope="col" class="n">Chance of damaging flood</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="direction" aria-labelledby="h-direction">
-    <h2 id="h-direction">Why swell direction matters</h2>
-    <div class="card">
-      <h3>Share of offshore swell height that reaches Capitola</h3>
-      <p class="note">Monterey Bay shelters Capitola from northwest swell. A southwest swell arrives at about twice the height of a northwest swell the same size offshore. Compared hour by hour, offshore (ERA5) against CDIP's nearshore model off Capitola, for swells over 2 m.</p>
-      <div id="dir" class="chart"></div>
-    </div>
-  </section>
-
-  <section id="rain" aria-labelledby="h-rain">
-    <h2 id="h-rain">Rain and Soquel Creek</h2>
-    <p class="take">Rain floods the Village a different way: Soquel Creek rises behind the beach and backs up through the creekside streets, worse when a high tide blocks its mouth. Creek risk peaks later than the coastal risk, in January and February once the hills are soaked.</p>
-    <div class="tiles">
-      <div class="tile" data-live>
-        <div class="lab">Watershed wetness</div>
-        <div class="big" data-k="wetness_now">—</div>
-        <div class="sub">rain in the last 30 days at Ben Lomond; a typical El Niño February runs <span data-k="feb_wetness">—</span> in</div>
-      </div>
-      <div class="tile" data-live>
-        <div class="lab">One-day rain for creek flood stage now</div>
-        <div class="big" data-k="rain_needed_now">—</div>
-        <div class="sub">even odds of reaching flood stage at today's wetness</div>
-      </div>
-      <div class="tile" data-live>
-        <div class="lab">Next 8 days, best chance of flood stage</div>
-        <div class="big" data-k="creek_worst_p">—</div>
-        <div class="sub" data-k="creek_worst_label">—</div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:var(--gap-md)" data-live>
-      <h3>Next 8 days on Soquel Creek</h3>
-      <p class="note">Rain is the NWS forecast for the Ben Lomond area. Peak stage is the model's middle estimate at the Soquel gauge. Compound marks a day with at least a 25% chance of flood stage and a high tide (plus offset) of 5 ft or more, when the creek mouth backs up.</p>
-      <div class="tw">
-        <table id="tbl-creekfc">
-          <thead><tr><th scope="col">Day</th><th scope="col" class="n">Rain (in)</th><th scope="col" class="n hide-narrow">Wetness (in)</th><th scope="col" class="n">Peak stage (ft)</th><th scope="col" class="n hide-narrow">Action</th><th scope="col" class="n">Flood stage</th><th scope="col" class="n hide-narrow">Moderate</th><th scope="col" class="n hide-narrow">High tide (ft)</th><th scope="col">Compound</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="grid">
-      <div class="card">
-        <h3>Rain it takes to flood the creek, by month</h3>
-        <p class="note">One-day rain at Ben Lomond for even odds of each level, with the watershed as wet as it usually is mid-month in an El Niño winter (wetness under each month).</p>
-        <div class="legend">
-          <span><i class="sw box" style="background:var(--ord-1)"></i>Action</span><span><i class="sw box" style="background:var(--ord-2)"></i>Flood stage</span><span><i class="sw box" style="background:var(--ord-3)"></i>Moderate</span>
-        </div>
-        <div id="rainneed" class="chart"></div>
-        <details class="dt"><summary>Show the numbers</summary><div class="tw" id="dt-rainneed"></div></details>
-      </div>
-      <div class="card">
-        <h3>Soquel Creek's highest stage each winter</h3>
-        <p class="note">Yearly peak at the Soquel gauge since 1937. El Niño winters are highlighted. Dashed lines are the NWS flood levels.</p>
-        <div class="legend">
-          <span><i class="sw box" style="background:var(--series-1)"></i>El Niño winter</span><span><i class="sw box" style="background:var(--muted-mark)"></i>Other winters</span>
-        </div>
-        <div id="peaks" class="chart"></div>
-        <details class="dt"><summary>Show the numbers</summary><div class="tw" id="dt-peaks"></div></details>
-      </div>
-    </div>
-    <div class="card" style="margin-top:var(--gap-md)">
-      <h3>Creek flood levels and odds per winter</h3>
-      <p class="note">NWS levels for the Soquel gauge and what they mean downstream. Odds are the share of winters since 1937 whose peak reached each level.</p>
-      <div class="tw">
-        <table id="tbl-clev">
-          <thead><tr><th scope="col">Level</th><th scope="col" class="n">Stage (ft)</th><th scope="col" class="n hide-narrow">Flow (cfs)</th><th scope="col">What it means</th><th scope="col" class="n">Any winter</th><th scope="col" class="n">El Niño winter</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <h3>How the creek model did on past floods</h3>
-      <p class="note">Model run on the rain that actually fell. It caught the big Dec 2022 and Jan 2023 floods as more likely than not, and missed March 2016, when far more rain fell in the hills than the gauge saw.</p>
-      <div class="tw">
-        <table id="tbl-cev">
-          <thead><tr><th scope="col">Day</th><th scope="col">What happened</th><th scope="col" class="n">Peak (ft)</th><th scope="col" class="n hide-narrow">Rain (in)</th><th scope="col" class="n hide-narrow">Wetness (in)</th><th scope="col" class="n">Model (ft)</th><th scope="col" class="n">Chance of flood stage</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section id="calibration" aria-labelledby="h-calibration">
-    <h2 id="h-calibration">How the model was checked</h2>
-    <div class="card">
-      <h3>Documented Capitola floods</h3>
-      <p class="note">Where each documented day ranks among all <span data-k="of_days">—</span> days since 2000 by the model's flood index. Waves are at the 15 m depth line.</p>
-      <div class="tw">
-        <table id="tbl-ev">
-          <thead><tr><th scope="col">Day</th><th scope="col">What happened</th><th scope="col" class="n">Index (ft)</th><th scope="col" class="n hide-narrow">Water (ft)</th><th scope="col" class="n">Waves (ft)</th><th scope="col" class="n hide-narrow">Period (s)</th><th scope="col" class="n">Rank</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Alert levels</h3>
-      <p class="note">Flood index in feet above NAVD88, set from the documented days.</p>
-      <table id="tbl-th">
-        <thead><tr><th scope="col">Level</th><th scope="col" class="n">Index (ft)</th><th scope="col">What it means</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div class="card">
-      <h3>Water above the tide tables, monthly</h3>
-      <p class="note">Observed minus predicted water level at Monterey. Part of every month's offset is sea level rise since the tide tables' reference years; the recent jump is the Kelvin wave. The last 12 months are highlighted.</p>
-      <div id="offset" class="chart"></div>
-      <details class="dt"><summary>Show the numbers</summary><div class="tw" id="dt-offset"></div></details>
-    </div>
-  </section>
-
-  <section id="method" aria-labelledby="h-method">
-    <h2 id="h-method">Method and limits</h2>
-    <div class="card method">
-      <p>The flood index is still water plus wave runup. Still water comes from the Monterey tide gauge: observed levels for past days, and predicted tide plus the recent offset for forecasts. Runup uses the Stockdon (2006) formula for Capitola Beach, fed by CDIP's MOP wave model at three points just off the beach. MOP bends offshore swell into the bay, so swell direction and period are built in. Long-period swell runs up much farther than short storm chop.</p>
-      <p>The winter outlook pairs this winter's predicted tides with day-to-day swell and storm surge from the four El Niño winters in the wave record (2002–03, 2009–10, 2015–16, 2023–24). Run on past winters, the same method closely matches the number of days that actually crossed each line.</p>
-      <ul>
-        <li>The creek model predicts the peak at the Soquel gauge from rain on the peak day and the day before (Ben Lomond) and the previous month's rain. Fit on 2007–2026 winters, it explains about two thirds of the swing in creek peaks. One rain gauge can miss storms that dump on the upper watershed, as in March 2016.</li>
-        <li>Storm-drain flooding from Noble Gulch (March 2011) came from a failed culvert and isn't modeled.</li>
-        <li>Beach sand matters. A stripped beach lets waves reach the seawall more easily, so late-winter risk may be understated.</li>
-        <li>The alert lines rest on five documented days. Minor overtopping is often unreported, so the Flood line may be a little conservative.</li>
-        <li>The offset scenarios assume this week is near the peak and then fade along the paths of 1982–83, 1997–98 and 2015–16. More Kelvin wave pulses could push it higher. Storms add surge on top. Each model run re-measures it.</li>
-      </ul>
-    </div>
-  </section>
+    </section>
   </main>
 
   <footer>
-    <p>A personal project by <a href="/">Kevin Keet</a>. Not an official forecast; for warnings, follow the <a href="https://www.weather.gov/mtr/">National Weather Service</a>.</p>
-    <p>Data: <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=9413450">NOAA Monterey tide gauge</a>, <a href="https://cdip.ucsd.edu/">CDIP</a> nearshore wave model (UC San Diego), <a href="https://waterdata.usgs.gov/monitoring-location/USGS-11160000/">USGS Soquel Creek gauge</a>, <a href="https://water.noaa.gov/gauges/SOQC1">NWS flood levels</a>, National Weather Service alerts and forecasts, and NOAA NCEI rain records. Wave map by <a href="https://www.windy.com/">Windy</a>. Live conditions load straight from these sources in your browser; the forecast reruns every morning.</p>
+    <p>A personal project by <a href="/">Kevin Keet</a>. Data: <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=9413450">NOAA tide gauge 9413450</a>, <a href="https://cdip.ucsd.edu/">CDIP</a> (UC San Diego), <a href="https://waterdata.usgs.gov/monitoring-location/USGS-11160000/">USGS Soquel Creek gauge</a>, <a href="https://water.noaa.gov/gauges/SOQC1">NWS flood levels</a>, National Weather Service alerts and forecasts, NOAA NCEI rain records. Webcam via Windy.</p>
   </footer>
 </div>
 
@@ -640,25 +310,20 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
 (function () {
   'use strict';
 
-  // ---------------------------------------------------------------- data
-  const SOURCES = ['forecast_daily', 'forecast_hourly', 'outlook_hourly', 'outlook_daily', 'offsets', 'kelvin_paths',
-    'winter_calendar', 'scenarios', 'thresholds', 'validation_events', 'direction_ratio', 'offset_monthly', 'swell_climate',
-    'creek_forecast', 'creek_levels', 'creek_rain_needed', 'creek_events', 'creek_annual_peaks'];
+  // ---------------------------------------------------------------- model data (CSVs written each morning by the GitHub Action)
+  const SOURCES = ['forecast_daily', 'creek_forecast', 'scenarios', 'winter_calendar', 'thresholds', 'validation_events',
+    'creek_levels', 'creek_rain_needed', 'direction_ratio'];
   const D = {};           // id -> array of row objects (strings), or null if it failed to load
   let loaded = false;
 
   const num = v => (v === '' || v == null) ? NaN : +v;
-  const f1 = d3.format('.1f'), f2 = d3.format('.2f'), pct = d3.format('.0%'), sgn2 = d3.format('+.2f'), comma = d3.format(',');
-  const parseDay = d3.timeParse('%Y-%m-%d'), parseHour = d3.timeParse('%Y-%m-%dT%H:%M'), parseMonth = d3.timeParse('%Y-%m');
-  const dayFmt = d3.timeFormat('%a %b %-d'), shortDay = d3.timeFormat('%b %-d'), longDay = d3.timeFormat('%b %-d, %Y');
-  const hourFmt = d3.timeFormat('%a %b %-d, %-I %p'), monFmt = d3.timeFormat('%b');
+  const f1 = d3.format('.1f'), f2 = d3.format('.2f'), pct = d3.format('.0%'), sgn1 = d3.format('+.1f'), sgn2 = d3.format('+.2f'), comma = d3.format(',');
+  const parseDay = d3.timeParse('%Y-%m-%d');
+  const dayFmt = d3.timeFormat('%a %b %-d'), shortDay = d3.timeFormat('%b %-d'), longDay = d3.timeFormat('%b %-d, %Y'), monFmt = d3.timeFormat('%b');
   const TZ = 'America/Los_Angeles';
   const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   const todayPT = (LOCAL && parseDay(new URLSearchParams(location.search).get('today') || '')) ||    // ?today=YYYY-MM-DD for local testing
     parseDay(new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
-  const yearsDash = s => String(s).replace(/(\d{4})-(\d{4})/g, '$1–$2');
-
-  const state = { win: 31, off: 'recede' };
 
   // ---------------------------------------------------------------- dom helpers
   const $ = (s, r = document) => r.querySelector(s);
@@ -667,24 +332,11 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
   function levelEl(level, label) { return el('span', 'lv lv-' + level, label || level); }
   function setK(key, value) { $$('[data-k="' + key + '"]').forEach(e => { if (value instanceof Node) e.replaceChildren(value); else e.textContent = value; }); }
   function failed(box) { box.replaceChildren(el('div', 'fail', "Couldn't load this chart's data.")); }
-  function message(box, text) { box.replaceChildren(el('div', 'msg', text)); }
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-
-  function fillTable(sel, rows, cells) {
-    const tb = $(sel + ' tbody'); if (!tb) return;
-    tb.replaceChildren();
-    (rows || []).forEach(r => {
-      const tr = el('tr'); const spec = cells(r);
-      if (spec.rowClass) tr.className = spec.rowClass;
-      spec.cells.forEach(c => {
-        const td = el('td', c.cls || null);
-        if (c.node) td.append(c.node); else td.textContent = c.t;
-        tr.append(td);
-      });
-      tb.append(tr);
-    });
-  }
-  // a plain table for the "Show the numbers" toggles under charts
+  const frag = (...parts) => parts.map(p => (typeof p === 'string' ? document.createTextNode(p) : p));   // text + elements
+  const B = t => el('b', null, t);
+  function fmtPT(t, opts) { return new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: TZ }, opts)).format(t); }
+  function joinList(xs) { return xs.length < 2 ? (xs[0] || '—') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1]; }
   function dataTable(id, cols, rows) {
     const host = document.getElementById(id); if (!host || !rows) return;
     const tbl = el('table'), thead = el('thead'), htr = el('tr'), tb = el('tbody');
@@ -693,39 +345,18 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     rows.forEach(r => { const tr = el('tr'); cols.forEach(c => tr.append(el('td', c.n ? 'n' : null, c.f(r)))); tb.append(tr); });
     tbl.append(thead, tb); host.replaceChildren(tbl);
   }
-
-  // ---------------------------------------------------------------- chart helpers
-  function axisStyle(g) {
-    g.attr('font-size', null).attr('font-family', null);
-    g.selectAll('text').style('fill', 'var(--ink-2)').style('font-size', '12px');
-    g.selectAll('line,path').style('stroke', 'var(--axis)');
+  function levelLines() {
+    const m = { Watch: 11, Flood: 12.5, Severe: 15.5 };
+    (D.thresholds || []).forEach(r => { if (isFinite(num(r.index_ft))) m[r.level] = num(r.index_ft); });
+    return m;
   }
+
+  // ---------------------------------------------------------------- chart helpers: tooltips, pointer and keyboard readouts
   function textWidth(svg, strs, size) {
     const g = svg.append('g').attr('aria-hidden', 'true'); let w = 0;
     strs.forEach(s => { const t = g.append('text').style('font-size', (size || 12) + 'px').text(s); w = Math.max(w, t.node().getComputedTextLength()); });
     g.remove(); return w;
   }
-  function newSvg(box, W, H, label) {
-    return d3.select(box).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'region')
-      .attr('aria-label', label + '. Use the arrow keys to step through the values.');
-  }
-  function gridLines(svg, y, ticks, x0, x1) {
-    svg.append('g').attr('aria-hidden', 'true').selectAll('line').data(ticks).join('line')
-      .attr('x1', x0).attr('x2', x1).attr('y1', d => y(d)).attr('y2', d => y(d)).style('stroke', 'var(--grid)');
-  }
-  // vertical bar with a rounded data end and a square baseline; yEnd may sit above or below yBase
-  function vbar(x, w, yBase, yEnd, r) {
-    const h = Math.abs(yBase - yEnd); r = Math.min(r, w / 2, h);
-    if (h < 0.5) return `M${x},${yBase}h${w}`;
-    const s = yEnd <= yBase ? 1 : -1;
-    return `M${x},${yBase}V${yEnd + s * r}Q${x},${yEnd} ${x + r},${yEnd}H${x + w - r}Q${x + w},${yEnd} ${x + w},${yEnd + s * r}V${yBase}Z`;
-  }
-  function hbar(xBase, xEnd, y, h, r) {
-    r = Math.min(r, h / 2, Math.max(0, xEnd - xBase));
-    return `M${xBase},${y}H${xEnd - r}Q${xEnd},${y} ${xEnd},${y + r}V${y + h - r}Q${xEnd},${y + h} ${xEnd - r},${y + h}H${xBase}Z`;
-  }
-
-  // tooltips: one per card, positioned in card coordinates
   function svgToCard(svgNode, card, sx, sy) {
     const a = svgNode.getBoundingClientRect(), b = card.getBoundingClientRect();
     const k = a.width / (svgNode.viewBox.baseVal.width || a.width);
@@ -748,19 +379,16 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     tip.style.top = clamp(ay - th / 2, 6, ch - th - 6) + 'px';
   }
   function hideTip(card) { const t = card && card.querySelector(':scope > .tip'); if (t) t.hidden = true; }
-
   const hiders = {};   // chart id -> hide(); tapping outside a chart clears it
   document.addEventListener('pointerdown', ev => {
     const inChart = ev.target.closest && ev.target.closest('.chart, .spark');
     Object.entries(hiders).forEach(([id, h]) => { if (!inChart || inChart.id !== id) h(); });
   });
-  // transparent layer that snaps the pointer to the nearest data position
   function overlay(svg, x0, y0, w, h, onMove, onLeave) {
     svg.append('rect').attr('x', x0).attr('y', y0).attr('width', Math.max(0, w)).attr('height', Math.max(0, h)).style('fill', 'transparent')
       .on('pointerdown pointermove', onMove)
       .on('pointerleave', ev => { if (ev.pointerType === 'mouse') onLeave(); });
   }
-  // keyboard: arrows step through n items, PageUp/PageDown by 7, Home/End
   function keyScrub(svg, n, show, hide) {
     const node = svg.node(); let i = 0;
     node.setAttribute('tabindex', '0');
@@ -777,277 +405,125 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     });
   }
 
-  // ---------------------------------------------------------------- derived values
+  // ---------------------------------------------------------------- model run stamp and staleness
+  function runTime() {
+    const fd = D.forecast_daily; if (!fd || !fd.length || !fd[0].run_at_utc) return null;
+    const t = new Date(fd[0].run_at_utc.replace(' ', 'T') + ':00Z');
+    return isNaN(t) ? null : t;
+  }
+  function renderStamp() {
+    const run = runTime();
+    if (!run) { if (loaded) $('#stamp').textContent = "Couldn't load the latest model run."; return; }
+    $('#stamp').textContent = 'Forecast run ' + fmtPT(run, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + fmtPT(run, { hour: 'numeric', minute: '2-digit' }) +
+      ' (reruns every morning); live data every 5 minutes.';
+    const ageH = (Date.now() - run) / 36e5, stale = ageH > 36, box = $('#stale');
+    document.body.classList.toggle('is-stale', stale); box.hidden = !stale;
+    if (stale) {
+      const days = Math.floor(ageH / 24);
+      box.replaceChildren(B('The forecast is ' + days + (days === 1 ? ' day' : ' days') + ' old. '),
+        document.createTextNode('The 10-day table is out of date until the model runs again. The live numbers are current.'));
+    }
+  }
+
+  // ---------------------------------------------------------------- next 10 days: coast and creek in one table
+  function renderTen() {
+    const fd = D.forecast_daily, cf = D.creek_forecast || [], L = levelLines();
+    const tb = $('#t10 tbody'); tb.replaceChildren();
+    if (!fd || !fd.length) return;
+    const worst = fd.reduce((a, b) => (num(b.twl) > num(a.twl) ? b : a)), lvl = worst.level;
+    const days = fd.filter(r => r.level === lvl).map(r => dayFmt(parseDay(r.date)));
+    const when = joinList(days.slice(0, 3)) + (days.length > 3 ? ' and ' + (days.length - 3) + ' more' : '');
+    const creekMax = cf.reduce((a, b) => (!a || num(b.p_minor) > num(a.p_minor) ? b : a), null);
+    const creekTxt = creekMax && num(creekMax.p_minor) >= 0.005
+      ? ' Soquel Creek: ' + pct(num(creekMax.p_minor)) + ' chance of flood stage ' + dayFmt(parseDay(creekMax.date)) + '.'
+      : ' Soquel Creek: no flood-level rain in the 8-day forecast.';
+    $('#status-level').replaceChildren(levelEl(lvl));
+    $('#status-text').textContent = (
+      lvl === 'Low' ? 'No waves over the seawall expected. Closest: ' + dayFmt(parseDay(worst.date)) + ', ' + worst.peak_time + ', ' + f1(num(worst.twl)) + ' ft' +
+        (num(worst.twl) >= L.Watch - 0.3 ? ', just under Watch (' + f1(L.Watch) + ').' : ', ' + f1(L.Flood - num(worst.twl)) + ' ft below Flood.')
+      : lvl === 'Watch' ? 'Waves could reach the seawall around high tide on ' + when + '.'
+      : lvl === 'Flood' ? 'Waves likely over the seawall on ' + when + '; highest ' + dayFmt(parseDay(worst.date)) + ', ' + worst.peak_time + '.'
+      : 'A damaging flood is possible on ' + when + '. Follow National Weather Service warnings.') + creekTxt;
+    const creek = new Map(cf.map(r => [r.date, r]));
+    const lo = 6, hi = 16, pos = v => clamp((v - lo) / (hi - lo), 0, 1) * 100;
+    fd.forEach(r => {
+      const c = creek.get(r.date), v = num(r.twl);
+      const tr = el('tr', ((r === worst ? 'peak' : '') + (/Open-Meteo/i.test(r.source) ? ' far' : '')).trim() || null);
+      const ib = el('span', 'ib ' + r.level), fill = el('i'); fill.style.width = pos(v) + '%';
+      const tw = el('s'), tf = el('s'); tw.style.left = pos(L.Watch) + '%'; tf.style.left = pos(L.Flood) + '%';
+      ib.append(fill, tw, tf);
+      const ixw = el('span', 'ixw'); ixw.append(ib, el('b', null, f1(v)));
+      if (r.level !== 'Low') ixw.append(levelEl(r.level));
+      const cells = [
+        el('td', 'nowrap', d3.timeFormat('%a %-d')(parseDay(r.date))), el('td', 'nowrap', r.peak_time), el('td', 'ix'),
+        el('td', 'n hide-narrow', f1(num(r.tide_ft))), el('td', 'n', f1(num(r.hs_capitola_ft))), el('td', 'n hide-narrow', Math.round(num(r.period_s))),
+        el('td', 'n hide-narrow', c ? f2(num(c.rain_in)) : ''), el('td', 'n', c ? pct(num(c.p_minor)) : '')];
+      cells[2].append(ixw);
+      if (c && String(c.compound).toLowerCase() === 'true') { cells[7].className = 'n yes'; cells[7].title = 'Flood-stage chance with a high tide that backs up the creek mouth'; }
+      tr.title = dayFmt(parseDay(r.date)) + ': index ' + f1(v) + ' ft at ' + r.peak_time + ' (Watch ' + f1(L.Watch) + ', Flood ' + f1(L.Flood) + '). Waves from ' + r.source + '.';
+      tr.append(...cells); tb.append(tr);
+    });
+    setK('offset', sgn2(num(fd[0].offset_ft)) + ' ft');
+  }
+
+  // ---------------------------------------------------------------- this winter: numbers, calendar, and one-line summaries
   function peakWindows(cal) {
     const out = []; let cur = null;
     const nextDay = s => { const d = new Date(s + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); };
     for (const r of cal) {
       if (num(r.p_flood) < 0.15) continue;
-      if (cur && nextDay(cur.end) === r.date) { cur.end = r.date; cur.peak = Math.max(cur.peak, num(r.p_flood)); }
-      else { cur = { start: r.date, end: r.date, peak: num(r.p_flood) }; out.push(cur); }
+      if (cur && nextDay(cur.end) === r.date) cur.end = r.date;
+      else { cur = { start: r.date, end: r.date }; out.push(cur); }
     }
     return out.map(w => {
       const s = parseDay(w.start), e = parseDay(w.end);
       return { end: e, label: (w.start === w.end) ? shortDay(s) : shortDay(s) + '–' + (monFmt(s) === monFmt(e) ? d3.timeFormat('%-d')(e) : shortDay(e)) };
     });
   }
-  function joinList(xs) { return xs.length < 2 ? (xs[0] || '—') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1]; }
-  function runTime() {
-    const fd = D.forecast_daily; if (!fd || !fd.length || !fd[0].run_at_utc) return null;
-    const t = new Date(fd[0].run_at_utc.replace(' ', 'T') + ':00Z');
-    return isNaN(t) ? null : t;
-  }
-  function fmtPT(t, opts) { return new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: TZ }, opts)).format(t); }
-
-  // ---------------------------------------------------------------- summary cards, staleness
-  function levelLines() {
-    const m = { Watch: 11, Flood: 12.5, Severe: 15.5 };
-    (D.thresholds || []).forEach(r => { if (isFinite(num(r.index_ft))) m[r.level] = num(r.index_ft); });
-    return m;
-  }
-  function renderHeadline() {
-    const run = runTime();
-    if (run) {
-      $('#stamp').textContent = 'Forecast from the model run on ' + fmtPT(run, { weekday: 'short', month: 'short', day: 'numeric' }) + ' at ' +
-        fmtPT(run, { hour: 'numeric', minute: '2-digit' }) + ' Pacific time; it reruns every morning. Live conditions refresh every few minutes.';
-      const ageH = (Date.now() - run) / 36e5;
-      const stale = ageH > 36;
-      document.body.classList.toggle('is-stale', stale);
-      const box = $('#stale'); box.hidden = !stale;
-      if (stale) {
-        const days = Math.floor(ageH / 24);
-        box.replaceChildren(el('b', null, 'The forecast is ' + days + (days === 1 ? ' day' : ' days') + ' old. '),
-          document.createTextNode('The 10-day swell and 8-day creek forecasts are out of date until the model runs again. The live conditions below are current.'));
-      }
-    } else if (loaded) $('#stamp').textContent = "Couldn't load the latest model run.";
-
-    const fd = D.forecast_daily, sc = D.scenarios, wc = D.winter_calendar, L = levelLines();
-    if (fd && fd.length) {
-      const worst = fd.reduce((a, b) => (num(b.twl) > num(a.twl) ? b : a));
-      const lvl = worst.level, days = fd.filter(r => r.level === lvl).map(r => dayFmt(parseDay(r.date)));
-      const when = joinList(days.slice(0, 3)) + (days.length > 3 ? ' and ' + (days.length - 3) + ' more' : '');
-      $('#status-level').replaceChildren(levelEl(lvl));
-      $('#status-text').textContent =
-        lvl === 'Low' ? 'No waves over the seawall expected. Closest: ' + dayFmt(parseDay(worst.date)) + ' around ' + worst.peak_time + ', ' +
-          (num(worst.twl) >= L.Watch - 0.3 ? 'just under the Watch line, where waves start reaching the seawall.' : f1(L.Flood - num(worst.twl)) + ' ft below the Flood line.')
-        : lvl === 'Watch' ? 'Waves could reach the seawall around high tide on ' + when + '.'
-        : lvl === 'Flood' ? 'Waves likely over the seawall on ' + when + '. Highest around ' + worst.peak_time + ' on ' + dayFmt(parseDay(worst.date)) + '.'
-        : 'A damaging flood is possible on ' + when + '. Follow National Weather Service warnings.';
-      const ul = $('#days'); ul.replaceChildren();
-      fd.forEach(r => {
-        const d = parseDay(r.date), li = el('li', 'day d-' + r.level + (r === worst ? ' peak' : ''));
-        li.append(el('b', null, d3.timeFormat('%a %-d')(d)));
-        if (r.level !== 'Low') li.append(el('span', 'lvl', r.level));
-        li.append(el('span', 'x', f1(num(r.twl)) + ' ft'), el('span', 'tm', r.peak_time));
-        const bar = el('span', 'bar'), fill = el('i');
-        fill.style.width = Math.round(100 * clamp((num(r.twl) - 6) / (L.Flood - 6), 0.03, 1)) + '%';
-        bar.append(fill); li.append(bar);
-        li.title = dayFmt(d) + ': highest index ' + f1(num(r.twl)) + ' ft around ' + r.peak_time + ' (Flood line ' + f1(L.Flood) + ' ft). Tide ' +
-          f1(num(r.tide_ft)) + ' ft, waves ' + f1(num(r.hs_capitola_ft)) + ' ft at ' + Math.round(num(r.period_s)) + ' s.';
-        ul.append(li);
-      });
-      setK('offset_lede', f1(num(fd[0].offset_ft)) + ' ft');
+  function renderWinter() {
+    const sc = D.scenarios, wc = D.winter_calendar, fd = D.forecast_daily, L = levelLines();
+    const find = s => sc && sc.find(r => r.scenario.includes(s));
+    const c = find('central'), a = sc && sc.find(r => r.scenario.startsWith('Average')), en = sc && sc.find(r => r.scenario.startsWith('Past'));
+    const hold = find('stays'), fast = find('fast');
+    if (c && a) {
+      setK('central_days', f1(num(c.flood_days))); setK('central_p', pct(num(c.p_any_severe)));
+      const seen = wc ? wc.filter(r => isFinite(num(r.observed_twl_ft))) : [], over = seen.filter(r => num(r.observed_twl_ft) >= L.Flood).length;
+      setK('vs_avg', f1(num(c.flood_days) / num(a.flood_days)) + '× an average winter (' + f1(num(a.flood_days)) + ')' + (seen.length ? '; ' + over + ' so far' : ''));
+      setK('vs_avg_p', pct(num(a.p_any_severe)) + ' in an average winter');
+      const parts = [];
+      if (hold) parts.push('offset stays ' + f1(num(hold.flood_days)) + ' days, ' + pct(num(hold.p_any_severe)));
+      if (fast) parts.push('recedes fast ' + f1(num(fast.flood_days)) + ', ' + pct(num(fast.p_any_severe)));
+      if (en) parts.push('past El Niño winters ' + f1(num(en.flood_days)) + ', ' + pct(num(en.p_any_severe)));
+      $('#scen-line').replaceChildren(...frag(B('Assumes the offset fades like past strong El Niños. '), 'Other cases: ' + parts.join(' · ') + '.'));
     }
-    if (sc) {
-      const c = sc.find(r => r.scenario.includes('central')), a = sc.find(r => r.scenario.startsWith('Average'));
-      if (c && a) {
-        setK('central_days', f1(num(c.flood_days)) + ' days'); setK('ratio', f1(num(c.flood_days) / num(a.flood_days)) + ' times');
-        setK('central_p', pct(num(c.p_any_severe))); setK('avg_p', pct(num(a.p_any_severe)));
-      }
-    }
+    if (fd && fd.length) setK('offset_fig', sgn1(num(fd[0].offset_ft)) + ' ft');
     if (wc) {
-      const ws = peakWindows(wc).filter(w => w.end >= todayPT), ul = $('#windows');
-      ul.replaceChildren(...ws.map(w => el('li', 'chip', w.label)));
-      $('#windows-lab').textContent = ws.length ? 'Riskiest stretches still ahead, the morning king tides of' : 'The riskiest king tides of the winter have passed.';
-      const seen = wc.filter(r => isFinite(num(r.observed_twl_ft)));
-      const over = seen.filter(r => num(r.observed_twl_ft) >= L.Flood).length;
-      setK('so_far', seen.length ? ', counting ' + over + (over === 1 ? ' day' : ' days') + ' so far' : '');
+      const ws = peakWindows(wc).filter(w => w.end >= todayPT);
+      $('#windows').replaceChildren(...(ws.length ? ws.map(w => el('span', 'chip', w.label)) : [el('span', null, 'the big king tides have passed.')]));
+      const ahead = wc.filter(r => parseDay(r.date) >= todayPT);
+      const top = ahead.length ? ahead.reduce((x, y) => (num(y.p_flood) > num(x.p_flood) ? y : x)) : null;
+      $('#need-line').textContent = top ? 'Worst morning, ' + dayFmt(parseDay(top.date)) + ' (' + pct(num(top.p_flood)) + '): an 18-second swell of about ' +
+        Math.round(num(top.offshore_ft_SW)) + ' ft from the SW, ' + Math.round(num(top.offshore_ft_W)) + ' ft W or ' + Math.round(num(top.offshore_ft_WNW)) +
+        ' ft WNW (offshore) would put water over the seawall at high tide.' : '';
     }
-
-    // creek: line under the 10-day strip and the creek-section tiles
-    const cf = D.creek_forecast, cl = D.creek_levels, crn = D.creek_rain_needed;
-    if (cf && cf.length) {
-      const r0 = cf[0], w = cf.reduce((a, b) => (num(b.p_minor) > num(a.p_minor) ? b : a));
-      $('#creek-line').textContent = num(w.p_minor) >= 0.005
-        ? 'Soquel Creek: ' + pct(num(w.p_minor)) + ' chance of flood stage on ' + dayFmt(parseDay(w.date)) + ' (' + f1(num(w.rain_in)) + ' in of rain forecast).'
-        : 'Soquel Creek: no flood-level rain in the 8-day forecast.';
-      setK('wetness_now', f1(num(r0.wetness_now_in)) + ' in');
-      const need = num(r0.rain_needed_minor_in);
-      setK('rain_needed_now', (need >= 25 ? '25+' : f1(need)) + ' in');
-      setK('creek_worst_p', pct(num(w.p_minor)));
-      setK('creek_worst_label', num(w.p_minor) > 0 ? dayFmt(parseDay(w.date)) + ', ' + f1(num(w.rain_in)) + ' in of rain forecast' : 'No flood-level rain in the forecast');
-    }
-    if (cl) { const m = cl.find(r => r.level === 'Minor'); if (m) setK('flood_stage', d3.format('.0f')(num(m.stage_ft))); }
-    if (crn) { const f = crn.find(r => r.month === 'Feb'); if (f) setK('feb_wetness', f1(num(f.wetness_in))); }
-    const ve = D.validation_events; if (ve && ve.length) setK('of_days', comma(num(ve[0].of_days)));
-  }
-
-  // ---------------------------------------------------------------- flood index chart
-  function renderOffsetButtons() {
-    const so = $('#seg-off'); so.replaceChildren();
-    (D.offsets || []).forEach(r => {
-      const b = el('button', null, r.label); b.type = 'button';
-      b.setAttribute('aria-pressed', String(r.key === state.off)); b.title = r.description;
-      b.addEventListener('click', () => { state.off = r.key; renderOutlook(); renderKelvin(); });
-      so.append(b);
-    });
-  }
-  $$('#seg-win button').forEach(b => b.addEventListener('click', () => { state.win = +b.dataset.win; renderOutlook(); }));
-
-  function renderOutlook() {
-    const box = $('#hourly'), card = box.closest('.card');
-    hideTip(card); box.replaceChildren();
-    $$('#seg-win button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.win === state.win)));
-    renderOffsetButtons();
-    const oh = D.outlook_hourly, od = D.outlook_daily, th = D.thresholds;
-    if (!loaded) return;
-    if (!oh || !od || !th) return failed(box);
-    const daily = state.win > 14, K = state.off;
-    let rows = (daily ? od : oh).map(r => ({ t: daily ? parseDay(r.date) : parseHour(r.t), still: num(r['still_' + K]), avg: num(r['avg_' + K]), big: num(r['big_' + K]),
-      tide: num(r.tide_mllw), off: num(r['offset_' + K]), time: r.high_tide_time, la: r['level_avg_' + K], lb: r['level_big_' + K] }));
-    if (!rows.length) return failed(box);
-    const t0 = rows[0].t > todayPT ? rows[0].t : todayPT;          // never start in the past, even if the data is old
-    const tEnd = d3.timeDay.offset(t0, state.win);
-    rows = rows.filter(r => r.t >= t0 && r.t <= tEnd);
-    if (rows.length < 2) return message(box, 'The outlook runs through March 31, 2027.');
-    let fc = [];
-    if (daily && D.forecast_daily) fc = D.forecast_daily.map(r => ({ t: parseDay(r.date), twl: num(r.twl), lv: r.level }));
-    if (!daily && D.forecast_hourly) fc = D.forecast_hourly.map(r => ({ t: parseHour(r.t), twl: num(r.twl) }));
-    fc = fc.filter(r => r.t >= t0 && r.t <= tEnd);
-    const lines = th.map(r => ({ level: r.level, v: num(r.index_ft) }));
-
-    const W = box.clientWidth, H = W < 520 ? 260 : 300, B = 26, T = 10;
-    const svg = newSvg(box, W, H, 'Flood index chart, ' + ($('#seg-win [aria-pressed="true"]') || {}).textContent);
-    const y = d3.scaleLinear([Math.floor(d3.min(rows, d => d.still)) - 0.5,
-      Math.max(d3.max(lines, d => d.v), d3.max(rows, d => d.big), d3.max(fc, d => d.twl) || 0) + 0.6], [H - B, T]);
-    const yTicks = y.ticks(6);
-    const ml = textWidth(svg, yTicks.map(v => v + ' ft')) + 12, mr = textWidth(svg, lines.map(l => l.level)) + 14;
-    const x = d3.scaleTime([rows[0].t, rows[rows.length - 1].t], [ml, W - mr]);
-    gridLines(svg, y, yTicks, ml, W - mr);
-    const ga = svg.append('g').attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(d => d + ' ft').tickSize(0).tickPadding(8));
-    axisStyle(ga); ga.select('.domain').remove();
-    const span = (rows[rows.length - 1].t - rows[0].t) / 864e5, nT = Math.max(2, Math.floor((W - ml - mr) / 72));
-    const xAxis = d3.axisBottom(x).tickSizeOuter(0);
-    if (state.win > 92) xAxis.tickValues(d3.timeMonth.range(d3.timeMonth.ceil(rows[0].t), rows[rows.length - 1].t)).tickFormat(monFmt);
-    else xAxis.tickValues(d3.timeDay.range(d3.timeDay.ceil(rows[0].t), rows[rows.length - 1].t, Math.max(1, Math.ceil(span / nT)))).tickFormat(shortDay);
-    axisStyle(svg.append('g').attr('transform', `translate(0,${H - B})`).call(xAxis));
-    lines.forEach(l => {
-      svg.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', y(l.v)).attr('y2', y(l.v)).style('stroke', 'var(--ref)').style('stroke-dasharray', '4 4');
-      svg.append('text').attr('x', W - mr + 6).attr('y', y(l.v)).attr('dy', '0.32em').text(l.level).style('fill', 'var(--ink-2)').style('font-size', '12px');
-    });
-    const ln = k => d3.line().defined(d => isFinite(d[k])).x(d => x(d.t)).y(d => y(d[k]));
-    const draw = (data, k, color, w) => svg.append('path').datum(data).attr('d', ln(k)).style('fill', 'none').style('stroke', color)
-      .style('stroke-width', w || 2).style('stroke-linejoin', 'round').style('stroke-linecap', 'round');
-    draw(rows, 'still', 'var(--ord-1)'); draw(rows, 'avg', 'var(--ord-2)'); draw(rows, 'big', 'var(--ord-3)');
-    if (fc.length) draw(fc, 'twl', 'var(--accent)', 2.5);
-
-    const focus = svg.append('g').style('display', 'none').attr('pointer-events', 'none');
-    const rule = focus.append('line').attr('y1', T).attr('y2', H - B).style('stroke', 'var(--axis)');
-    const dot = c => focus.append('circle').attr('r', 4).style('fill', c).style('stroke', 'var(--surface)').style('stroke-width', 2);
-    const dS = dot('var(--ord-1)'), dA = dot('var(--ord-2)'), dB = dot('var(--ord-3)'), dF = dot('var(--accent)');
-    const bis = d3.bisector(d => d.t).center;
-    function show(i, ev) {
-      const d = rows[i], cx = x(d.t);
-      focus.style('display', null); rule.attr('x1', cx).attr('x2', cx);
-      dS.attr('cx', cx).attr('cy', y(d.still)); dA.attr('cx', cx).attr('cy', y(d.avg)); dB.attr('cx', cx).attr('cy', y(d.big));
-      const f = fc.length ? fc[bis(fc, d.t)] : null, hit = f && Math.abs(f.t - d.t) < 36e5 * (daily ? 12 : 1);
-      dF.style('display', hit ? null : 'none'); if (hit) dF.attr('cx', x(f.t)).attr('cy', y(f.twl));
-      const tr = [daily ? dayFmt(d.t) : hourFmt(d.t)];
-      if (hit) tr.push({ k: 'Swell forecast', v: f1(f.twl) + ' ft' + (f.lv ? ', ' + f.lv : ''), c: 'var(--accent)' });
-      tr.push({ k: 'Big swell', v: f1(d.big) + ' ft' + (daily && d.lb ? ', ' + d.lb : ''), c: 'var(--ord-3)' });
-      tr.push({ k: 'Average swell', v: f1(d.avg) + ' ft' + (daily && d.la ? ', ' + d.la : ''), c: 'var(--ord-2)' });
-      tr.push({ k: 'Still water', v: f1(d.still) + ' ft', c: 'var(--ord-1)' });
-      tr.push({ k: daily ? 'High tide' : 'Tide', v: f1(d.tide) + ' ft' + (daily && d.time ? ' at ' + d.time : '') });
-      tr.push({ k: 'Offset', v: sgn2(d.off) + ' ft' });
-      const [ax, ay] = svgToCard(svg.node(), card, cx, (T + H - B) / 2);
-      showTip(card, tr, ax, ev ? d3.pointer(ev, card)[1] : ay);
-    }
-    function hide() { focus.style('display', 'none'); hideTip(card); }
-    overlay(svg, ml, 0, W - mr - ml, H, ev => show(bis(rows, x.invert(d3.pointer(ev)[0])), ev), hide);
-    keyScrub(svg, rows.length, i => show(i), hide);
-    hiders.hourly = hide;
-
-    dataTable('dt-outlook', [
-      { h: daily ? 'Day' : 'Hour', f: r => daily ? dayFmt(r.t) : hourFmt(r.t) },
-      { h: daily ? 'High tide (ft)' : 'Tide (ft)', n: 1, f: r => f1(r.tide) },
-      { h: 'Offset (ft)', n: 1, f: r => sgn2(r.off) },
-      { h: 'Still water (ft)', n: 1, f: r => f1(r.still) },
-      { h: 'Average swell (ft)', n: 1, f: r => f1(r.avg) },
-      { h: 'Big swell (ft)', n: 1, f: r => f1(r.big) }], rows);
-  }
-
-  // ---------------------------------------------------------------- Kelvin wave chart
-  function renderKelvin() {
-    const box = $('#kelvin'), card = box.closest('.card');
-    hideTip(card); box.replaceChildren();
-    if (!loaded) return;
-    const kp = D.kelvin_paths; if (!kp) return failed(box);
-    const rows = kp.map(r => Object.assign({}, r, { i: num(r.order) }));
-    const S = [
-      { k: 'el_nino_1982_83', lab: '1982–83', kind: 'past' }, { k: 'el_nino_1997_98', lab: '1997–98', kind: 'past' }, { k: 'el_nino_2015_16', lab: '2015–16', kind: 'past' },
-      { k: 'scenario_hold', lab: 'Stays', kind: 'scen', key: 'hold' }, { k: 'scenario_recede', lab: 'Recedes', kind: 'scen', key: 'recede' },
-      { k: 'scenario_fast', lab: 'Recedes fast', kind: 'scen', key: 'fast' }, { k: 'this_year_observed', lab: 'This year', kind: 'now' }];
-    S.forEach(s => {
-      const sel = s.kind === 'scen' && s.key === state.off;
-      Object.assign(s, s.kind === 'now' ? { c: 'var(--accent)', w: 2.5, dash: null, z: 3 }
-        : s.kind === 'past' ? { c: 'var(--muted-mark)', w: 1.5, dash: null, z: 0 }
-        : sel ? { c: 'var(--series-1)', w: 2, dash: '6 4', z: 2 } : { c: 'var(--muted-mark)', w: 1.5, dash: '4 4', z: 1 });
-      s.sel = sel;
-    });
-    const pts = s => rows.filter(r => isFinite(num(r[s.k]))).map(r => ({ i: r.i, v: num(r[s.k]) }));
-    const all = S.flatMap(pts);
-    const W = box.clientWidth, H = W < 520 ? 210 : 230, B = 24, T = 10;
-    const svg = newSvg(box, W, H, 'Kelvin wave offset by month');
-    const y = d3.scaleLinear([Math.min(0, d3.min(all, d => d.v)), d3.max(all, d => d.v) + 0.1], [H - B, T]).nice();
-    const yTicks = y.ticks(4), fmtY = d => (d === 0 ? '0' : d3.format('+.1f')(d)) + ' ft';
-    const ml = textWidth(svg, yTicks.map(fmtY)) + 12;
-    const scen = S.filter(s => s.kind === 'scen');
-    const mr = textWidth(svg, scen.map(s => s.lab)) + 14;
-    const x = d3.scalePoint(rows.map(r => r.i), [ml, W - mr]);
-    gridLines(svg, y, yTicks, ml, W - mr);
-    const ga = svg.append('g').attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(fmtY).tickSize(0).tickPadding(8));
-    axisStyle(ga); ga.select('.domain').remove();
-    axisStyle(svg.append('g').attr('transform', `translate(0,${H - B})`).call(d3.axisBottom(x).tickFormat(i => rows[i].month).tickSizeOuter(0)));
-    S.slice().sort((a, b) => a.z - b.z).forEach(s => {
-      const p = pts(s); if (!p.length) return;
-      svg.append('path').datum(p).attr('d', d3.line().x(d => x(d.i)).y(d => y(d.v))).style('fill', 'none').style('stroke', s.c)
-        .style('stroke-width', s.w).style('stroke-dasharray', s.dash).style('stroke-linejoin', 'round').style('stroke-linecap', s.dash ? 'butt' : 'round');
-    });
-    // direct labels: the three scenarios at the right edge, this year at its last point
-    const labs = scen.map(s => { const p = pts(s); const e = p[p.length - 1]; return e ? { y: y(e.v), t: s.lab, strong: s.sel } : null; }).filter(Boolean).sort((a, b) => a.y - b.y);
-    for (let i = 1; i < labs.length; i++) labs[i].y = Math.max(labs[i].y, labs[i - 1].y + 13);
-    labs.forEach(l => svg.append('text').attr('x', W - mr + 6).attr('y', l.y).attr('dy', '0.32em').text(l.t)
-      .style('fill', l.strong ? 'var(--ink)' : 'var(--ink-2)').style('font-weight', l.strong ? 600 : null).style('font-size', '12px'));
-    const now = pts(S[S.length - 1]); const nl = now[now.length - 1];
-    if (nl) svg.append('text').attr('x', x(nl.i) - 8).attr('y', y(nl.v) - 8).attr('text-anchor', 'end').text('This year')
-      .style('fill', 'var(--ink)').style('font-weight', 600).style('font-size', '12px');
-
-    const focus = svg.append('g').style('display', 'none').attr('pointer-events', 'none');
-    const rule = focus.append('line').attr('y1', T).attr('y2', H - B).style('stroke', 'var(--axis)');
-    function show(i, ev) {
-      const r = rows[i], cx = x(r.i);
-      focus.style('display', null); rule.attr('x1', cx).attr('x2', cx);
-      const tr = [r.month];
-      ['this_year_observed', 'scenario_hold', 'scenario_recede', 'scenario_fast', 'el_nino_1982_83', 'el_nino_1997_98', 'el_nino_2015_16'].forEach(k => {
-        const s = S.find(z => z.k === k), v = num(r[k]);
-        if (isFinite(v)) tr.push({ k: s.lab, v: sgn2(v) + ' ft', c: s.c, dash: !!s.dash });
+    const dr = D.direction_ratio;
+    if (dr) {
+      const by = {}; dr.forEach(r => { (by[r.compass] = by[r.compass] || []).push(num(r.share_reaching_capitola)); });
+      const show = ['SW', 'S', 'W', 'WNW', 'NW'].filter(k => by[k]).map(k => {
+        const v = by[k], lo = d3.min(v), hi = d3.max(v);
+        return k + ' ' + (Math.round(lo * 100) === Math.round(hi * 100) ? pct(lo) : Math.round(lo * 100) + '–' + pct(hi));
       });
-      const [ax, ay] = svgToCard(svg.node(), card, cx, (T + H - B) / 2);
-      showTip(card, tr, ax, ev ? d3.pointer(ev, card)[1] : ay);
+      $('#dir-line').replaceChildren(B('Swell direction: '), document.createTextNode('share of offshore height that reaches Capitola, ' + show.join(' · ') + '. The bay shelters Capitola from northwest swell.'));
     }
-    function hide() { focus.style('display', 'none'); hideTip(card); }
-    overlay(svg, ml - x.step() / 2, 0, W - mr - ml + x.step(), H, ev => {
-      const px = d3.pointer(ev)[0]; show(clamp(Math.round((px - ml) / x.step()), 0, rows.length - 1), ev);
-    }, hide);
-    keyScrub(svg, rows.length, i => show(i), hide);
-    hiders.kelvin = hide;
-
-    dataTable('dt-kelvin', [{ h: 'Month', f: r => r.month }].concat(
-      ['this_year_observed', 'scenario_hold', 'scenario_recede', 'scenario_fast', 'el_nino_1982_83', 'el_nino_1997_98', 'el_nino_2015_16']
-        .map(k => ({ h: S.find(z => z.k === k).lab, n: 1, f: r => isFinite(num(r[k])) ? sgn2(num(r[k])) : '' }))), rows);
+    const cl = D.creek_levels, crn = D.creek_rain_needed;
+    if (cl) {
+      const m = cl.find(r => r.level === 'Minor');
+      const need = crn ? crn.filter(r => ['Dec', 'Jan', 'Feb', 'Mar'].includes(r.month)).map(r => r.month + ' ' + f1(num(r.rain_minor_in))) : [];
+      if (m) $('#creek-winter').replaceChildren(B('Soquel Creek: '), document.createTextNode('flood stage (' + d3.format('.0f')(num(m.stage_ft)) + ' ft) in ' + pct(num(m.p_winter_all)) +
+        ' of winters since 1937, ' + pct(num(m.p_winter_elnino)) + ' of El Niño winters.' + (need.length ? ' One-day rain for even odds once the hills are soaked: ' + need.join(' · ') + ' in.' : '')));
+    }
+    renderHeat();
   }
-
-  // ---------------------------------------------------------------- winter calendar heatmap
   function renderHeat() {
     const box = $('#heat'), card = box.closest('.card');
     hideTip(card); box.replaceChildren();
@@ -1055,18 +531,19 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     const wc = D.winter_calendar; if (!wc) return failed(box);
     const rows = wc.map(r => Object.assign({}, r, { d: parseDay(r.date), p: num(r.p_flood) }));
     const months = d3.groups(rows, r => r.date.slice(0, 7));
-    const W = box.clientWidth, labW = 34, cols = 31, gap = 2;
-    const cw = clamp(Math.floor((W - labW) / cols) - gap, 5, 26), ch = Math.max(cw, 20);
-    const H = months.length * (ch + gap) + 20;
-    const svg = newSvg(box, W, H, 'Daily chance of waves over the seawall, November to March');
+    const W = box.clientWidth, labW = 30, cols = 31, gap = 2;
+    const cw = clamp(Math.floor((W - labW) / cols) - gap, 5, 24), ch = Math.max(cw, 16);
+    const H = months.length * (ch + gap) + 16;
+    const svg = d3.select(box).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'region')
+      .attr('aria-label', 'Daily chance of waves over the seawall, November to March. Use the arrow keys to step through the days.');
     const pmax = d3.max(rows, r => r.p) || 1;
-    $('#heat-max').textContent = pct(pmax) + ' a day';
+    $('#heat-max').textContent = pct(pmax);
     const cs = getComputedStyle(document.documentElement);
     const ramp = d3.interpolateLab(cs.getPropertyValue('--heat-lo').trim(), cs.getPropertyValue('--heat-hi').trim());
     const cells = [];
     months.forEach(([, rs], mi) => {
       const yy = mi * (ch + gap);
-      svg.append('text').attr('x', 0).attr('y', yy + ch / 2).attr('dy', '0.32em').text(monFmt(rs[0].d)).style('fill', 'var(--ink-2)').style('font-size', '12px');
+      svg.append('text').attr('x', 0).attr('y', yy + ch / 2).attr('dy', '0.32em').text(monFmt(rs[0].d)).style('fill', 'var(--ink-2)').style('font-size', '11px');
       rs.forEach(r => cells.push({ r, mi, x: labW + (r.d.getDate() - 1) * (cw + gap), y: yy }));
     });
     const L = levelLines(), past = c => c.r.d < todayPT;
@@ -1079,7 +556,7 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     if (ti >= 0) svg.append('rect').attr('x', cells[ti].x - 1).attr('y', cells[ti].y - 1).attr('width', cw + 2).attr('height', ch + 2).attr('rx', 3)
       .style('fill', 'none').style('stroke', 'var(--accent)').style('stroke-width', 2);
     svg.append('g').attr('aria-hidden', 'true').selectAll('text').data([1, 8, 15, 22, 29]).join('text')
-      .attr('x', d => labW + (d - 1) * (cw + gap)).attr('y', H - 4).text(d => d).style('fill', 'var(--ink-2)').style('font-size', '12px');
+      .attr('x', d => labW + (d - 1) * (cw + gap)).attr('y', H - 3).text(d => d).style('fill', 'var(--ink-2)').style('font-size', '11px');
     const ring = svg.append('rect').attr('width', cw + 2).attr('height', ch + 2).attr('rx', 3).attr('pointer-events', 'none')
       .style('fill', 'none').style('stroke', 'var(--ink)').style('stroke-width', 2).style('display', 'none');
     function show(i, ev) {
@@ -1095,8 +572,7 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
         { k: 'Swell needed, WNW', v: Math.round(num(r.offshore_ft_WNW)) + ' ft' }], ax, ev ? d3.pointer(ev, card)[1] : ay);
     }
     function hide() { ring.style('display', 'none'); hideTip(card); }
-    const byMonth = months.map(([, rs]) => rs.length);
-    const start = byMonth.map((_, i) => d3.sum(byMonth.slice(0, i)));
+    const byMonth = months.map(([, rs]) => rs.length), start = byMonth.map((_, i) => d3.sum(byMonth.slice(0, i)));
     overlay(svg, labW, 0, cols * (cw + gap), months.length * (ch + gap), ev => {
       const [px, py] = d3.pointer(ev);
       const mi = clamp(Math.floor(py / (ch + gap)), 0, months.length - 1), day = clamp(Math.floor((px - labW) / (cw + gap)), 0, byMonth[mi] - 1);
@@ -1104,204 +580,32 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     }, hide);
     keyScrub(svg, cells.length, i => show(i), hide);
     hiders.heat = hide;
-
     dataTable('dt-heat', [
-      { h: 'Day', f: r => dayFmt(r.d) }, { h: 'High tide', f: r => f1(num(r.high_tide_ft)) + ' ft at ' + r.high_tide_time },
+      { h: 'Day', f: r => dayFmt(r.d) }, { h: 'High tide', f: r => f1(num(r.high_tide_ft)) + ' ft, ' + r.high_tide_time },
       { h: 'Chance', n: 1, f: r => pct(r.p) }, { h: 'Severe', n: 1, f: r => pct(num(r.p_severe)) },
-      { h: 'SW swell (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_SW)) }, { h: 'W swell (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_W)) },
-      { h: 'WNW swell (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_WNW)) },
+      { h: 'SW (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_SW)) }, { h: 'W (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_W)) },
+      { h: 'WNW (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_WNW)) },
       { h: 'Observed (ft)', n: 1, f: r => isFinite(num(r.observed_twl_ft)) ? f1(num(r.observed_twl_ft)) : '' }], rows);
   }
 
-  // ---------------------------------------------------------------- swell direction bars
-  function renderDirection() {
-    const box = $('#dir'), card = box.closest('.card');
-    hideTip(card); box.replaceChildren();
-    if (!loaded) return;
-    const dr = D.direction_ratio; if (!dr) return failed(box);
-    const rows = dr.map(r => ({ lab: r.compass + ' ' + r.direction_deg + '°', v: num(r.share_reaching_capitola) }));
-    const W = box.clientWidth, bh = 18, step = bh + 8, H = rows.length * step;
-    const svg = newSvg(box, W, H, 'Share of offshore swell height reaching Capitola, by direction');
-    const ml = textWidth(svg, rows.map(r => r.lab)) + 12, mr = 44;
-    const x = d3.scaleLinear([0, d3.max(rows, r => r.v)], [ml, W - mr]);
-    rows.forEach((r, i) => {
-      const yy = 4 + i * step;
-      svg.append('text').attr('x', ml - 8).attr('y', yy + bh / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(r.lab).style('fill', 'var(--ink-2)').style('font-size', '12px');
-      svg.append('path').attr('d', hbar(ml, Math.max(ml + 1, x(r.v)), yy, bh, 4)).style('fill', 'var(--series-1)');
-      svg.append('text').attr('x', x(r.v) + 6).attr('y', yy + bh / 2).attr('dy', '0.32em').text(pct(r.v)).style('fill', 'var(--ink)').style('font-size', '12px');
+  // ---------------------------------------------------------------- how it has done
+  function renderAbout() {
+    const ve = D.validation_events, tb = $('#t-ev tbody'), L = levelLines();
+    $('#levels-text').textContent = 'Levels come from documented floods: Watch ' + f1(L.Watch) + ' ft (waves reach the seawall), Flood ' + f1(L.Flood) +
+      ' ft (water over it onto the Esplanade), Severe ' + f1(L.Severe) + ' ft (damaging flooding of Esplanade businesses).';
+    tb.replaceChildren();
+    if (!ve) return;
+    setK('of_days', ve.length ? comma(num(ve[0].of_days)) : '—');
+    ve.forEach(r => {
+      const tr = el('tr');
+      tr.append(el('td', 'nowrap', longDay(parseDay(r.date))), el('td', null, r.impact), el('td', 'n', f1(num(r.twl_index_ft))),
+        el('td', 'n nowrap hide-narrow', f1(num(r.hs_capitola_ft)) + ' ft @ ' + Math.round(num(r.period_s)) + ' s'), el('td', 'n', comma(num(r.rank))));
+      tb.append(tr);
     });
-    const ring = svg.append('rect').attr('pointer-events', 'none').attr('rx', 5).style('fill', 'none').style('stroke', 'var(--ink)').style('stroke-width', 1.5).style('display', 'none');
-    function show(i, ev) {
-      const r = rows[i], yy = 4 + i * step;
-      ring.style('display', null).attr('x', ml - 2).attr('y', yy - 2).attr('width', Math.max(4, x(r.v) - ml + 4)).attr('height', bh + 4);
-      const [ax, ay] = svgToCard(svg.node(), card, x(r.v), yy + bh / 2);
-      showTip(card, [r.lab, { k: 'Reaches Capitola', v: pct(r.v) + ' of offshore height', c: 'var(--series-1)' }], ax, ev ? d3.pointer(ev, card)[1] : ay);
-    }
-    function hide() { ring.style('display', 'none'); hideTip(card); }
-    overlay(svg, 0, 0, W, H, ev => show(clamp(Math.floor(d3.pointer(ev)[1] / step), 0, rows.length - 1), ev), hide);   // splits at the gap midpoints
-    keyScrub(svg, rows.length, i => show(i), hide);
-    hiders.dir = hide;
-  }
-
-  // ---------------------------------------------------------------- rain needed (grouped bars)
-  function renderRainNeeded() {
-    const box = $('#rainneed'), card = box.closest('.card');
-    hideTip(card); box.replaceChildren();
-    if (!loaded) return;
-    const crn = D.creek_rain_needed; if (!crn) return failed(box);
-    const rows = crn.map(r => ({ m: r.month, w: num(r.wetness_in), a: num(r.rain_action_in), mi: num(r.rain_minor_in), mo: num(r.rain_moderate_in) }));
-    const keys = [['a', 'Action', 'var(--ord-1)'], ['mi', 'Flood stage', 'var(--ord-2)'], ['mo', 'Moderate', 'var(--ord-3)']];
-    const W = box.clientWidth, H = 220, B = 40, T = 8;
-    const svg = newSvg(box, W, H, 'One-day rain needed for each creek level, by month');
-    const y = d3.scaleLinear([0, d3.max(rows, r => r.mo) * 1.08], [H - B, T]).nice();
-    const yTicks = y.ticks(5);
-    const ml = textWidth(svg, yTicks.map(d => d + ' in')) + 12, mr = 4;
-    const x0 = d3.scaleBand(rows.map(r => r.m), [ml, W - mr]).padding(0.25);
-    const x1 = d3.scaleBand(keys.map(k => k[0]), [0, x0.bandwidth()]).padding(0.12);
-    const bw = Math.min(24, x1.bandwidth());
-    gridLines(svg, y, yTicks, ml, W - mr);
-    const ga = svg.append('g').attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(d => d + ' in').tickSize(0).tickPadding(8));
-    axisStyle(ga); ga.select('.domain').remove();
-    axisStyle(svg.append('g').attr('transform', `translate(0,${H - B})`).call(d3.axisBottom(x0).tickSizeOuter(0)));
-    svg.append('g').attr('aria-hidden', 'true').selectAll('text').data(rows).join('text').attr('x', r => x0(r.m) + x0.bandwidth() / 2).attr('y', H - 4)
-      .attr('text-anchor', 'middle').text(r => f1(r.w) + ' in wet').style('fill', 'var(--ink-2)').style('font-size', '11px');
-    rows.forEach(r => keys.forEach(([k, , c]) => {
-      const bx = x0(r.m) + x1(k) + (x1.bandwidth() - bw) / 2;
-      svg.append('path').attr('d', vbar(bx, bw, y(0), y(r[k]), 4)).style('fill', c);
-    }));
-    const hl = svg.append('rect').attr('pointer-events', 'none').attr('rx', 6).style('fill', 'none').style('stroke', 'var(--ink)').style('stroke-width', 1.5).style('display', 'none');
-    function show(i, ev) {
-      const r = rows[i];
-      hl.style('display', null).attr('x', x0(r.m) - 3).attr('y', y(r.mo) - 3).attr('width', x0.bandwidth() + 6).attr('height', y(0) - y(r.mo) + 3);
-      const [ax, ay] = svgToCard(svg.node(), card, x0(r.m) + x0.bandwidth(), y(r.mi));
-      showTip(card, [r.m + ', watershed wetness ' + f1(r.w) + ' in'].concat(keys.slice().reverse().map(([k, lab, c]) => ({ k: lab, v: f1(r[k]) + ' in in one day', c }))),
-        ax, ev ? d3.pointer(ev, card)[1] : ay);
-    }
-    function hide() { hl.style('display', 'none'); hideTip(card); }
-    overlay(svg, ml, 0, W - mr - ml, H - B, ev => {
-      const px = d3.pointer(ev)[0]; show(clamp(Math.floor((px - ml) / x0.step()), 0, rows.length - 1), ev);
-    }, hide);
-    keyScrub(svg, rows.length, i => show(i), hide);
-    hiders.rainneed = hide;
-    dataTable('dt-rainneed', [{ h: 'Month', f: r => r.m }, { h: 'Wetness (in)', n: 1, f: r => f1(r.w) }, { h: 'Action (in)', n: 1, f: r => f1(r.a) },
-      { h: 'Flood stage (in)', n: 1, f: r => f1(r.mi) }, { h: 'Moderate (in)', n: 1, f: r => f1(r.mo) }], rows);
-  }
-
-  // ---------------------------------------------------------------- annual creek peaks
-  function renderPeaks() {
-    const box = $('#peaks'), card = box.closest('.card');
-    hideTip(card); box.replaceChildren();
-    if (!loaded) return;
-    const ap = D.creek_annual_peaks, cl = D.creek_levels; if (!ap || !cl) return failed(box);
-    const rows = ap.map(r => ({ wy: num(r.wy), s: num(r.stage), q: num(r.flow), d: r.date, en: String(r.el_nino).toLowerCase() === 'true' })).filter(r => isFinite(r.s));
-    const lv = cl.map(r => ({ l: r.level === 'Minor' ? 'Flood' : r.level, v: num(r.stage_ft) }));
-    const W = box.clientWidth, H = 220, B = 24, T = 8;
-    const svg = newSvg(box, W, H, "Soquel Creek's highest stage each winter since 1937");
-    const y = d3.scaleLinear([0, Math.max(d3.max(rows, r => r.s), d3.max(lv, r => r.v)) + 1], [H - B, T]);
-    const yTicks = y.ticks(5);
-    const ml = textWidth(svg, yTicks.map(d => d + ' ft')) + 12, mr = textWidth(svg, lv.map(l => l.l)) + 12;
-    const yrs = d3.range(d3.min(rows, r => r.wy), d3.max(rows, r => r.wy) + 1);
-    const x = d3.scaleBand(yrs, [ml, W - mr]).padding(0.2);
-    gridLines(svg, y, yTicks, ml, W - mr);
-    const ga = svg.append('g').attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(d => d + ' ft').tickSize(0).tickPadding(8));
-    axisStyle(ga); ga.select('.domain').remove();
-    const every = (W - ml - mr) / (yrs.length / 10) < 44 ? 20 : 10;
-    axisStyle(svg.append('g').attr('transform', `translate(0,${H - B})`).call(d3.axisBottom(x).tickValues(yrs.filter(v => v % every === 0)).tickSizeOuter(0)));
-    rows.forEach(r => svg.append('path').attr('d', vbar(x(r.wy), x.bandwidth(), y(0), y(r.s), 3)).style('fill', r.en ? 'var(--series-1)' : 'var(--muted-mark)'));
-    lv.forEach(l => {
-      svg.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', y(l.v)).attr('y2', y(l.v)).style('stroke', 'var(--ref)').style('stroke-dasharray', '4 4');
-      svg.append('text').attr('x', W - mr + 6).attr('y', y(l.v)).attr('dy', '0.32em').text(l.l).style('fill', 'var(--ink-2)').style('font-size', '12px');
-    });
-    const hl = svg.append('rect').attr('pointer-events', 'none').attr('rx', 2).style('fill', 'none').style('stroke', 'var(--ink)').style('stroke-width', 1.5).style('display', 'none');
-    function show(i, ev) {
-      const r = rows[i];
-      hl.style('display', null).attr('x', x(r.wy) - 2).attr('y', y(r.s) - 2).attr('width', x.bandwidth() + 4).attr('height', y(0) - y(r.s) + 2);
-      const [ax, ay] = svgToCard(svg.node(), card, x(r.wy) + x.bandwidth(), y(r.s));
-      showTip(card, [longDay(parseDay(r.d)) + (r.en ? ' (El Niño)' : ''), { k: 'Peak stage', v: f1(r.s) + ' ft', c: r.en ? 'var(--series-1)' : 'var(--muted-mark)' },
-        { k: 'Peak flow', v: comma(r.q) + ' cfs' }], ax, ev ? d3.pointer(ev, card)[1] : ay);
-    }
-    function hide() { hl.style('display', 'none'); hideTip(card); }
-    const at = new Map(rows.map((r, i) => [r.wy, i]));
-    overlay(svg, ml, 0, W - mr - ml, H - B, ev => {
-      const px = d3.pointer(ev)[0], yr = yrs[clamp(Math.floor((px - ml) / x.step()), 0, yrs.length - 1)];
-      let best = 0, bd = Infinity; rows.forEach((r, i) => { const dd = Math.abs(r.wy - yr); if (dd < bd) { bd = dd; best = i; } });
-      show(at.has(yr) ? at.get(yr) : best, ev);
-    }, hide);
-    keyScrub(svg, rows.length, i => show(i), hide);
-    hiders.peaks = hide;
-    dataTable('dt-peaks', [{ h: 'Winter', f: r => (r.wy - 1) + '–' + String(r.wy).slice(2) }, { h: 'Peak day', f: r => longDay(parseDay(r.d)) },
-      { h: 'Stage (ft)', n: 1, f: r => f1(r.s) }, { h: 'Flow (cfs)', n: 1, f: r => comma(r.q) }, { h: 'El Niño', f: r => r.en ? 'Yes' : '' }], rows.slice().reverse());
-  }
-
-  // ---------------------------------------------------------------- monthly offset history
-  function renderOffset() {
-    const box = $('#offset'), card = box.closest('.card');
-    hideTip(card); box.replaceChildren();
-    if (!loaded) return;
-    const om = D.offset_monthly; if (!om) return failed(box);
-    const rows = om.map(r => ({ m: r.month, d: parseMonth(r.month), v: num(r.offset_ft) }));
-    const W = box.clientWidth, H = 210, B = 24, T = 8;
-    const svg = newSvg(box, W, H, 'Monthly water level above the tide tables at Monterey since 2014');
-    const y = d3.scaleLinear([Math.min(0, d3.min(rows, r => r.v)), d3.max(rows, r => r.v) + 0.1], [H - B, T]).nice();
-    const yTicks = y.ticks(4), fmtY = d => (d === 0 ? '0' : d3.format('+.1f')(d)) + ' ft';
-    const ml = textWidth(svg, yTicks.map(fmtY)) + 12, mr = 4;
-    const x = d3.scaleBand(rows.map(r => r.m), [ml, W - mr]).padding(0.15);
-    gridLines(svg, y, yTicks, ml, W - mr);
-    const ga = svg.append('g').attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(fmtY).tickSize(0).tickPadding(8));
-    axisStyle(ga); ga.select('.domain').remove();
-    const years = rows.filter(r => r.m.endsWith('-01')).map(r => r.m);
-    const every = Math.max(1, Math.ceil(years.length / Math.max(2, Math.floor((W - ml) / 46))));
-    axisStyle(svg.append('g').attr('transform', `translate(0,${H - B})`).call(d3.axisBottom(x).tickValues(years.filter((_, i) => i % every === 0)).tickFormat(m => m.slice(0, 4)).tickSizeOuter(0)));
-    const recent = new Set(rows.slice(-12).map(r => r.m));
-    rows.forEach(r => svg.append('path').attr('d', vbar(x(r.m), x.bandwidth(), y(0), y(r.v), 3)).style('fill', recent.has(r.m) ? 'var(--series-1)' : 'var(--muted-mark)'));
-    svg.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', y(0)).attr('y2', y(0)).style('stroke', 'var(--axis)');
-    const hl = svg.append('rect').attr('pointer-events', 'none').attr('rx', 2).style('fill', 'none').style('stroke', 'var(--ink)').style('stroke-width', 1.5).style('display', 'none');
-    function show(i, ev) {
-      const r = rows[i], top = Math.min(y(r.v), y(0)), h = Math.abs(y(r.v) - y(0));
-      hl.style('display', null).attr('x', x(r.m) - 2).attr('y', top - 2).attr('width', x.bandwidth() + 4).attr('height', h + 4);
-      const [ax, ay] = svgToCard(svg.node(), card, x(r.m) + x.bandwidth(), top);
-      showTip(card, [d3.timeFormat('%B %Y')(r.d), { k: 'Above predicted', v: sgn2(r.v) + ' ft', c: recent.has(r.m) ? 'var(--series-1)' : 'var(--muted-mark)' }],
-        ax, ev ? d3.pointer(ev, card)[1] : ay);
-    }
-    function hide() { hl.style('display', 'none'); hideTip(card); }
-    overlay(svg, ml, 0, W - mr - ml, H - B, ev => show(clamp(Math.floor((d3.pointer(ev)[0] - ml) / x.step()), 0, rows.length - 1), ev), hide);
-    keyScrub(svg, rows.length, i => show(i), hide);
-    hiders.offset = hide;
-    dataTable('dt-offset', [{ h: 'Month', f: r => d3.timeFormat('%b %Y')(r.d) }, { h: 'Above predicted (ft)', n: 1, f: r => sgn2(r.v) }], rows.slice().reverse());
-  }
-
-  // ---------------------------------------------------------------- tables
-  function renderTables() {
-    fillTable('#tbl-clim', D.swell_climate, r => ({ cells: [{ t: r.month_name }, { t: f1(num(r.typical_runup_ft)), cls: 'n' }, { t: f1(num(r.big_runup_ft)), cls: 'n' },
-      { t: f1(num(r.typical_hs_ft)), cls: 'n' }, { t: f1(num(r.typical_tp_s)), cls: 'n' }] }));
-    fillTable('#tbl-daily', D.forecast_daily, r => ({ cells: [{ t: dayFmt(parseDay(r.date)), cls: 'nowrap' }, { t: r.peak_time, cls: 'nowrap' }, { node: levelEl(r.level) },
-      { t: f1(num(r.twl)), cls: 'n' }, { t: f1(num(r.tide_ft)), cls: 'n hide-narrow' }, { t: f1(num(r.hs_capitola_ft)), cls: 'n' }, { t: Math.round(num(r.period_s)), cls: 'n' },
-      { t: r.source, cls: 'hide-narrow' }] }));
-    const top = D.winter_calendar && D.winter_calendar.filter(r => parseDay(r.date) >= todayPT).sort((a, b) => num(b.p_flood) - num(a.p_flood)).slice(0, 12);
-    fillTable('#tbl-top', top, r => ({ cells: [{ t: shortDay(parseDay(r.date)), cls: 'nowrap' }, { t: r.high_tide_time, cls: 'nowrap' }, { t: f1(num(r.high_tide_ft)), cls: 'n hide-narrow' },
-      { t: pct(num(r.p_flood)), cls: 'n' }, { t: Math.round(num(r.offshore_ft_SW)) + ' ft', cls: 'n' }, { t: Math.round(num(r.offshore_ft_W)) + ' ft', cls: 'n' },
-      { t: Math.round(num(r.offshore_ft_WNW)) + ' ft', cls: 'n' }] }));
-    fillTable('#tbl-scen', D.scenarios, r => ({ rowClass: r.scenario.includes('central') ? 'em' : '', cells: [{ t: yearsDash(r.scenario) },
-      { t: isFinite(num(r.offset_ft)) ? sgn2(num(r.offset_ft)) : '', cls: 'n hide-narrow' }, { t: f1(num(r.flood_days)), cls: 'n' },
-      { t: f2(num(r.severe_days)), cls: 'n' }, { t: pct(num(r.p_any_severe)), cls: 'n' }] }));
-    fillTable('#tbl-creekfc', D.creek_forecast, r => {
-      const comp = String(r.compound).toLowerCase() === 'true';
-      return { cells: [{ t: dayFmt(parseDay(r.date)), cls: 'nowrap' }, { t: f2(num(r.rain_in)), cls: 'n' }, { t: f1(num(r.wetness_in)), cls: 'n hide-narrow' },
-        { t: isFinite(num(r.peak_stage_ft)) ? f1(num(r.peak_stage_ft)) : '', cls: 'n' }, { t: pct(num(r.p_action)), cls: 'n hide-narrow' }, { t: pct(num(r.p_minor)), cls: 'n' },
-        { t: pct(num(r.p_moderate)), cls: 'n hide-narrow' }, { t: f1(num(r.still_water_ft)), cls: 'n hide-narrow' }, comp ? { node: levelEl('Yes') } : { t: '' }] };
-    });
-    fillTable('#tbl-clev', D.creek_levels, r => ({ cells: [{ node: levelEl(r.level) }, { t: f1(num(r.stage_ft)), cls: 'n' }, { t: comma(num(r.flow_cfs)), cls: 'n hide-narrow' },
-      { t: r.impact }, { t: pct(num(r.p_winter_all)), cls: 'n' }, { t: pct(num(r.p_winter_elnino)), cls: 'n' }] }));
-    fillTable('#tbl-cev', D.creek_events, r => ({ cells: [{ t: longDay(parseDay(r.date)), cls: 'nowrap' }, { t: r.what_happened }, { t: f1(num(r.peak_stage_ft)), cls: 'n' },
-      { t: f2(num(r.rain_peak_day_in)), cls: 'n hide-narrow' }, { t: f1(num(r.wetness_in)), cls: 'n hide-narrow' },
-      { t: isFinite(num(r.model_stage_ft)) ? f1(num(r.model_stage_ft)) : '', cls: 'n' }, { t: pct(num(r.p_minor)), cls: 'n' }] }));
-    fillTable('#tbl-ev', D.validation_events, r => ({ cells: [{ t: longDay(parseDay(r.date)), cls: 'nowrap' }, { t: r.impact }, { t: f1(num(r.twl_index_ft)), cls: 'n' },
-      { t: f1(num(r.water_level_ft)), cls: 'n hide-narrow' }, { t: f1(num(r.hs_capitola_ft)), cls: 'n' }, { t: Math.round(num(r.period_s)), cls: 'n hide-narrow' }, { t: comma(num(r.rank)), cls: 'n' }] }));
-    fillTable('#tbl-th', D.thresholds, r => ({ cells: [{ node: levelEl(r.level) }, { t: f1(num(r.index_ft)), cls: 'n' }, { t: r.meaning }] }));
   }
 
   // ---------------------------------------------------------------- live conditions, fetched in the visitor's browser
-  // Every source below allows cross-origin requests (checked Oct 2026). Each card loads and fails on its own.
+  // Every source below allows cross-origin requests (checked Oct 2026). Each one loads and fails on its own.
   const LIVE = { at: 0 };
   const COOPS = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=9413450&datum=MLLW&units=english&time_zone=gmt&format=json&application=kevinkeet_capitola';
   const MOP = 'https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/';
@@ -1317,7 +621,7 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
   const timeout = ms => { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; };
   async function getJSON(url, headers) { const r = await fetch(url, { signal: timeout(20000), headers }); if (!r.ok) throw new Error(r.status + ' ' + url); return r.json(); }
   async function getText(url) { const r = await fetch(url, { signal: timeout(20000) }); if (!r.ok) throw new Error(r.status + ' ' + url); return r.text(); }
-  function liveError(prefix, msg) { $('#' + prefix + '-val').replaceChildren(el('span', 'lerr', msg)); }
+  const trendWord = dv => (Math.abs(dv) < 0.05 ? 'steady' : dv > 0 ? 'rising' : 'falling');
 
   // Wave runup on Capitola Beach: a port of runup_ft() in model/model.py (Stockdon 2006, beach slope 0.06,
   // nearshore height de-shoaled from the 15 m depth line with linear theory). Keep the two in step.
@@ -1331,57 +635,38 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
   }
   function levelOf(v) { const L = levelLines(); return v >= L.Severe ? 'Severe' : v >= L.Flood ? 'Flood' : v >= L.Watch ? 'Watch' : 'Low'; }
 
-  // small live charts: lines or bars over time, a "now" rule, optional reference lines, hover/tap readout
+  // small live chart: lines over time with a "now" rule and a hover/tap readout
   function miniChart(box, o) {
     const card = box.closest('.card'); hideTip(card); box.replaceChildren();
-    const lines = o.series || [], bars = o.bars || [];
-    const all = lines.flatMap(s => s.pts).concat(bars);
+    const lines = o.series || [], all = lines.flatMap(s => s.pts);
     if (!all.length) return;
-    const W = box.clientWidth || 300, H = 104, B = 18, T = 6;
+    const W = box.clientWidth || 300, H = 76, Bm = 16, T = 4;
     const svg = d3.select(box).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', o.label);
-    let lo = o.y0 != null ? o.y0 : d3.min(all, d => d.v), hi = d3.max(all, d => d.v);
-    (o.refs || []).forEach(r => { lo = Math.min(lo, r.v); hi = Math.max(hi, r.v); });
-    if (o.minSpan && hi - lo < o.minSpan) hi = lo + o.minSpan;
-    const pad = o.y0 != null ? 0 : o.yPad != null ? o.yPad : (hi - lo) * 0.12 || 0.5;
-    const y = d3.scaleLinear([lo - pad, hi + (o.y0 != null ? (hi - lo) * 0.08 : pad)], [H - B, T]).nice(3);
-    const ticks = y.ticks(3), fmt = o.fmt || f1;
-    const ml = textWidth(svg, ticks.map(fmt), 11) + 6;
-    const mr = (o.refs || []).length ? textWidth(svg, o.refs.map(r => r.name), 11) + 6 : 2;
+    const lo = d3.min(all, d => d.v), hi = d3.max(all, d => d.v), pad = o.yPad != null ? o.yPad : (hi - lo) * 0.12 || 0.5;
+    const y = d3.scaleLinear([lo - pad, hi + pad], [H - Bm, T]).nice(3), ticks = y.ticks(3), fmt = o.fmt || f1;
+    const ml = textWidth(svg, ticks.map(fmt), 10) + 5, mr = 2;
     const x = d3.scaleTime(o.x, [ml, W - mr]);
     svg.append('g').attr('aria-hidden', 'true').selectAll('line').data(ticks).join('line')
       .attr('x1', ml).attr('x2', W - mr).attr('y1', d => y(d)).attr('y2', d => y(d)).style('stroke', 'var(--grid)');
-    svg.append('g').attr('aria-hidden', 'true').selectAll('text').data(ticks).join('text').attr('x', ml - 6).attr('y', d => y(d)).attr('dy', '0.32em')
-      .attr('text-anchor', 'end').text(fmt).style('fill', 'var(--ink-2)').style('font-size', '11px');
-    (o.refs || []).forEach(r => {
-      svg.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', y(r.v)).attr('y2', y(r.v)).style('stroke', 'var(--ref)').style('stroke-dasharray', '4 4');
-      svg.append('text').attr('x', W - mr + 4).attr('y', y(r.v)).attr('dy', '0.32em').text(r.name).style('fill', 'var(--ink-2)').style('font-size', '11px');
-    });
-    bars.forEach(b => {
-      const x0 = x(Math.max(+b.t, +o.x[0])), x1 = x(Math.min(+b.t1, +o.x[1]));
-      if (x1 - x0 > 1 && b.v > 0) svg.append('path').attr('d', vbar(x0 + 1, x1 - x0 - 2, y(0), y(b.v), 3)).style('fill', 'var(--series-1)');
-    });
-    lines.forEach(s => {
-      if (s.area) svg.append('path').datum(s.pts).attr('d', d3.area().x(d => x(d.t)).y0(y(o.y0 || 0)).y1(d => y(d.v))).style('fill', s.color).style('fill-opacity', 0.1);
-      svg.append('path').datum(s.pts).attr('d', d3.line().x(d => x(d.t)).y(d => y(d.v))).style('fill', 'none').style('stroke', s.color)
-        .style('stroke-width', s.width || 2).style('stroke-dasharray', s.dash || null).style('stroke-linejoin', 'round').style('stroke-linecap', 'round');
-    });
-    if (o.now) svg.append('line').attr('x1', x(o.now)).attr('x2', x(o.now)).attr('y1', T).attr('y2', H - B).style('stroke', 'var(--axis)');
-    const lab = (t, xx, anchor) => t && svg.append('text').attr('x', xx).attr('y', H - 4).attr('text-anchor', anchor).text(t).style('fill', 'var(--ink-2)').style('font-size', '11px');
+    svg.append('g').attr('aria-hidden', 'true').selectAll('text').data(ticks).join('text').attr('x', ml - 5).attr('y', d => y(d)).attr('dy', '0.32em')
+      .attr('text-anchor', 'end').text(fmt).style('fill', 'var(--ink-2)').style('font-size', '10px');
+    lines.forEach(s => svg.append('path').datum(s.pts).attr('d', d3.line().x(d => x(d.t)).y(d => y(d.v))).style('fill', 'none').style('stroke', s.color)
+      .style('stroke-width', s.width || 2).style('stroke-dasharray', s.dash || null).style('stroke-linejoin', 'round').style('stroke-linecap', 'round'));
+    if (o.now) svg.append('line').attr('x1', x(o.now)).attr('x2', x(o.now)).attr('y1', T).attr('y2', H - Bm).style('stroke', 'var(--axis)');
+    const lab = (t, xx, anchor) => t && svg.append('text').attr('x', xx).attr('y', H - 3).attr('text-anchor', anchor).text(t).style('fill', 'var(--ink-2)').style('font-size', '10px');
     const [l0, l1, l2] = o.labels || [];
     lab(l0, ml, 'start'); lab(l2, W - mr, 'end'); if (o.now) lab(l1, x(o.now), 'middle');
-    // readout
     const focus = svg.append('g').style('display', 'none').attr('pointer-events', 'none');
-    const rule = focus.append('line').attr('y1', T).attr('y2', H - B).style('stroke', 'var(--axis)');
+    const rule = focus.append('line').attr('y1', T).attr('y2', H - Bm).style('stroke', 'var(--axis)');
     const dots = lines.map(s => focus.append('circle').attr('r', 3.5).style('fill', s.color).style('stroke', 'var(--surface)').style('stroke-width', 2));
     const near = (pts, t) => { const i = d3.bisector(d => d.t).center(pts, t); const p = pts[i]; return p && Math.abs(p.t - t) <= (o.tol || 36e5) ? p : null; };
     function show(ev) {
-      const t = x.invert(d3.pointer(ev)[0]); const rows = [o.tipTime ? o.tipTime(t) : dayClock(t)];
+      const t = x.invert(d3.pointer(ev)[0]), rows = [dayClock(t)];
       focus.style('display', null); rule.attr('x1', x(t)).attr('x2', x(t));
       lines.forEach((s, i) => {
         const p = near(s.pts, t); dots[i].style('display', p ? null : 'none');
-        if (p) { dots[i].attr('cx', x(p.t)).attr('cy', y(p.v)); rows.push({ k: s.name, v: fmt(p.v) + (o.more && i === 0 ? o.more(p) : ''), c: s.color, dash: !!s.dash }); }
+        if (p) { dots[i].attr('cx', x(p.t)).attr('cy', y(p.v)); rows.push({ k: s.name, v: fmt(p.v) + ' ft', c: s.color, dash: !!s.dash }); }
       });
-      const b = bars.find(b => t >= b.t && t < b.t1); if (b) { rows[0] = o.tipTime ? o.tipTime(b.t) : dayClock(b.t); rows.push({ k: o.barName || 'Value', v: fmt(b.v), c: 'var(--series-1)' }); }
       const [ax, ay] = d3.pointer(ev, card); showTip(card, rows, ax, ay);
     }
     function hide() { focus.style('display', 'none'); hideTip(card); }
@@ -1419,13 +704,13 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
       a.append(el('div', 'ah', joinList(ps.map(q => q.event))), el('div', 'aw', ps.map(alertSpan).join('; ') + '. National Weather Service.'));
       a.append(el('p', null, what ? what.replace(/\s*\n\s*/g, ' ').trim() : p.headline || ''));
       const text = [p.description, p.instruction].filter(Boolean).join('\n\n');
-      if (text) { const det = el('details'); det.append(el('summary', null, 'Read the full statement'), el('pre', null, text)); a.append(det); }
+      if (text) { const det = el('details'); det.append(el('summary', null, 'Full statement'), el('pre', null, text)); a.append(det); }
       box.append(a);
     });
     if (other.length) box.append(el('p', 'also', 'Also in effect: ' + [...new Set(other.map(p => p.event))].join(', ') + '.'));
     const coastal = main.find(p => /coastal flood/i.test(p.event)), note = $('#nws-note');
     note.hidden = !coastal;
-    if (coastal) note.textContent = 'The National Weather Service ' + coastal.event + ' covers tidal flooding of low-lying areas around the bay. This forecast is about waves topping the Capitola seawall, so read the two together.';
+    if (coastal) note.textContent = 'The NWS ' + coastal.event + ' covers tidal flooding of low-lying areas around the bay; this table is about waves topping the Capitola seawall.';
   }
 
   // ---- tide gauge: 72 h of 6-minute observations against the tide table, and the next highs and lows
@@ -1447,22 +732,14 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
   }
   function renderTide() {
     const T = LIVE.tide; if (!T) return;
-    const dir = Math.abs(T.trend) < 0.05 ? 'steady' : T.trend > 0 ? 'rising' : 'falling';
-    $('#lt-val').replaceChildren(document.createTextNode(f1(T.last.v) + ' ft'), el('small', null, dir));
-    $('#lt-sub').replaceChildren(el('b', null, sgn2(T.offset) + ' ft'), document.createTextNode(' above the tide table over the last 3 days' +
-      (isFinite(T.residNow) ? ' (' + sgn2(T.residNow) + ' ft right now)' : '') + '. Heights are above mean lower low water.'));
-    $('#lt-time').textContent = when(T.last.t);
-    $('#lt-next').replaceChildren(...T.next.map(d => {
-      const li = el('li');
-      li.append(el('span', null, (d.type === 'H' ? 'High ' : 'Low ') + f1(d.v) + ' ft, ' + when(d.t)), el('span', null, d.type === 'H' ? 'about ' + f1(d.v + T.offset) + ' ft with the offset' : ''));
-      return li;
-    }));
+    $('#lt-sub').replaceChildren(...frag(B(f1(T.last.v) + ' ft'), ' ' + trendWord(T.trend) + ', ', B(sgn2(T.residNow) + ' ft'),
+      ' above the table (' + sgn2(T.offset) + ' over 3 days), ' + when(T.last.t)));
     const now = Date.now(), lo = new Date(now - 24 * 36e5), hi = new Date(now + 24 * 36e5), pred = T.pred.filter(d => d.t >= lo && d.t <= hi);
-    miniChart($('#lt-spark'), { label: 'Tide at Monterey over the last and next 24 hours', x: [lo, hi], now: new Date(now), labels: ['24 h ago', 'now', '24 h ahead'], tol: 6 * 6e4,
-      fmt: v => f1(v) + ' ft', yPad: 0.3, series: [
-        { name: 'Tide table', pts: pred, color: 'var(--ink-2)', width: 1.5, dash: '3 3' },
+    miniChart($('#lt-spark'), { label: 'Tide at Monterey: observed over the last 24 hours, tide table plus offset for the next 24', x: [lo, hi], now: new Date(now),
+      labels: ['observed vs table', 'now', 'table + offset'], tol: 6 * 6e4, fmt: v => f1(v), yPad: 0.3, series: [
+        { name: 'Tide table', pts: pred, color: 'var(--ink-2)', width: 1.25, dash: '3 3' },
         { name: 'Table + offset', pts: pred.filter(d => d.t >= T.last.t).map(d => ({ t: d.t, v: d.v + T.offset })), color: 'var(--ord-2)', width: 2 },
-        { name: 'Observed', pts: T.obs.filter(d => d.t >= lo), color: 'var(--accent)', width: 2.5 }] });
+        { name: 'Observed', pts: T.obs.filter(d => d.t >= lo), color: 'var(--accent)', width: 2.25 }] });
   }
 
   // ---- CDIP MOP nowcast at the three points off Capitola Beach (the model's wave input), via OPeNDAP
@@ -1470,7 +747,7 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     const data = await Promise.all(['SC111', 'SC112', 'SC113'].map(async s => {
       const n = +((await getText(MOP + s + '_nowcast.nc.dds')).match(/waveTime\[waveTime = (\d+)\]/) || [])[1];
       if (!n) throw new Error('no CDIP time axis for ' + s);
-      const r = encodeURIComponent('[' + Math.max(0, n - 49) + ':1:' + (n - 1) + ']');
+      const r = encodeURIComponent('[' + Math.max(0, n - 25) + ':1:' + (n - 1) + ']');
       const txt = await getText(MOP + s + '_nowcast.nc.ascii?' + ['waveTime', 'waveHs', 'waveTp', 'waveDp'].map(v => v + r).join(','));
       const out = {}; for (const m of txt.matchAll(/^(wave\w+)\[\d+\]\n([^\n]+)/gm)) out[m[1]] = m[2].split(',').map(Number);
       return out;
@@ -1487,14 +764,10 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     renderWaves(); renderIndex(); stampLive();
   }
   function renderWaves() {
-    const Wv = LIVE.waves; if (!Wv) return; const w = Wv.last;
-    $('#lw-val').replaceChildren(document.createTextNode(f1(w.hs * M2FT) + ' ft'), el('small', null, Math.round(w.tp) + ' s from the ' + compass(w.dp) + ' (' + Math.round(w.dp) + '°)'));
-    $('#lw-sub').replaceChildren(document.createTextNode('Runs up about '), el('b', null, f1(runupFt(w.hs, w.tp)) + ' ft'),
-      document.createTextNode(' on Capitola Beach. Long-period swell runs up farther than storm chop of the same height.'));
-    $('#lw-time').textContent = when(w.t);
-    miniChart($('#lw-spark'), { label: 'Wave height off Capitola over the last 2 days', x: [Wv.pts[0].t, w.t], labels: ['2 days ago', '', 'latest'], y0: 0, minSpan: 2,
-      fmt: v => f1(v) + ' ft', more: p => ', ' + Math.round(p.tp) + ' s',
-      series: [{ name: 'Wave height', pts: Wv.pts.map(d => ({ t: d.t, v: d.hs * M2FT, tp: d.tp })), color: 'var(--series-1)', width: 2, area: true }] });
+    const Wv = LIVE.waves; if (!Wv) return;
+    const w = Wv.last, day = Wv.pts.find(d => d.t >= w.t - 24 * 36e5) || Wv.pts[0], dv = (w.hs - day.hs) * M2FT;
+    $('#lw-sub').replaceChildren(...frag(B(f1(w.hs * M2FT) + ' ft @ ' + Math.round(w.tp) + ' s'), ' from the ' + compass(w.dp) + ' (' + Math.round(w.dp) + '°), ' +
+      (Math.abs(dv) < 0.2 ? 'steady' : (dv > 0 ? 'up ' : 'down ') + f1(Math.abs(dv)) + ' ft') + ' over 24 h; runs up ', B(f1(runupFt(w.hs, w.tp)) + ' ft'), ', ' + when(w.t)));
   }
 
   // ---- flood index now = tide gauge + wave runup, the forecast's formula on live inputs
@@ -1502,28 +775,25 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
     const T = LIVE.tide, Wv = LIVE.waves, L = levelLines();
     if (!T || !Wv) return;
     const w = Wv.last, ru = runupFt(w.hs, w.tp), still = T.last.v + NAVD, idx = still + ru;
-    $('#li-val').replaceChildren(document.createTextNode(f1(idx) + ' ft'), levelEl(levelOf(idx)));
-    const lo = 6, hi = 17, pos = v => clamp((v - lo) / (hi - lo), 0, 1) * 100, m = $('#li-meter');
+    $('#li-val').textContent = f1(idx) + ' ft'; $('#li-lvl').replaceChildren(levelEl(levelOf(idx)));
+    const lo = 6, hi = 17.5, pos = v => clamp((v - lo) / (hi - lo), 0, 1) * 100, m = $('#li-meter'), g = d3.format('~g');
     m.style.background = `linear-gradient(90deg, var(--grid) 0 ${pos(L.Watch)}%, var(--warning) ${pos(L.Watch)}% ${pos(L.Flood)}%, var(--serious) ${pos(L.Flood)}% ${pos(L.Severe)}%, var(--critical) ${pos(L.Severe)}% 100%)`;
-    const ticks = [['Watch', L.Watch], ['Flood', L.Flood], ['Severe', L.Severe]].map(([n, v]) => { const t = el('span', 'tk', n); t.style.left = pos(v) + '%'; return t; });
+    const ticks = [['Watch', L.Watch], ['Flood', L.Flood], ['Severe', L.Severe]].map(([n, v]) => { const t = el('span', 'tk', n + ' ' + g(v)); t.style.left = pos(v) + '%'; return t; });
     const mk = el('span', 'mk'); mk.style.left = pos(idx) + '%';
     m.replaceChildren(...ticks, mk);
-    $('#li-sub').replaceChildren(document.createTextNode('Still water '), el('b', null, f1(still) + ' ft'), document.createTextNode(' (the tide gauge, in feet above NAVD88) plus wave runup of '),
-      el('b', null, f1(ru) + ' ft'), document.createTextNode('. Waves start reaching the seawall around ' + f1(L.Watch) + ' ft and go over it around ' + f1(L.Flood) + ' ft.'));
+    $('#li-sub').replaceChildren(...frag('still water ', B(f1(still)), ' + wave runup ', B(f1(ru)), ' ft (NAVD88)'));
     const nh = T.next.find(d => d.type === 'H');
     if (nh) {
       const v = nh.v + T.offset + NAVD + ru;
-      $('#li-next').replaceChildren(document.createTextNode('If these waves hold, the next high tide (' + when(nh.t) + ') brings it to about '), el('b', null, f1(v) + ' ft'),
-        document.createTextNode(v >= L.Flood ? ', over the Flood line.' : ', ' + f1(L.Flood - v) + ' ft below the Flood line.'));
+      $('#li-next').replaceChildren(...frag(when(nh.t) + ': table ' + f1(nh.v) + ' ft + offset; index ≈ ', B(f1(v) + ' ft'), v >= L.Flood ? ', over Flood' : ', ' + f1(L.Flood - v) + ' below Flood', ' if waves hold'));
     }
-    $('#li-src').textContent = 'NOAA Monterey tide gauge at ' + when(T.last.t) + ', CDIP nearshore waves at ' + when(w.t) + '.';
+    $('#li-src').textContent = 'NOAA Monterey tide gauge ' + when(T.last.t) + ' · CDIP nearshore waves ' + when(w.t) + ' · USGS creek gauge · NWS rain forecast.';
   }
-  function indexError() { if (!(LIVE.tide && LIVE.waves)) liveError('li', "Needs both the tide gauge and the wave model, and one isn't answering right now."); }
 
   // ---- Soquel Creek: USGS 15-minute stage and flow, plus any official NWS forecast
   async function loadCreek() {
     const [iv, fc] = await Promise.all([
-      getJSON('https://waterservices.usgs.gov/nwis/iv/?format=json&sites=11160000&parameterCd=00065,00060&period=P3D'),
+      getJSON('https://waterservices.usgs.gov/nwis/iv/?format=json&sites=11160000&parameterCd=00065,00060&period=P1D'),
       getJSON('https://api.water.noaa.gov/nwps/v1/gauges/SOQC1/stageflow/forecast').catch(() => null)]);
     const ser = code => {
       const ts = iv.value.timeSeries.find(s => s.variable.variableCode[0].value === code);
@@ -1535,60 +805,40 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
   }
   function renderCreek() {
     const C = LIVE.creek; if (!C) return;
-    const last = C.stage[C.stage.length - 1], before = C.stage.filter(d => d.t <= last.t - 60 * 6e4).pop(), dv = before ? last.v - before.v : 0;
-    const lv = { Action: 13, Flood: 16 };
-    (D.creek_levels || []).forEach(r => { if (r.level === 'Action') lv.Action = num(r.stage_ft); if (r.level === 'Minor') lv.Flood = num(r.stage_ft); });
-    $('#lc-val').replaceChildren(document.createTextNode(f1(last.v) + ' ft'), el('small', null, Math.abs(dv) < 0.05 ? 'steady' : dv > 0 ? 'rising' : 'falling'));
-    const q = C.flow.length ? C.flow[C.flow.length - 1].v : NaN, sub = $('#lc-sub');
-    sub.replaceChildren(document.createTextNode((isFinite(q) ? 'Flowing ' + comma(Math.round(q)) + ' cubic feet per second. ' : '') + 'Flood stage is ' + f1(lv.Flood) + ' ft, '),
-      el('b', null, f1(Math.max(0, lv.Flood - last.v)) + ' ft'), document.createTextNode(last.v >= lv.Flood ? ' over it now.' : ' above the current level.'));
-    if (C.fc.length) {
-      const crest = C.fc.reduce((a, b) => (b.v > a.v ? b : a));
-      sub.append(document.createTextNode(' The National Weather Service forecasts a crest of '), el('b', null, f1(crest.v) + ' ft'), document.createTextNode(' around ' + dayClock(crest.t) + '.'));
-    }
-    $('#lc-time').textContent = when(last.t);
-    const series = [{ name: 'Stage', pts: C.stage, color: 'var(--series-1)', width: 2 }];
-    if (C.fc.length) series.push({ name: 'NWS forecast', pts: C.fc, color: 'var(--accent)', width: 2, dash: '4 3' });
-    const top = d3.max(series.flatMap(s => s.pts), d => d.v);
-    miniChart($('#lc-spark'), { label: 'Soquel Creek stage over the last 3 days', x: [C.stage[0].t, C.fc.length ? C.fc[C.fc.length - 1].t : last.t],
-      labels: ['3 days ago', 'now', C.fc.length ? 'forecast' : 'latest'], now: C.fc.length ? new Date() : null, fmt: v => f1(v) + ' ft', minSpan: 1, tol: 3 * 36e5,
-      refs: top > lv.Action - 4 ? [{ v: lv.Action, name: 'Action' }, { v: lv.Flood, name: 'Flood' }] : [], series });
+    const last = C.stage[C.stage.length - 1], before = C.stage.filter(d => d.t <= last.t - 60 * 6e4).pop();
+    let flood = 16; (D.creek_levels || []).forEach(r => { if (r.level === 'Minor') flood = num(r.stage_ft); });
+    const q = C.flow.length ? C.flow[C.flow.length - 1].v : NaN, need = D.creek_forecast && D.creek_forecast[0] ? num(D.creek_forecast[0].rain_needed_minor_in) : NaN;
+    const parts = [B(f1(last.v) + ' ft'), ' ' + trendWord(before ? last.v - before.v : 0) + (isFinite(q) ? ', ' + comma(Math.round(q)) + ' cfs' : '') + '; flood stage ' + f1(flood) + ' ft'];
+    if (isFinite(need)) parts.push('; it would take ' + (need >= 25 ? '25+' : f1(need)) + ' in of rain in a day to get there');
+    if (C.fc.length) { const crest = C.fc.reduce((a, b) => (b.v > a.v ? b : a)); parts.push('; NWS forecasts a crest of ', B(f1(crest.v) + ' ft'), ' ' + dayClock(crest.t)); }
+    $('#lc-sub').replaceChildren(...frag(...parts));
   }
 
-  // ---- rain in the Soquel Creek watershed (NWS grid forecast for Ben Lomond, the creek model's gauge) + Capitola forecast
+  // ---- rain in the Soquel Creek watershed: NWS grid forecast for Ben Lomond, the creek model's gauge
   const isoHours = d => { const m = /P(?:(\d+)D)?(?:T(?:(\d+)H)?)?/.exec(d) || []; return (+(m[1] || 0)) * 24 + (+(m[2] || 0)); };
   async function loadRain() {
-    const [grid, fc] = await Promise.all([
-      getJSON('https://api.weather.gov/gridpoints/MTR/91,73', { Accept: 'application/geo+json' }),
-      getJSON('https://api.weather.gov/gridpoints/MTR/94,67/forecast', { Accept: 'application/geo+json' }).catch(() => null)]);
+    const grid = await getJSON('https://api.weather.gov/gridpoints/MTR/91,73', { Accept: 'application/geo+json' });
     const now = Date.now(), span = v => { const [s, d] = v.validTime.split('/'); const t = new Date(s); return { t, t1: new Date(+t + isoHours(d) * 36e5) }; };
     const qpf = grid.properties.quantitativePrecipitation.values.map(v => Object.assign(span(v), { v: (v.value || 0) / 25.4 })).filter(d => d.t1 > now);
     const pop = (grid.properties.probabilityOfPrecipitation || { values: [] }).values.map(v => Object.assign(span(v), { v: v.value || 0 })).filter(d => d.t1 > now && d.t < now + 24 * 36e5);
-    LIVE.rain = { qpf, pop: d3.max(pop, d => d.v) || 0, periods: fc && fc.properties ? fc.properties.periods.slice(0, 3) : [] };
+    LIVE.rain = { qpf, pop: d3.max(pop, d => d.v) || 0 };
     renderRain(); stampLive();
   }
   function renderRain() {
     const R = LIVE.rain; if (!R) return;
     const now = Date.now(), sum = hrs => d3.sum(R.qpf, d => { const a = Math.max(+d.t, now), b = Math.min(+d.t1, now + hrs * 36e5); return b > a ? d.v * (b - a) / (d.t1 - d.t) : 0; });
-    $('#lr-val').replaceChildren(document.createTextNode(f2(sum(24)) + ' in'), el('small', null, 'next 24 hours'));
-    $('#lr-sub').replaceChildren(document.createTextNode('In the Soquel Creek watershed: '), el('b', null, f2(sum(72)) + ' in'), document.createTextNode(' over 3 days and '),
-      el('b', null, f2(sum(168)) + ' in'), document.createTextNode(' over 7. Chance of rain in the next 24 hours: ' + Math.round(R.pop) + '%.'));
-    const end = new Date(now + 72 * 36e5), bars = R.qpf.filter(d => d.t < end);
-    if (d3.max(bars, d => d.v) > 0.005) miniChart($('#lr-spark'), { label: 'Rain forecast for the next 3 days, by 6 hours', x: [new Date(now), end], y0: 0, minSpan: 0.25,
-      fmt: v => f2(v) + ' in', bars, barName: 'Rain', labels: ['now', '', '3 days'], tipTime: t => dayClock(t) });
-    else { $('#lr-spark').replaceChildren(el('p', 'lsub', 'No rain in the 3-day forecast.')); delete hiders['lr-spark']; }
-    $('#lr-wx').replaceChildren(...R.periods.map(p => { const li = el('li'); li.append(el('b', null, p.name + ': '), document.createTextNode(p.shortForecast + ', ' + p.temperature + '°' + (p.temperatureUnit || 'F'))); return li; }));
-    $('#lr-time').textContent = 'checked ' + clock(new Date());
+    $('#lr-sub').replaceChildren(...frag(B(f2(sum(24)) + ' in'), ' next 24 h (' + Math.round(R.pop) + '% chance) · ' + f2(sum(72)) + ' in 3 days · ' + f2(sum(168)) + ' in 7 days, in the watershed'));
   }
 
   // ---- refresh loop: every few minutes while the page is visible
-  function stampLive() { LIVE.at = Date.now(); $('#livestamp').textContent = 'Live, updated ' + ago(LIVE.at); }
+  function stampLive() { LIVE.at = Date.now(); $('#livestamp').textContent = 'live, updated ' + ago(LIVE.at); }
+  const failText = (id, msg) => { if ($('#' + id).textContent === '—') $('#' + id).replaceChildren(el('span', 'lerr', msg)); };
   const JOBS = [
     { fn: loadAlerts, every: 5, fail: () => { if (!$('#alerts .alert, #alerts .alerts-none:not(.off)')) $('#alerts').replaceChildren(el('p', 'alerts-none off', "Couldn't reach the National Weather Service for alerts. Check weather.gov/mtr.")); } },
-    { fn: loadTide, every: 5, fail: () => { if (!LIVE.tide) liveError('lt', "Couldn't reach the NOAA tide gauge right now."); indexError(); } },
-    { fn: loadWaves, every: 15, fail: () => { if (!LIVE.waves) liveError('lw', "Couldn't reach the CDIP wave model right now."); indexError(); } },
-    { fn: loadCreek, every: 5, fail: () => { if (!LIVE.creek) liveError('lc', "Couldn't reach the USGS creek gauge right now."); } },
-    { fn: loadRain, every: 30, fail: () => { if (!LIVE.rain) liveError('lr', "Couldn't reach the National Weather Service right now."); } }];
+    { fn: loadTide, every: 5, fail: () => { failText('lt-sub', 'NOAA tide gauge not answering'); failText('li-sub', 'needs the tide gauge and the wave model'); } },
+    { fn: loadWaves, every: 15, fail: () => { failText('lw-sub', 'CDIP wave model not answering'); failText('li-sub', 'needs the tide gauge and the wave model'); } },
+    { fn: loadCreek, every: 5, fail: () => failText('lc-sub', 'USGS creek gauge not answering') },
+    { fn: loadRain, every: 30, fail: () => failText('lr-sub', 'NWS forecast not answering') }];
   function tick(force) {
     const now = Date.now();
     JOBS.forEach(j => { if (force || now - (j.at || 0) >= j.every * 6e4) { j.at = now; j.fn().catch(e => { console.warn('capitola live:', e); j.fail(); }); } });
@@ -1598,34 +848,32 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
 
   // ---------------------------------------------------------------- render loop
   function safely(fn) { try { fn(); } catch (e) { console.error('capitola:', fn.name, e); } }
-  function renderCharts() { [renderOutlook, renderKelvin, renderHeat, renderDirection, renderRainNeeded, renderPeaks, renderOffset].forEach(safely); }
-  function render() { safely(renderHeadline); safely(renderTables); renderCharts(); }
+  function render() { [renderStamp, renderTen, renderWinter, renderAbout].forEach(safely); }
 
-  render();   // controls and placeholders before the data arrives
+  render();
   Promise.all(SOURCES.map(id => fetch('data/' + id + '.csv', { cache: 'no-cache' })
     .then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.text(); })
     .then(t => { D[id] = d3.csvParse(t); })
     .catch(e => { D[id] = null; console.warn('capitola: could not load ' + id, e); })))
     .then(() => { loaded = true; render(); renderLive(); });
   tick(true);
-  setInterval(() => { if (document.visibilityState === 'visible') tick(false); if (LIVE.at) $('#livestamp').textContent = 'Live, updated ' + ago(LIVE.at); }, 30e3);
+  setInterval(() => { if (document.visibilityState === 'visible') tick(false); if (LIVE.at) $('#livestamp').textContent = 'live, updated ' + ago(LIVE.at); }, 30e3);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tick(false); });
-  $$('.frame .shield').forEach(b => b.addEventListener('click', () => { b.parentElement.classList.add('live'); }));
-  setInterval(() => {
+  setInterval(() => {   // the radar loop and other auto-updating images
     if (document.visibilityState !== 'visible') return;
     $$('img[data-refresh]').forEach(img => { const base = img.dataset.base || (img.dataset.base = img.src); img.src = base + (base.includes('?') ? '&' : '?') + '_=' + Date.now(); });
   }, 10 * 6e4);
 
-  // redraw charts when the width changes, the theme flips, or the web font arrives
+  // redraw the drawings when the width changes, the theme flips, or the web font arrives
   let lastW = 0, timer = 0;
   new ResizeObserver(entries => {
     const w = Math.round(entries[0].contentRect.width);
     if (w === lastW) return; lastW = w;
-    clearTimeout(timer); timer = setTimeout(() => { if (loaded) renderCharts(); renderLive(); }, 120);
+    clearTimeout(timer); timer = setTimeout(() => { if (loaded) safely(renderHeat); safely(renderTide); }, 120);
   }).observe($('#page'));
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
   (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(() => { if (loaded) safely(renderHeat); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (loaded) renderCharts(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (loaded) safely(renderHeat); safely(renderTide); });
 })();
 </script>
 </body>
