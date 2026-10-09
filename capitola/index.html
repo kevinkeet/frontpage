@@ -244,6 +244,14 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
 .frame.wide{aspect-ratio:16/9}
 .frame iframe,.frame img{position:absolute;inset:0;width:100%;height:100%;border:0}
 .frame img{object-fit:contain;background:#fff}
+.frame .shield{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;justify-content:center;padding:12px;border:0;background:transparent;cursor:pointer;font:inherit;font-size:var(--fs-small);color:transparent}
+.frame .shield:hover,.frame .shield:focus-visible{color:#fff;background:linear-gradient(transparent 60%,rgba(0,0,0,.45))}
+.frame.live .shield{display:none}
+@media (hover:none){.frame .shield{color:#fff;background:linear-gradient(transparent 70%,rgba(0,0,0,.4))}}
+.shot{display:block;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.shot img{display:block;width:100%;height:auto}
+.links{margin:0;padding-left:1.1rem;font-size:var(--fs-note);line-height:1.5}
+.links li+li{margin-top:8px}
 
 /* phones */
 @media (max-width:640px){
@@ -341,14 +349,69 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
 
   <section id="cams" aria-labelledby="h-cams">
     <h2 id="h-cams">Maps and cams</h2>
-    <div class="embeds" id="embeds">
+    <p class="take">No public camera looks at Capitola itself right now, so these are the closest live views of the bay, plus live maps and official graphs. The images refresh every 10 minutes while the page is open.</p>
+    <div class="embeds">
       <div class="card">
         <h3>Swell across Monterey Bay</h3>
         <p class="note">Wave height and direction from Windy (ECMWF wave model). Drag the time slider to see the next few days.</p>
-        <div class="frame">
+        <div class="frame shielded">
+          <button type="button" class="shield">Click to use the map</button>
           <iframe title="Windy wave map of Monterey Bay" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
-            src="https://embed.windy.com/embed.html?type=map&amp;location=coordinates&amp;metricRain=in&amp;metricTemp=%C2%B0F&amp;metricWind=kt&amp;zoom=8&amp;overlay=waves&amp;product=ecmwfWaves&amp;level=surface&amp;lat=36.75&amp;lon=-122.15&amp;detailLat=36.96&amp;detailLon=-121.95&amp;marker=true&amp;message=true"></iframe>
+            src="https://embed.windy.com/embed2.html?lat=36.75&amp;lon=-122.15&amp;detailLat=36.96&amp;detailLon=-121.95&amp;zoom=8&amp;level=surface&amp;overlay=waves&amp;product=ecmwfWaves&amp;menu=&amp;message=true&amp;marker=true&amp;calendar=now&amp;pressure=&amp;type=map&amp;location=coordinates&amp;detail=&amp;metricWind=kt&amp;metricTemp=%C2%B0F&amp;radarRange=-1"></iframe>
         </div>
+      </div>
+      <div class="card">
+        <h3>Soquel Cove from Rio Del Mar</h3>
+        <p class="note">Looking southwest across the cove toward the Seacliff cement ship, about 3 miles east of Capitola. A still that updates every few minutes, via Windy webcams.</p>
+        <div class="frame">
+          <iframe title="Webcam: Rio Del Mar Beach, Soquel Cove" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+            src="https://webcams.windy.com/webcams/public/embed/player/1793912252/live"></iframe>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Santa Cruz Main Beach and the wharf</h3>
+        <p class="note">USGS CoastCam on the Dream Inn, looking east, about 4 miles west of Capitola. Updates every 30 minutes in daylight.</p>
+        <a class="shot" href="https://cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg"><img loading="lazy" data-refresh alt="USGS CoastCam view of Santa Cruz Main Beach and the wharf"
+          src="https://cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg" width="2448" height="2048"></a>
+        <p class="src">U.S. Geological Survey</p>
+      </div>
+      <div class="card">
+        <h3>Rain radar</h3>
+        <p class="note">The last hour of the National Weather Service radar at Mount Umunhum. Capitola sits on the coast just south of the radar.</p>
+        <a class="shot" href="https://radar.weather.gov/station/kmux/standard"><img loading="lazy" data-refresh alt="Animated NWS radar loop for the Bay Area and Monterey Bay"
+          src="https://radar.weather.gov/ridge/standard/KMUX_loop.gif" width="600" height="550"></a>
+        <p class="src">National Weather Service</p>
+      </div>
+      <div class="card">
+        <h3>Swell inside the bay</h3>
+        <p class="note">CDIP's wave model across Monterey Bay, with height in color and direction as arrows. It lags real time by a couple of hours, and its color scale changes with conditions.</p>
+        <a class="shot" href="https://cdip.ucsd.edu/"><img loading="lazy" data-refresh alt="CDIP wave model map of Monterey Bay"
+          src="https://cdip.ucsd.edu/recent/model_images/monterey.png" width="639" height="790"></a>
+        <p class="src">Data courtesy of <a href="https://cdip.ucsd.edu/">CDIP</a></p>
+      </div>
+      <div class="card">
+        <h3>CDIP's flooding index for Pleasure Point</h3>
+        <p class="note">CDIP's own experimental forecast for the nearest model point, about a mile west: tide plus wave runup over the next 3 days. It uses the same runup formula as this page but a different beach and datum (feet above mean lower low water), so compare its timing, not its numbers.</p>
+        <a class="shot" href="https://cdip.ucsd.edu/"><img loading="lazy" alt="CDIP potential flooding index for Pleasure Point, next 3 days"
+          src="https://cdip.ucsd.edu/recent/forecast/mop_water_level.gd?SC117+web" width="560" height="420"></a>
+        <p class="src">Data courtesy of <a href="https://cdip.ucsd.edu/">CDIP</a></p>
+      </div>
+      <div class="card">
+        <h3>Soquel Creek, last week</h3>
+        <p class="note">The creek at the Soquel gauge over the past 7 days, with the flood levels shaded. The National Weather Service adds a forecast here during storms.</p>
+        <a class="shot" href="https://water.noaa.gov/gauges/SOQC1"><img loading="lazy" data-refresh alt="NWS hydrograph for Soquel Creek at Soquel"
+          src="https://water.noaa.gov/resources/hydrographs/soqc1_record.png" width="600" height="465"></a>
+        <p class="src">National Weather Service and USGS</p>
+      </div>
+      <div class="card">
+        <h3>More live views</h3>
+        <ul class="links">
+          <li><a href="https://siocpg.ucsd.edu/coastal-focus/streamtest.html">Seacliff State Beach live video</a> and its <a href="https://ccciaweb.ucsd.edu/imperial-beach/siocpg/stacked_highchart_seacliff.html">water-level forecast</a>, from Scripps Institution of Oceanography</li>
+          <li><a href="https://santacruz.onerain.com/">Santa Cruz County flood-warning gauges</a>: rain and stream levels across the county</li>
+          <li><a href="https://www.youtube.com/watch?v=hXtYKDio1rQ">Rio Sands beach cam</a> in Aptos</li>
+          <li><a href="https://forecast.weather.gov/MapClick.php?lat=36.972&amp;lon=-121.952">National Weather Service forecast for Capitola</a> and the <a href="https://www.weather.gov/mtr/">Bay Area office</a></li>
+          <li><a href="https://tidesandcurrents.noaa.gov/waterlevels.html?id=9413450">Monterey tide gauge</a>, observed against predicted</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -1547,6 +1610,11 @@ noscript p{padding:12px 16px;border:1px solid var(--line);border-radius:var(--ra
   tick(true);
   setInterval(() => { if (document.visibilityState === 'visible') tick(false); if (LIVE.at) $('#livestamp').textContent = 'Live, updated ' + ago(LIVE.at); }, 30e3);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tick(false); });
+  $$('.frame .shield').forEach(b => b.addEventListener('click', () => { b.parentElement.classList.add('live'); }));
+  setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    $$('img[data-refresh]').forEach(img => { const base = img.dataset.base || (img.dataset.base = img.src); img.src = base + (base.includes('?') ? '&' : '?') + '_=' + Date.now(); });
+  }, 10 * 6e4);
 
   // redraw charts when the width changes, the theme flips, or the web font arrives
   let lastW = 0, timer = 0;

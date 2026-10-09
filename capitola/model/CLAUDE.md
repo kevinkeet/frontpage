@@ -45,6 +45,24 @@ with day chips; this winter) → sticky section nav → "Right now" live cards �
   winter calendar, observed overtopping days get red dots, chips/tables list only days ahead); `window.__capitola` exposes
   the live state. Preview: `holdem-site` launch entry (serves `frontpage/` on :8090).
 
+### Maps and cams (embeds, checked Oct 9, 2026)
+
+No working public camera shows Capitola itself: the old Capitola streams (YouTube 2rnC_GihBKg, JYIyiZFv5sE, the Venetian
+hotel cam, LiveBeaches) are dead or can't be embedded. What the page embeds, with the terms that allow it:
+- Windy map: `embed.windy.com/embed2.html?...overlay=waves&product=ecmwfWaves` (Windy's embed widget format; `embed.html`
+  sometimes came up on the wind layer). Covered by a "Click to use the map" shield so page scrolling doesn't zoom it.
+- Windy webcam 1793912252, Rio Del Mar / Soquel Cove (Pixie Deli cam): iframe `webcams.windy.com/webcams/public/embed/player/1793912252/live`.
+  Windy terms: keep the Windy logo visible and clickable; not for commercial weather apps (a personal site is fine).
+- USGS CoastCam, Dream Inn, Santa Cruz: `cmgp-coastcam.s3-us-west-2.amazonaws.com/cameras/dreaminn/latest/c1_snap.jpg` (public domain, credit USGS).
+- NWS radar loop `radar.weather.gov/ridge/standard/KMUX_loop.gif` and SOQC1 hydrograph `water.noaa.gov/resources/hydrographs/soqc1_record.png` (public domain).
+- CDIP `recent/model_images/monterey.png` and `recent/forecast/mop_water_level.gd?SC117+web` (CDIP's experimental flooding index for
+  Pleasure Point). CDIP terms: free if unaltered, and the page must say "Data courtesy of CDIP" with a link.
+- Images with `data-refresh` reload every 10 minutes with a cache-busting `_=` parameter (all of those servers ignore it; the
+  CDIP `.gd?SC117+web` URL has a raw query string, so it is left out).
+- Link only: Scripps Seacliff live video + water-level forecast (no published terms; ask Scripps CPG before embedding),
+  santacruz.onerain.com (blocks framing), Rio Sands YouTube cam (embedding disabled), HDOnTap Seascape (X-Frame-Options DENY).
+  Surfline offers no free embeds.
+
 ## Files
 
 | File | What it does |
