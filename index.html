@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kevin Keet | Visual Resume</title>
-    <meta name="description" content="Kevin Keet, MD — Hospitalist & Associate Program Director at Stanford Medicine. AI in medical education: Stanford site lead for a Macy Foundation trial, BMJ author. Explore the room, talk to the dog.">
+    <meta name="description" content="Kevin Keet, MD — Hospitalist & Associate Program Director at Stanford Medicine. AI in medical education: Stanford site lead for a Macy Foundation trial, with papers in BMJ Digital Health & AI, npj Digital Medicine and JGIM. Explore the room, talk to the dog.">
     <meta property="og:title" content="Kevin Keet | Visual Resume">
     <meta property="og:description" content="Stanford hospitalist & med-ed leader. AI in medical education, bedside medicine, and a bloodhound named Frankenstein who answers questions.">
     <meta property="og:image" content="https://kevinkeet.com/background.jpg">
@@ -628,45 +628,14 @@
             transform: scale(0.8);
         }
 
-        /* Music Player */
-        .music-player {
-            position: fixed;
-            bottom: 24px;
-            left: 24px;
-            background: rgba(29, 20, 16, 0.9);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(217, 195, 157, 0.18);
-            border-radius: 50px;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 50;
+        /* Music toggle lives in the header so nothing floats over the scene */
+        .music-toggle {
+            font-family: inherit;
         }
 
-        .music-info {
-            font-size: 0.75rem;
+        .music-toggle.is-playing {
+            border-color: rgba(232, 163, 61, 0.55);
             color: var(--amber-soft);
-            font-weight: 600;
-        }
-
-        .music-btn {
-            width: 36px;
-            height: 36px;
-            background: rgba(232, 163, 61, 0.12);
-            border: none;
-            border-radius: 50%;
-            color: var(--amber-soft);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .music-btn:hover {
-            background: rgba(232, 163, 61, 0.22);
-            transform: scale(1.1);
         }
 
         /* Details List (mobile / accessible fallback for hotspots) */
@@ -789,10 +758,6 @@
                 height: 60vh;
             }
 
-            .music-player {
-                display: none;
-            }
-
             .chat-toggle {
                 right: 16px;
                 bottom: 16px;
@@ -800,6 +765,482 @@
         }
 
         /* API Key Modal - removed, using backend proxy */
+
+        /* ===== Inspect view: pick an object up out of the room ===== */
+        .inspect {
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --paper-w: min(86vw, calc(70vh * 0.7727), 540px);
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+        }
+
+        .inspect[hidden] {
+            display: none;
+        }
+
+        .inspect-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(18, 11, 7, 0.82);
+            opacity: 0;
+            transition: opacity 420ms var(--ease-out);
+        }
+
+        @media (min-width: 769px) {
+            .inspect-backdrop {
+                -webkit-backdrop-filter: blur(3px);
+                backdrop-filter: blur(3px);
+            }
+        }
+
+        .inspect.is-open .inspect-backdrop {
+            opacity: 1;
+        }
+
+        .inspect.is-closing .inspect-backdrop {
+            opacity: 0;
+        }
+
+        /* The cut-out of the object, lifted straight off background.jpg */
+        .inspect-lift {
+            position: fixed;
+            z-index: 3;
+            background-image: url('background.jpg');
+            background-repeat: no-repeat;
+            border-radius: 4px;
+            opacity: 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .inspect-stage {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            pointer-events: none;
+        }
+
+        .inspect-stage > * {
+            pointer-events: auto;
+        }
+
+        .inspect-head,
+        .paper-nav {
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 300ms var(--ease-out) 300ms, transform 300ms var(--ease-out) 300ms;
+        }
+
+        .inspect.is-open .inspect-head,
+        .inspect.is-open .paper-nav {
+            opacity: 1;
+            transform: none;
+        }
+
+        .inspect.is-closing .inspect-head,
+        .inspect.is-closing .paper-nav {
+            opacity: 0;
+            transition-duration: 160ms;
+            transition-delay: 0ms;
+        }
+
+        .inspect-head {
+            width: min(100%, 980px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .inspect-title {
+            font-family: var(--display);
+            font-weight: 400;
+            font-size: 1.35rem;
+            color: var(--parchment-hi);
+        }
+
+        .inspect-sub {
+            margin-top: 2px;
+            font-size: 0.85rem;
+            color: var(--parchment-mut);
+        }
+
+        .inspect-close {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 99px;
+            border: 1px solid rgba(217, 195, 157, 0.3);
+            background: rgba(65, 48, 31, 0.6);
+            color: var(--parchment);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .inspect-close:hover {
+            background: rgba(65, 48, 31, 0.95);
+            border-color: rgba(217, 195, 157, 0.55);
+        }
+
+        .inspect-close:focus-visible,
+        .paper-nav button:focus-visible {
+            outline: 2px solid var(--amber);
+            outline-offset: 2px;
+        }
+
+        .paper-stack {
+            position: relative;
+            flex: none;
+            width: 100%;
+            height: calc(var(--paper-w) / 0.7727 + 36px);
+            pointer-events: none;
+        }
+
+        .paper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: var(--paper-w);
+            aspect-ratio: 8.5 / 11;
+            container-type: inline-size;
+            background:
+                radial-gradient(120% 90% at 28% 18%, rgba(255, 255, 255, 0.5), transparent 62%),
+                linear-gradient(#f7eedd, #efe1c6);
+            border: 1px solid #dccaa6;
+            border-radius: 3px;
+            box-shadow: 0 18px 40px rgba(14, 8, 4, 0.45), 0 3px 8px rgba(14, 8, 4, 0.3);
+            color: #2c2117;
+            cursor: pointer;
+            pointer-events: auto;
+            will-change: transform;
+        }
+
+        .paper.is-front {
+            cursor: default;
+        }
+
+        /* Pages lower in the stack sit in a little shadow; hover hints they can be pulled out */
+        .paper::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: rgba(60, 38, 18, 0.12);
+            pointer-events: none;
+            transition: opacity 300ms;
+        }
+
+        .paper.is-front::after {
+            opacity: 0;
+        }
+
+        .paper:not(.is-front):hover::after {
+            opacity: 0.25;
+        }
+
+        .paper-inner {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            gap: max(6px, 2.6cqw);
+            padding: max(18px, 7.5cqw) max(18px, 7.5cqw) max(14px, 6cqw);
+            overflow: hidden;
+        }
+
+        .paper-mast {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 4cqw;
+            padding-bottom: max(5px, 1.8cqw);
+            border-bottom: 1.5px solid #2c2117;
+            font-size: max(9px, 2.3cqw);
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .paper-meta {
+            flex: none;
+            color: #6b5640;
+        }
+
+        .paper-type {
+            font-size: max(9px, 2.2cqw);
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #9a5f12;
+        }
+
+        .paper-title {
+            font-family: var(--display);
+            font-weight: 400;
+            font-size: max(15px, 5.1cqw);
+            line-height: 1.2;
+            color: #24190f;
+        }
+
+        .paper-authors {
+            font-size: max(10.5px, 2.9cqw);
+            line-height: 1.5;
+            color: #4d3c2b;
+        }
+
+        .paper-authors b {
+            font-weight: 700;
+            color: #24190f;
+            background: linear-gradient(transparent 62%, rgba(232, 163, 61, 0.5) 62%);
+        }
+
+        .paper-authnote {
+            color: #8a755d;
+        }
+
+        /* Greeked text: suggests the printed page without reproducing it */
+        .paper-greek {
+            display: flex;
+            flex-direction: column;
+            gap: max(4px, 1.55cqw);
+        }
+
+        .paper-greek i {
+            display: block;
+            flex: none;
+            height: max(3px, 1.1cqw);
+            border-radius: 1px;
+            background: rgba(44, 33, 23, 0.16);
+        }
+
+        .paper-greek i.gap {
+            height: max(4px, 1.6cqw);
+            background: none;
+        }
+
+        .paper-standfirst i {
+            background: rgba(44, 33, 23, 0.24);
+        }
+
+        .paper-cols {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4cqw;
+            padding-top: max(6px, 2cqw);
+            border-top: 1px solid rgba(44, 33, 23, 0.2);
+        }
+
+        .paper-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: max(6px, 2cqw);
+            padding-top: max(8px, 2.4cqw);
+            border-top: 1px solid rgba(44, 33, 23, 0.25);
+        }
+
+        .paper-cite {
+            font-size: max(9px, 2.2cqw);
+            color: #6b5640;
+            overflow-wrap: anywhere;
+        }
+
+        .paper-links {
+            display: flex;
+            gap: max(6px, 2cqw);
+        }
+
+        .paper-link {
+            padding: max(6px, 1.4cqw) max(11px, 2.8cqw);
+            border: 1.5px solid #2c2117;
+            border-radius: 99px;
+            color: #2c2117;
+            font-size: max(11.5px, 2.6cqw);
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .paper-link--primary {
+            background: #2c2117;
+            color: #f7eedd;
+        }
+
+        .paper-link:hover {
+            background: #9a5f12;
+            border-color: #9a5f12;
+            color: #f7eedd;
+        }
+
+        .paper-link:focus-visible {
+            outline: 2px solid var(--amber-deep);
+            outline-offset: 2px;
+        }
+
+        /* A sticky note on the pile for the trial, which isn't a paper */
+        .sticky-note {
+            position: absolute;
+            z-index: 30;
+            right: calc(50% + var(--paper-w) / 2 + 48px);
+            top: calc(50% - var(--paper-w) / 0.7727 / 2 + 36px);
+            width: 196px;
+            padding: 18px 16px 18px;
+            background: #f1d47f;
+            color: #3a2a12;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            transform: rotate(-4deg);
+            box-shadow: 0 10px 22px rgba(14, 8, 4, 0.4);
+            pointer-events: auto;
+            opacity: 0;
+            transition: opacity 300ms var(--ease-out) 420ms;
+        }
+
+        .sticky-note::before {
+            content: '';
+            position: absolute;
+            top: -9px;
+            left: 50%;
+            width: 64px;
+            height: 18px;
+            transform: translateX(-50%) rotate(2deg);
+            background: rgba(255, 248, 230, 0.55);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
+
+        .sticky-note strong {
+            display: block;
+            margin-bottom: 4px;
+            font-family: var(--display);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .inspect.is-open .sticky-note {
+            opacity: 1;
+        }
+
+        .inspect.is-closing .sticky-note {
+            opacity: 0;
+            transition-delay: 0ms;
+            transition-duration: 140ms;
+        }
+
+        .paper-nav {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 0.85rem;
+            color: var(--parchment-mut);
+        }
+
+        .paper-nav button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border-radius: 99px;
+            border: 1px solid rgba(232, 163, 61, 0.35);
+            background: rgba(232, 163, 61, 0.1);
+            color: var(--amber-soft);
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .paper-nav button:hover {
+            background: rgba(232, 163, 61, 0.2);
+            border-color: rgba(232, 163, 61, 0.6);
+        }
+
+        .paper-count {
+            min-width: 3.6em;
+            text-align: center;
+            color: var(--parchment);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tooltip-hint {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 10px;
+            padding-top: 9px;
+            border-top: 1px dashed rgba(92, 73, 54, 0.3);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #9a5f12;
+        }
+
+        .detail-card-inspect {
+            margin-top: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Buttons sitting on a paper card need solid ink, not the translucent dark style */
+        .detail-card .btn-secondary {
+            background: #33261a;
+            border-color: #33261a;
+            color: var(--paper);
+        }
+
+        .detail-card .btn-secondary:hover {
+            background: #9a5f12;
+            border-color: #9a5f12;
+        }
+
+        @media (max-width: 1100px) {
+            .sticky-note {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .inspect {
+                --paper-w: min(84vw, calc(62vh * 0.7727));
+            }
+
+            /* No blur on phones (cost), so the backdrop itself has to hide the cards behind */
+            .inspect-backdrop {
+                background: rgba(18, 11, 7, 0.95);
+            }
+
+            .inspect-sub {
+                display: none;
+            }
+
+            .inspect-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .inspect-backdrop,
+            .inspect-head,
+            .paper-nav,
+            .sticky-note {
+                transition-duration: 120ms !important;
+                transition-delay: 0ms !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -833,6 +1274,10 @@
             <a href="https://www.linkedin.com/in/kevin-keet-0357ab19a/" target="_blank" class="btn btn-secondary">
                 <i class="fab fa-linkedin-in"></i>
             </a>
+            <button class="btn btn-secondary music-toggle" id="musicBtn" type="button" onclick="toggleMusic()" aria-pressed="false">
+                <i class="fas fa-play" id="musicIcon"></i> Lo-fi beats
+            </button>
+            <audio id="bgMusic" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
         </div>
     </header>
 
@@ -893,13 +1338,32 @@
         </div>
     </div>
 
-    <!-- Music Player -->
-    <div class="music-player">
-        <div class="music-info">Lo-Fi Beats</div>
-        <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
-            <i class="fas fa-play" id="musicIcon"></i>
-        </button>
-        <audio id="bgMusic" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
+    <!-- Inspect view: an object picked up out of the room -->
+    <div class="inspect" id="inspect" hidden>
+        <div class="inspect-backdrop"></div>
+        <div class="inspect-lift" id="inspectLift" aria-hidden="true"></div>
+        <div class="inspect-stage" role="dialog" aria-modal="true" aria-labelledby="inspectTitle">
+            <div class="inspect-head">
+                <div>
+                    <h2 class="inspect-title" id="inspectTitle">Research &amp; Grants</h2>
+                    <p class="inspect-sub">Click the edge of a page to pull it out, or use the arrow keys.</p>
+                </div>
+                <button class="inspect-close" id="inspectClose" type="button">
+                    <i class="fas fa-xmark"></i> Put it back
+                </button>
+            </div>
+            <div class="paper-stack" id="paperStack">
+                <div class="sticky-note">
+                    <strong>Stanford Site Lead, TEACH-AI</strong>
+                    Josiah Macy Jr. Foundation / ARiSE multi-center RCT on generative AI in medical education, 2025 to now
+                </div>
+            </div>
+            <div class="paper-nav">
+                <button type="button" id="paperPrev"><i class="fas fa-arrow-left"></i> Previous</button>
+                <span class="paper-count" id="paperCount" aria-live="polite"></span>
+                <button type="button" id="paperNext">Next <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
     </div>
 
     <!-- API Key handled by backend proxy -->
@@ -920,104 +1384,95 @@
 
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQZinX9u2_gDmo1KOUiOvR7ooqtPpNw8KN6iLCG-djZV9yFo5Xgpxvly7napuRDS7fPcjBTvTKbNePZ/pub?output=csv'; // Paste your published CSV URL here
 
-        // --- FALLBACK/DEFAULT HOTSPOT DATA ---
-        // This is used if Google Sheets isn't configured or fails to load
+        // --- FALLBACK HOTSPOT DATA ---
+        // Shown when the Google Sheet can't load (ad blockers, hospital networks that
+        // block Google Docs). Keep it word for word in sync with the Sheet. Positions
+        // come from HOTSPOT_POSITIONS, the same as for Sheet rows.
         const defaultHotspots = [
             {
                 id: 'diplomas',
-                pos: [1, 2, 28, 31],
                 icon: 'fa-graduation-cap',
                 title: 'Education & Credentials',
-                bullets: ['MD, University of Vermont (2007)', 'Internal Medicine Residency, UCSF (2007-2010)', 'BA, UC San Diego (2002)'],
-                tags: ['Board Certified', 'UCSF Trained'],
+                bullets: ['BS, UC San Diego (2002), Cognitive Science and Film', 'MD, University of Vermont (2007)', 'Internal Medicine Residency, UCSF (2007-2010)'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'family',
-                pos: [1, 33, 21, 32],
                 icon: 'fa-heart',
                 title: 'Family',
-                bullets: ['Wife owns "Ethos" in Santa Cruz', 'Daughter (17) – University of Oregon', 'Daughter (15) – Water Polo player'],
-                tags: ['Santa Cruz', 'Proud Dad*'],
+                bullets: ['Wife owns Ethos in Santa Cruz', 'Two teenage daughters', 'sister at UNC', 'Parents are cool too'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'map',
-                pos: [22, 31, 9, 17],
                 icon: 'fa-globe-americas',
                 title: 'Travel',
-                intro: 'Places I\'ve explored:',
-                bullets: ['Spain, Greece, New Zealand', 'Australia, Bali, Singapore'],
-                tags: ['Adventure', 'Exploration'],
+                intro: 'Places I love:',
+                bullets: ['Kamakura, Japan', 'Arugam Bay, Sri Lanka', 'Raglan, NZ', 'Nelson BC'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'reading',
-                pos: [0, 58, 15, 22],
                 icon: 'fa-newspaper',
-                title: 'Reading & Interests',
-                bullets: ['Asterix comics', 'Astral Codex Ten (blog)', 'AI/ML research papers'],
-                tags: ['Curious Mind'],
+                title: 'Current Projects',
+                bullets: ['Macy/ARISE multi-site RCT on AI in med ed', 'De-skilling RCT', 'AI curricula for doctors'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'laptop',
-                pos: [16, 64, 17, 22],
                 icon: 'fa-laptop-code',
                 title: 'Current Roles',
-                bullets: ['Associate Program Director, Stanford IM Residency', 'Co-Director, Generative AI in Medicine Curriculum', 'Director, Medical Education Lab, Stanford Hospital Medicine', 'Co-Director, MERIT Pathway of Distinction'],
-                tags: ['AI in Medicine', 'Education'],
+                bullets: ['Associate Program Director, Stanford IM Residency', 'Co-Director, Generative AI in Medicine Curriculum', 'Director, Medical Education Lab, Stanford Hospital Medicine', 'Co-Director, MERIT Pathway'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'awards',
-                pos: [49, 51, 18, 13],
                 icon: 'fa-trophy',
                 title: 'Awards & Recognition',
-                bullets: ['Stanford GME Outstanding Contribution Award (2026)', 'Stanford IM Residency Teaching & Mentoring Award (2024)', 'Excellent Medical Educator Award, Palo Alto VA (2015)', 'Henry J. Kaiser Family Foundation Teaching Award (2012)'],
-                tags: ['Excellence*', 'Teaching'],
+                bullets: ['Stanford GME Outstanding Contribution Award · 2026', 'Stanford IM Residency Teaching & Mentoring Award · 2024', 'Excellent Medical Educator Award, Palo Alto VA · 2015', 'Henry J. Kaiser Family Foundation Award · 2012'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'bookshelf',
-                pos: [33, 53, 10, 11],
                 icon: 'fa-book',
                 title: 'Bookshelf',
-                intro: 'Favorite reads:',
-                bullets: ['Project Hail Mary', 'Cloud Atlas', 'Medical journals & AI research'],
-                tags: ['Sci-Fi Fan', 'Lifelong Learner'],
+                intro: 'A few favorites:',
+                bullets: ['Project Hail Mary', 'Cloud Atlas', 'Special Topics in Calamity Physics'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'calendar',
-                pos: [66, 59, 13, 14],
                 icon: 'fa-calendar-alt',
                 title: 'Talks',
                 bullets: ['SHM Converge · workshop lead, Stay Sharp: Using AI Without Losing Clinical Skills · March 2027 (upcoming)', 'SHM Converge · co-presenter, AI Competency for Hospitalists · March 2027 (upcoming)', 'UVA Hospital Medicine Grand Rounds · October 2026', 'Stanford Hospital Medicine Grand Rounds expert discussant · June 2026'],
-                tags: ['Speaker'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'surfboard',
-                pos: [83, 17, 9, 63],
                 icon: 'fa-water',
                 title: 'Hobbies',
-                bullets: ['Surfing – Santa Cruz breaks', 'Basketball', 'Outdoor adventures'],
-                tags: ['Active Lifestyle*'],
+                bullets: ['Surfing', 'Basketball', 'Tromping through the redwoods with my pup'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'whitecoat',
-                pos: [92, 16, 8, 46],
                 icon: 'fa-stethoscope',
                 title: 'Clinical Practice',
-                bullets: ['Hospitalist, Stanford Medicine (2021-)', 'Hospitalist, Palo Alto VA (2010-)', 'Associate Program Director'],
-                tags: ['Stanford', 'VA Healthcare'],
+                bullets: ['Hospitalist, Stanford Medicine (2021-)', 'Hospitalist, Palo Alto VA (2010-)'],
+                tags: [],
                 isDog: false
             },
             {
                 id: 'dog',
-                pos: [58, 68, 22, 28],
                 icon: 'fa-dog',
                 title: 'Frankenstein',
                 intro: 'Kevin\'s loyal Bloodhound companion. Click to chat with me and ask questions about Kevin!',
@@ -1091,12 +1546,11 @@
             intro: '',
             bullets: [
                 'Stanford Site Lead, TEACH-AI: Josiah Macy Jr. Foundation / ARiSE multi-center RCT on generative AI in medical education (2025–)',
-                '"From iPatient to AI-Patient" — BMJ editorial (2026)',
-                'MedVAL: expert-level medical text validation — npj Digital Medicine (2026)',
-                'GPT-4 vs authentic residency personal statements — J Gen Intern Med (2024)',
+                'Two 2026 papers in BMJ Digital Health & AI, including the editorial "From iPatient to AI-Patient"',
+                'Papers in npj Digital Medicine (2026), J Gen Intern Med (2025) and Am J Med (2010)',
                 'Stanford ICDP curriculum grant (2025)'
             ],
-            tags: ['Macy Foundation*', 'BMJ'],
+            tags: [],
             isDog: false
         };
 
@@ -1126,15 +1580,23 @@
             };
         }
 
+        // The fallback copy takes the same measured positions as Sheet rows
+        function fallbackHotspots() {
+            return defaultHotspots.map(h => ({ ...h, pos: HOTSPOT_POSITIONS[h.id] }));
+        }
+
         // --- LOAD CONTENT FROM GOOGLE SHEETS ---
         async function loadFromGoogleSheets() {
             if (!GOOGLE_SHEET_CSV_URL) {
                 console.log('No Google Sheet URL configured, using defaults');
-                return defaultHotspots;
+                return fallbackHotspots();
             }
 
             try {
-                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                // A network that silently drops Google requests would otherwise leave
+                // the room with no hotspots until the browser gives up
+                const signal = AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined;
+                const response = await fetch(GOOGLE_SHEET_CSV_URL, { signal });
                 if (!response.ok) throw new Error('Failed to fetch sheet');
 
                 const csv = await response.text();
@@ -1142,16 +1604,15 @@
 
                 if (rows.length === 0) {
                     console.log('Sheet is empty, using defaults');
-                    return defaultHotspots;
+                    return fallbackHotspots();
                 }
 
                 console.log('Loaded ' + rows.length + ' hotspots from Google Sheets');
                 return rows.map(rowToHotspot);
 
             } catch (error) {
-                console.error('Error loading from Google Sheets:', error);
-                console.log('Using default hotspots');
-                return defaultHotspots;
+                console.warn('Google Sheet unavailable, using the built-in copy:', error.name || error);
+                return fallbackHotspots();
             }
         }
 
@@ -1204,11 +1665,13 @@
                 btn.addEventListener('mouseleave', hideTooltip);
 
                 // Keyboard accessibility: reveal tooltip on focus
-                btn.addEventListener('focus', () => showSpotTooltip(btn, hs));
+                btn.addEventListener('focus', () => { if (!suppressFocusTooltip) showSpotTooltip(btn, hs); });
                 btn.addEventListener('blur', hideTooltip);
 
                 if (hs.isDog) {
                     btn.addEventListener('click', openChat);
+                } else if (INSPECTABLES[hs.id]) {
+                    btn.addEventListener('click', () => openInspect(hs.id, btn));
                 }
 
                 overlay.appendChild(btn);
@@ -1234,14 +1697,19 @@
                 const dogBtn = hs.isDog
                     ? '<button class="btn btn-secondary detail-card-chat" onclick="openChat()"><i class="fas fa-dog"></i> Chat with Frankenstein</button>'
                     : '';
+                const inspectBtn = INSPECTABLES[hs.id]
+                    ? `<button class="btn btn-secondary detail-card-inspect" type="button"><i class="fas ${INSPECTABLES[hs.id].buttonIcon}"></i> ${INSPECTABLES[hs.id].buttonLabel}</button>`
+                    : '';
 
                 card.innerHTML = `
                     <div class="detail-card-header">
                         <div class="detail-card-icon${hs.isDog ? ' is-dog' : ''}"><i class="fas ${hs.icon}"></i></div>
                         <div class="detail-card-title">${hs.title}</div>
                     </div>
-                    <div class="detail-card-body">${body}${dogBtn}</div>
+                    <div class="detail-card-body">${body}${dogBtn}${inspectBtn}</div>
                 `;
+                const ib = card.querySelector('.detail-card-inspect');
+                if (ib) ib.addEventListener('click', () => openInspect(hs.id, null, ib));
                 list.appendChild(card);
             });
         }
@@ -1260,6 +1728,7 @@
                     <div class="tooltip-title">${hs.title}</div>
                 </div>
                 <div class="tooltip-body">${content}</div>
+                ${INSPECTABLES[hs.id] ? `<div class="tooltip-hint"><i class="fas fa-hand-pointer"></i> ${INSPECTABLES[hs.id].hint}</div>` : ''}
             `;
 
             const pad = 14;
@@ -1283,6 +1752,349 @@
         function hideTooltip() {
             tooltip.classList.remove('active');
         }
+
+        // =====================================================
+        // INSPECT: click an object to pick it up out of the room
+        // =====================================================
+        // Objects that open a close-up view. Diplomas and photos can join
+        // this registry later with their own renderers.
+        const INSPECTABLES = {
+            research: {
+                title: 'Research & Grants',
+                hint: 'Click to pick up the papers',
+                buttonIcon: 'fa-file-lines',
+                buttonLabel: 'Read the papers'
+            }
+        };
+
+        // Checked against PubMed and Crossref, October 2026
+        const PAPERS = [
+            {
+                journal: 'BMJ Digital Health & AI', year: '2026', type: 'Editorial',
+                title: 'From iPatient to AI-Patient: a responsibility to medical education',
+                authors: ['Hosamani P', 'Keet K', 'Chi J', 'Hom J'],
+                cite: '2026;2(1):e000082', doi: '10.1136/bmjdh-2026-000082',
+                pmid: '42712307', free: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC13492545/'
+            },
+            {
+                journal: 'BMJ Digital Health & AI', year: '2026', type: 'Review',
+                title: 'The long road to AI-physician partnership starts with learners: a map for AI in medical education',
+                authors: ['Patel N', 'Kumar A', 'Chi J', 'Keet K', 'Kugler J', 'Hom J', 'Hosamani P'],
+                cite: '2026;2(1):e000056', doi: '10.1136/bmjdh-2026-000056',
+                pmid: '42756909', free: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC13583697/'
+            },
+            {
+                journal: 'npj Digital Medicine', year: '2026', type: 'Article · MedVAL',
+                title: 'Toward expert-level medical text validation with language models',
+                authors: ['Aali A', 'Bikia V', 'Varma M', '…', 'Keet KR', '…', 'Chaudhari AS'],
+                authorNote: '27 authors',
+                doi: '10.1038/s41746-026-03084-5',
+                free: 'https://doi.org/10.1038/s41746-026-03084-5'
+            },
+            {
+                journal: 'Journal of General Internal Medicine', year: '2025', type: 'Research letter',
+                title: 'Comparing IM residency application personal statements generated by GPT-4 and authentic applicants',
+                authors: ['Nair V', 'Nayak A', 'Ahuja N', 'Weng Y', 'Keet K', 'Hosamani P', 'Hom J'],
+                cite: '2025;40(1):124–126', doi: '10.1007/s11606-024-08784-w',
+                pmid: '38689120', free: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11780005/'
+            },
+            {
+                journal: 'The American Journal of Medicine', year: '2010', type: 'Case series',
+                title: 'Severe H1N1-associated acute respiratory distress syndrome: a case series',
+                authors: ['Lai AR', 'Keet K', 'Yong CM', 'Diaz JV'],
+                cite: '2010;123(3):282–285.e2', doi: '10.1016/j.amjmed.2009.11.004',
+                pmid: '20193840'
+            }
+        ];
+
+        const inspectEl = document.getElementById('inspect');
+        const inspectLift = document.getElementById('inspectLift');
+        const paperStack = document.getElementById('paperStack');
+        const paperCount = document.getElementById('paperCount');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
+        const SHADOW_LOW = '0 2px 6px rgba(20, 12, 6, 0.3)';
+        const SHADOW_HIGH = '0 40px 70px rgba(20, 12, 6, 0.55)';
+        // Where each page sits by depth in the pile (0 = on top)
+        const FAN = [
+            { x: 0, y: 0, r: 0 },
+            { x: 46, y: -8, r: 5 },
+            { x: -50, y: -4, r: -6 },
+            { x: 78, y: 6, r: 9 },
+            { x: -82, y: 12, r: -10 }
+        ];
+        const INERT_WHILE_OPEN = ['.header', '.main-container', '#chatToggle', '#chatWindow'];
+
+        let order = [];
+        let inspectOpen = false;
+        let busy = false;
+        let liftSource = null;       // the hotspot the object was picked up from
+        let returnFocusTo = null;
+        let videoWasPlaying = false;
+        let suppressFocusTooltip = false;
+
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const motionOK = () => !reducedMotion.matches;
+
+        function escapeHTML(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Greeked lines: bars that read as printed text without reproducing it
+        function greek(seed, lines) {
+            let s = seed * 9973 + 7;
+            const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+            let html = '';
+            let run = 0;
+            for (let n = 0; n < lines; n++) {
+                const paraEnd = run > 2 && rnd() < 0.17;
+                const w = paraEnd ? 36 + rnd() * 42 : 90 + rnd() * 10;
+                html += `<i style="width:${w.toFixed(1)}%"></i>`;
+                run++;
+                if (paraEnd) { html += '<i class="gap"></i>'; run = 0; }
+            }
+            return html;
+        }
+
+        function paperHTML(p, i) {
+            const authors = p.authors.map(a => /^Keet K/.test(a) ? `<b>${escapeHTML(a)}</b>` : escapeHTML(a)).join(', ');
+            const note = p.authorNote ? ` <span class="paper-authnote">(${escapeHTML(p.authorNote)})</span>` : '';
+            const read = p.free
+                ? `<a class="paper-link paper-link--primary" href="${p.free}" target="_blank" rel="noopener">Read it free</a>`
+                : `<a class="paper-link paper-link--primary" href="https://doi.org/${p.doi}" target="_blank" rel="noopener">Read at journal</a>`;
+            const pubmed = p.pmid
+                ? `<a class="paper-link" href="https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/" target="_blank" rel="noopener">PubMed</a>`
+                : '';
+            return `
+                <article class="paper" data-idx="${i}" aria-label="${escapeHTML(p.title)}">
+                    <div class="paper-inner">
+                        <header class="paper-mast"><span>${escapeHTML(p.journal)}</span><span class="paper-meta">${p.year}</span></header>
+                        <p class="paper-type">${escapeHTML(p.type)}</p>
+                        <h3 class="paper-title">${escapeHTML(p.title)}</h3>
+                        <p class="paper-authors">${authors}${note}</p>
+                        <div class="paper-greek paper-standfirst">${greek(i + 1, 4)}</div>
+                        <div class="paper-cols">
+                            <div class="paper-greek">${greek(i + 11, 34)}</div>
+                            <div class="paper-greek">${greek(i + 29, 34)}</div>
+                        </div>
+                        <footer class="paper-foot">
+                            <span class="paper-cite">${p.cite ? escapeHTML(p.cite) + ' · ' : ''}doi:${escapeHTML(p.doi)}</span>
+                            <span class="paper-links">${read}${pubmed}</span>
+                        </footer>
+                    </div>
+                </article>`;
+        }
+
+        function buildPapers() {
+            paperStack.querySelectorAll('.paper').forEach(el => el.remove());
+            paperStack.insertAdjacentHTML('beforeend', PAPERS.map(paperHTML).join(''));
+            order = PAPERS.map((_, i) => i);
+            paperStack.querySelectorAll('.paper').forEach(el => {
+                el.addEventListener('click', e => {
+                    if (e.target.closest('a')) return;
+                    pullToFront(Number(el.dataset.idx));
+                });
+            });
+        }
+
+        const paperEl = i => paperStack.querySelector(`.paper[data-idx="${i}"]`);
+        const fanK = () => (window.innerWidth < 769 ? 0.42 : 1);
+
+        function tf(x, y, r, s) {
+            return `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${r}deg) scale(${s})`;
+        }
+
+        function slot(d) {
+            const f = FAN[Math.min(d, FAN.length - 1)];
+            const k = fanK();
+            return tf(f.x * k, f.y * k, f.r, d === 0 ? 1 : 0.97);
+        }
+
+        // Settle every page into its place in the pile. With `stagger`, the
+        // bottom page moves first so the pile fans out from underneath.
+        function layout(ms, stagger = 0) {
+            order.forEach((i, d) => {
+                const el = paperEl(i);
+                const delay = stagger * (order.length - 1 - d);
+                el.style.transition = ms
+                    ? `transform ${ms}ms ${EASE_OUT} ${delay}ms, opacity ${ms}ms ${EASE_OUT} ${delay}ms`
+                    : 'none';
+                el.style.zIndex = String(10 - d);
+                el.style.transform = slot(d);
+                el.style.opacity = '1';
+                el.classList.toggle('is-front', d === 0);
+                el.setAttribute('aria-hidden', d === 0 ? 'false' : 'true');
+                el.querySelectorAll('a').forEach(a => { a.tabIndex = d === 0 ? 0 : -1; });
+            });
+            paperCount.textContent = `${order[0] + 1} of ${PAPERS.length}`;
+        }
+
+        // Slide a page sideways out of the pile
+        function slideOut(el, side, ms) {
+            el.style.transition = `transform ${ms}ms ${EASE_OUT}`;
+            el.style.transform = tf(side * el.offsetWidth * 0.64 * Math.max(fanK(), 0.6), -10, side * 11, 1);
+            return wait(ms);
+        }
+
+        async function nextPaper() {        // the top page tucks under the pile
+            if (busy || !inspectOpen) return;
+            busy = true;
+            const el = paperEl(order[0]);
+            if (motionOK()) await slideOut(el, 1, 240);
+            order.push(order.shift());
+            layout(motionOK() ? 420 : 0);
+            await wait(motionOK() ? 420 : 0);
+            busy = false;
+        }
+
+        function prevPaper() {               // the bottom page comes back to the top
+            pullToFront(order[order.length - 1]);
+        }
+
+        async function pullToFront(i) {
+            if (busy || !inspectOpen || order[0] === i) return;
+            busy = true;
+            const el = paperEl(i);
+            const side = FAN[Math.min(order.indexOf(i), FAN.length - 1)].x < 0 ? -1 : 1;
+            if (motionOK()) await slideOut(el, side, 240);
+            order = [i, ...order.filter(x => x !== i)];
+            layout(motionOK() ? 420 : 0);
+            await wait(motionOK() ? 420 : 0);
+            busy = false;
+        }
+
+        // The lifted cut-out is the hotspot's own patch of background.jpg
+        function prepLift(btn) {
+            const r = btn.getBoundingClientRect();
+            const w = document.getElementById('imageWrapper').getBoundingClientRect();
+            Object.assign(inspectLift.style, {
+                left: r.left + 'px',
+                top: r.top + 'px',
+                width: r.width + 'px',
+                height: r.height + 'px',
+                backgroundSize: `${w.width}px ${w.height}px`,
+                backgroundPosition: `${w.left - r.left}px ${w.top - r.top}px`
+            });
+            const s = Math.min(window.innerHeight * 0.4, 340) / r.height;
+            const dx = window.innerWidth / 2 - (r.left + r.width / 2);
+            const dy = window.innerHeight / 2 - (r.top + r.height / 2);
+            return {
+                home: 'translate(0px, 0px) scale(1) rotate(0deg)',
+                lifted: 'translate(0px, -10px) scale(1.07) rotate(-1.5deg)',
+                center: `translate(${dx}px, ${dy}px) scale(${s}) rotate(-3deg)`
+            };
+        }
+
+        async function openInspect(id, sourceBtn, focusReturn) {
+            if (inspectOpen || !INSPECTABLES[id]) return;
+            inspectOpen = true;
+            busy = true;
+            hideTooltip();
+            liftSource = sourceBtn;
+            returnFocusTo = focusReturn || sourceBtn;
+            document.getElementById('inspectTitle').textContent = INSPECTABLES[id].title;
+            buildPapers();
+
+            // Freeze the room behind the close-up
+            const video = document.getElementById('bgVideo');
+            videoWasPlaying = !!video && !video.paused;
+            if (video) video.pause();
+            INERT_WHILE_OPEN.forEach(sel => { const el = document.querySelector(sel); if (el) el.inert = true; });
+            document.body.style.overflow = 'hidden';
+
+            // Pages start gathered at the centre, invisible
+            paperStack.querySelectorAll('.paper').forEach(el => {
+                el.style.transition = 'none';
+                el.style.opacity = '0';
+                el.style.transform = tf(0, 30, 0, 0.62);
+            });
+            inspectEl.hidden = false;
+            inspectEl.classList.remove('is-closing');
+            void inspectEl.offsetWidth;              // commit the start state before animating
+            inspectEl.classList.add('is-open');
+
+            const fly = motionOK() && sourceBtn && sourceBtn.offsetParent !== null;
+            if (fly) {
+                const g = prepLift(sourceBtn);
+                inspectLift.getAnimations().forEach(a => a.cancel());
+                inspectLift.animate([
+                    { transform: g.home, boxShadow: SHADOW_LOW, opacity: 1, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' },
+                    { offset: 0.24, transform: g.lifted, boxShadow: SHADOW_LOW, opacity: 1, easing: EASE_OUT },
+                    { transform: g.center, boxShadow: SHADOW_HIGH, opacity: 1 }
+                ], { duration: 580, fill: 'forwards' });
+                await wait(500);                     // start fanning just before the pile lands
+            }
+
+            // Fan the pages out of the lifted pile
+            const ms = motionOK() ? 440 : 0;
+            const stagger = motionOK() ? 45 : 0;
+            layout(ms, stagger);
+            if (fly) {
+                inspectLift.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 280, easing: EASE_OUT, fill: 'forwards' });
+            }
+            await wait(ms + stagger * (order.length - 1));
+            document.getElementById('inspectClose').focus({ preventScroll: true });
+            busy = false;
+        }
+
+        async function closeInspect() {
+            if (!inspectOpen || busy) return;
+            busy = true;
+
+            // Gather the pages back into a pile
+            paperStack.querySelectorAll('.paper').forEach(el => {
+                el.style.transition = motionOK() ? `transform 220ms ${EASE_OUT}, opacity 220ms ${EASE_OUT}` : 'none';
+                el.style.opacity = '0';
+                el.style.transform = tf(0, 30, 0, 0.62);
+            });
+            inspectEl.classList.add('is-closing');
+
+            const fly = motionOK() && liftSource && liftSource.offsetParent !== null;
+            if (fly) {
+                const g = prepLift(liftSource);
+                inspectLift.getAnimations().forEach(a => a.cancel());
+                await inspectLift.animate([
+                    { transform: g.center, boxShadow: SHADOW_HIGH, opacity: 0 },
+                    { transform: g.center, boxShadow: SHADOW_HIGH, opacity: 1 }
+                ], { duration: 160, easing: EASE_OUT, fill: 'forwards' }).finished;
+                await inspectLift.animate([
+                    { transform: g.center, boxShadow: SHADOW_HIGH, opacity: 1 },
+                    { transform: g.home, boxShadow: SHADOW_LOW, opacity: 1 }
+                ], { duration: 460, easing: EASE_OUT, fill: 'forwards' }).finished;
+            } else {
+                await wait(motionOK() ? 240 : 0);
+            }
+
+            // Back in its place: drop the cut-out and hand the room back
+            inspectLift.getAnimations().forEach(a => a.cancel());
+            inspectEl.hidden = true;
+            inspectEl.classList.remove('is-open', 'is-closing');
+            INERT_WHILE_OPEN.forEach(sel => { const el = document.querySelector(sel); if (el) el.inert = false; });
+            document.body.style.overflow = '';
+            const video = document.getElementById('bgVideo');
+            if (video && videoWasPlaying) video.play().catch(() => {});
+            inspectOpen = false;
+            busy = false;
+            if (returnFocusTo) {
+                suppressFocusTooltip = true;
+                returnFocusTo.focus({ preventScroll: true });
+                suppressFocusTooltip = false;
+            }
+        }
+
+        document.getElementById('inspectClose').addEventListener('click', closeInspect);
+        document.getElementById('paperNext').addEventListener('click', nextPaper);
+        document.getElementById('paperPrev').addEventListener('click', prevPaper);
+        inspectEl.addEventListener('click', e => {
+            if (!e.target.closest('.paper, .paper-nav, .inspect-head, .sticky-note')) closeInspect();
+        });
+        document.addEventListener('keydown', e => {
+            if (!inspectOpen) return;
+            if (e.key === 'Escape') closeInspect();
+            else if (e.key === 'ArrowRight') { e.preventDefault(); nextPaper(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevPaper(); }
+        });
+        window.addEventListener('resize', () => { if (inspectOpen && !busy) layout(0); });
 
         // --- INITIALIZE ---
         async function init() {
@@ -1374,11 +2186,12 @@ GRANTS & FUNDED RESEARCH:
 - A "de-skilling" RCT, now enrolling; member of the ARiSE network
 
 RESEARCH & PUBLICATIONS:
-- Keet K. "From iPatient to AI-Patient: a responsibility to medical education." BMJ (2026), editorial
-- Nair V, ..., Keet K, et al. "Comparing IM residency application personal statements generated by GPT-4 and authentic applicants." J Gen Intern Med (2024)
-- MedVAL: expert-level medical text validation with language models. npj Digital Medicine (2026)
+- Hosamani P, Keet K, Chi J, Hom J. "From iPatient to AI-Patient: a responsibility to medical education." BMJ Digital Health & AI (2026), editorial
+- Patel N, Kumar A, Chi J, Keet K, Kugler J, Hom J, Hosamani P. "The long road to AI-physician partnership starts with learners: a map for AI in medical education." BMJ Digital Health & AI (2026), review
+- Aali A, Bikia V, Varma M, ..., Keet KR, ..., Chaudhari AS. "Toward expert-level medical text validation with language models" (MedVAL). npj Digital Medicine (2026)
+- Nair V, ..., Keet K, et al. "Comparing IM residency application personal statements generated by GPT-4 and authentic applicants." J Gen Intern Med (2025), research letter
 - Lai AR, Keet K, et al. Severe H1N1-associated ARDS: a case series. Am J Med (2010)
-- In progress: an invited BMJ AI narrative piece and resident collaborations
+- In progress: further resident and mentee collaborations
 
 PERSONAL LIFE:
 - Lives in Santa Cruz, California
@@ -1466,7 +2279,7 @@ Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occa
                 }
 
             } catch (error) {
-                console.error('Error loading context from Google Doc:', error);
+                console.warn('Google Doc unavailable, using the built-in chat context:', error.name || error);
                 return DEFAULT_CONTEXT;
             }
         }
@@ -1544,7 +2357,7 @@ Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occa
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
                         max_tokens: 300,
-                        system: RESUME_CONTEXT + "\n\nRESPONSE LENGTH: Keep every reply short and conversational - ideally 1-2 sentences, and never more than 3. Be warm but brief; don't dump everything you know. If they want more, they can ask a follow-up.\n\nNEVER mention money: do not state dollar amounts, grant sums, salaries, or any funding figures, even if they appear in your context. Refer to grants and awards by name only, without their monetary value.\n\nCURRENT FACTS (these override anything above that conflicts): Kevin does NOT lead any 'GME-wide AI Education Expansion'; never mention it. His leadership roles are Associate Program Director of the Stanford IM Residency, Co-Director of the Generative AI in Medicine Curriculum, Director of the Medical Education Lab in Stanford's Division of Hospital Medicine, and Co-Director of the MERIT pathway. On the Macy Foundation / ARiSE TEACH-AI trial, Kevin is the Stanford Site Lead, not the PI (the PI is Jonathan Chen). MedVAL is published in npj Digital Medicine (2026), not a preprint. His talks: upcoming at SHM Converge 2027 in Las Vegas, as workshop lead for 'Stay Sharp: Using AI Without Losing Clinical Skills' and co-presenter for 'AI Competency for Hospitalists'; UVA Hospital Medicine Grand Rounds (October 2026); and expert discussant at Stanford Hospital Medicine Grand Rounds (June 2026).",
+                        system: RESUME_CONTEXT + "\n\nRESPONSE LENGTH: Keep every reply short and conversational - ideally 1-2 sentences, and never more than 3. Be warm but brief; don't dump everything you know. If they want more, they can ask a follow-up.\n\nNEVER mention money: do not state dollar amounts, grant sums, salaries, or any funding figures, even if they appear in your context. Refer to grants and awards by name only, without their monetary value.",
                         messages: [{ role: 'user', content: message }]
                     })
                 });
@@ -1573,13 +2386,17 @@ Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occa
         const musicIcon = document.getElementById('musicIcon');
 
         function toggleMusic() {
-            if (bgMusic.paused) {
-                bgMusic.play();
+            const musicBtn = document.getElementById('musicBtn');
+            const playing = bgMusic.paused;
+            if (playing) {
+                bgMusic.play().catch(() => {});
                 musicIcon.classList.replace('fa-play', 'fa-pause');
             } else {
                 bgMusic.pause();
                 musicIcon.classList.replace('fa-pause', 'fa-play');
             }
+            musicBtn.classList.toggle('is-playing', playing);
+            musicBtn.setAttribute('aria-pressed', String(playing));
         }
 
         // Event listeners
