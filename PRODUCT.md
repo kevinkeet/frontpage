@@ -18,7 +18,7 @@ An interactive "visual resume" at kevinkeet.com. A lo-fi illustrated scene of Ke
 
 ## Brand Personality
 
-Warm, playful, credible. Serious academic work (Stanford hospitalist, $200K RCT PI, BMJ editorial) presented with humor and humanity (lo-fi beats, a chatty bloodhound, surfboards). Bedside empathy is a core theme: the site should feel like the person who pulls up a chair.
+Warm, playful, credible. Serious academic work (Stanford hospitalist, site lead on a Macy Foundation RCT, BMJ editorial) presented with humor and humanity (lo-fi beats, a chatty bloodhound, surfboards). Bedside empathy is a core theme: the site should feel like the person who pulls up a chair.
 
 ## Anti-references
 
