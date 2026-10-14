@@ -1,6 +1,6 @@
 id,position,icon,title,intro,bullets,tags,isDog
 diplomas,"1,2,28,32",fa-graduation-cap,Education & Credentials,,"MD, University of Vermont (2007); Internal Medicine Residency, UCSF (2007-2010); BA, UC San Diego (2002)",Board Certified; UCSF Trained,false
-family,"1,36,10,26",fa-heart,Family,,"Wife owns ""Ethos"" in Santa Cruz; Daughter (17) – University of Oregon; Daughter (15) – Water Polo player",Santa Cruz; Proud Dad*,false
+family,"1,36,10,26",fa-heart,Family,,"Married, with two teenage daughters; Santa Cruz is home; Parents are cool too",,false
 map,"12,33,9,20",fa-globe-americas,Travel,Places I've explored:,"Spain, Greece, New Zealand; Australia, Bali, Singapore",Adventure; Exploration,false
 reading,"0,56,15,26",fa-newspaper,Reading & Interests,,Asterix comics; Astral Codex Ten (blog); AI/ML research papers,Curious Mind,false
 laptop,"21,40,16,26",fa-laptop-code,Current Focus,,"Co-Director: AI for Medicine Residents Curriculum (2024-); Researching GPT-4 vs authentic residency statements; Building AI literacy programs",AI in Medicine; Education,false
