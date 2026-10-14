@@ -93,45 +93,101 @@
             flex-wrap: wrap;
         }
 
-        .header-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-right: 8px;
+        /* Projects dropdown: every site Kevin has built, tucked away until asked for */
+        .projects {
+            position: relative;
         }
 
-        .header-link {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1px;
-            padding: 7px 13px;
-            background: rgba(232, 163, 61, 0.08);
-            border: 1px solid rgba(232, 163, 61, 0.22);
-            border-radius: 8px;
-            color: var(--amber-soft);
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
+        .projects-toggle {
+            font-family: inherit;
         }
 
-        .header-link:hover {
-            background: rgba(232, 163, 61, 0.16);
-            border-color: rgba(232, 163, 61, 0.45);
-            transform: translateY(-1px);
-        }
-
-        .header-link i {
-            font-size: 0.7rem;
-            margin-right: 5px;
-        }
-
-        .header-link small {
+        .projects-caret {
             font-size: 0.65rem;
-            font-weight: 400;
+            transition: transform 0.2s;
+        }
+
+        .projects-toggle[aria-expanded="true"] .projects-caret {
+            transform: rotate(180deg);
+        }
+
+        .projects-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            z-index: 300;
+            width: 340px;
+            padding: 10px;
+            background: var(--ink-900);
+            border: 1px solid rgba(217, 195, 157, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 18px 40px rgba(14, 8, 4, 0.55);
+            text-align: left;
+        }
+
+        .projects-menu[hidden] {
+            display: none;
+        }
+
+        .projects-group + .projects-group {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(217, 195, 157, 0.12);
+        }
+
+        .projects-label {
+            padding: 4px 8px 6px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--parchment-dim);
+        }
+
+        .project-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 8px;
+            border-radius: 8px;
+            color: var(--parchment);
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .project-link:hover,
+        .project-link:focus-visible {
+            background: rgba(232, 163, 61, 0.12);
+            outline: none;
+        }
+
+        .project-icon {
+            flex: none;
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: var(--tint);
+            color: #fff8ec;
+            font-size: 0.85rem;
+        }
+
+        .project-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.3;
+        }
+
+        .project-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--parchment-hi);
+        }
+
+        .project-desc {
+            font-size: 0.75rem;
             color: var(--parchment-mut);
-            letter-spacing: 0.02em;
         }
 
         .btn {
@@ -733,8 +789,20 @@
                 text-align: center;
             }
 
-            .header-links {
+            .header-right {
+                position: relative;
                 justify-content: center;
+            }
+
+            /* On phones the menu centres under the whole button row */
+            .projects {
+                position: static;
+            }
+
+            .projects-menu {
+                left: 50%;
+                transform: translateX(-50%);
+                width: min(92vw, 340px);
             }
 
             .scene-caption {
@@ -1177,6 +1245,169 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* Each inspectable object has its own scene inside the close-up */
+        .inspect-scene {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .inspect-scene[hidden] {
+            display: none;
+        }
+
+        /* The laptop, opened: a screen of everything Kevin has built */
+        .laptop {
+            width: min(92vw, 880px);
+            opacity: 0;
+            transform: scale(0.86);
+            transition: opacity 360ms var(--ease-out), transform 460ms var(--ease-out);
+        }
+
+        .laptop.is-up {
+            opacity: 1;
+            transform: none;
+        }
+
+        .inspect.is-closing .laptop {
+            opacity: 0;
+            transform: scale(0.9);
+            transition-duration: 220ms;
+        }
+
+        .laptop-bezel {
+            position: relative;
+            padding: 16px;
+            border-radius: 18px 18px 6px 6px;
+            background: #120d0a;
+            box-shadow: 0 30px 60px rgba(10, 6, 3, 0.6), inset 0 0 0 1px rgba(255, 240, 220, 0.06);
+        }
+
+        .laptop-bezel::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            margin-left: -2.5px;
+            border-radius: 50%;
+            background: #2c2622;
+        }
+
+        .laptop-display {
+            max-height: min(62vh, 560px);
+            overflow-y: auto;
+            padding: 26px 28px 30px;
+            border-radius: 6px;
+            background:
+                radial-gradient(120% 80% at 80% 0%, rgba(79, 122, 138, 0.35), transparent 60%),
+                linear-gradient(165deg, #20302f 0%, #1c2324 45%, #261d18 100%);
+        }
+
+        .laptop-base {
+            position: relative;
+            height: 14px;
+            margin: 0 -4%;
+            border-radius: 0 0 14px 14px;
+            background: linear-gradient(#3b2d22, #241a13);
+            box-shadow: 0 10px 20px rgba(10, 6, 3, 0.5);
+        }
+
+        .laptop-base::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 90px;
+            height: 5px;
+            margin-left: -45px;
+            border-radius: 0 0 6px 6px;
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .apps-group + .apps-group {
+            margin-top: 22px;
+        }
+
+        .apps-label {
+            margin-bottom: 14px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(234, 217, 189, 0.62);
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 22px 14px;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 6px;
+            border-radius: 12px;
+            color: var(--parchment);
+            text-align: center;
+            text-decoration: none;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: background 0.2s, opacity 320ms var(--ease-out), transform 420ms var(--ease-out);
+        }
+
+        .laptop.is-up .app {
+            opacity: 1;
+            transform: none;
+            transition-delay: 0ms, calc(var(--i) * 35ms + 140ms), calc(var(--i) * 35ms + 140ms);
+        }
+
+        .app:hover,
+        .app:focus-visible {
+            background: rgba(255, 240, 220, 0.07);
+            outline: none;
+        }
+
+        .app:focus-visible {
+            box-shadow: 0 0 0 2px var(--amber);
+        }
+
+        .app-icon {
+            width: 54px;
+            height: 54px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: var(--tint);
+            background: linear-gradient(150deg, var(--tint), color-mix(in srgb, var(--tint) 68%, #1d1410));
+            color: #fff8ec;
+            font-size: 1.35rem;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            transition: transform 0.2s var(--ease-out);
+        }
+
+        .app:hover .app-icon {
+            transform: translateY(-3px);
+        }
+
+        .app-name {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--parchment-hi);
+        }
+
+        .app-desc {
+            font-size: 0.74rem;
+            line-height: 1.35;
+            color: var(--parchment-mut);
+        }
+
         .tooltip-hint {
             display: flex;
             align-items: center;
@@ -1230,15 +1461,32 @@
             .inspect-title {
                 font-size: 1.1rem;
             }
+
+            .laptop-display {
+                max-height: 64vh;
+                padding: 20px 14px 22px;
+            }
+
+            .apps-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 16px 8px;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
             .inspect-backdrop,
             .inspect-head,
             .paper-nav,
-            .sticky-note {
+            .sticky-note,
+            .laptop,
+            .app {
                 transition-duration: 120ms !important;
                 transition-delay: 0ms !important;
+            }
+
+            .laptop,
+            .app {
+                transform: none !important;
             }
         }
     </style>
@@ -1251,22 +1499,11 @@
             <p>Hospitalist &amp; Associate Program Director</p>
         </div>
         <div class="header-right">
-            <div class="header-links">
-                <a href="https://nerdify.kevinkeet.com" target="_blank" class="header-link">
-                    <span><i class="fas fa-brain"></i> Nerdify</span>
-                </a>
-                <a href="https://actingintern.com" target="_blank" class="header-link">
-                    <span><i class="fas fa-heartbeat"></i> Acting Intern</span>
-                    <small>EHR simulator</small>
-                </a>
-                <a href="https://aieducator.kevinkeet.com" target="_blank" class="header-link">
-                    <span><i class="fas fa-chalkboard-teacher"></i> Preceptor</span>
-                    <small>teaching companion</small>
-                </a>
-                <a href="https://meds.kevinkeet.com" target="_blank" class="header-link">
-                    <span><i class="fas fa-pills"></i> Medication Evaluator</span>
-                    <small>drug benefit checker</small>
-                </a>
+            <div class="projects" id="projects">
+                <button class="btn btn-secondary projects-toggle" id="projectsToggle" type="button" aria-expanded="false" aria-controls="projectsMenu">
+                    <i class="fas fa-laptop-code"></i> Projects <i class="fas fa-chevron-down projects-caret"></i>
+                </button>
+                <div class="projects-menu" id="projectsMenu" hidden></div>
             </div>
             <a href="mailto:kkeet@stanford.edu" class="btn btn-primary">
                 <i class="fas fa-envelope"></i> Contact Me
@@ -1346,22 +1583,32 @@
             <div class="inspect-head">
                 <div>
                     <h2 class="inspect-title" id="inspectTitle">Research &amp; Grants</h2>
-                    <p class="inspect-sub">Click the edge of a page to pull it out, or use the arrow keys.</p>
+                    <p class="inspect-sub" id="inspectSub"></p>
                 </div>
                 <button class="inspect-close" id="inspectClose" type="button">
                     <i class="fas fa-xmark"></i> Put it back
                 </button>
             </div>
-            <div class="paper-stack" id="paperStack">
-                <div class="sticky-note">
-                    <strong>Stanford Site Lead, TEACH-AI</strong>
-                    Josiah Macy Jr. Foundation / ARiSE multi-center RCT on generative AI in medical education, 2025 to now
+            <div class="inspect-scene" data-scene="papers">
+                <div class="paper-stack" id="paperStack">
+                    <div class="sticky-note">
+                        <strong>Stanford Site Lead, TEACH-AI</strong>
+                        Josiah Macy Jr. Foundation / ARiSE multi-center RCT on generative AI in medical education, 2025 to now
+                    </div>
+                </div>
+                <div class="paper-nav">
+                    <button type="button" id="paperPrev"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <span class="paper-count" id="paperCount" aria-live="polite"></span>
+                    <button type="button" id="paperNext">Next <i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
-            <div class="paper-nav">
-                <button type="button" id="paperPrev"><i class="fas fa-arrow-left"></i> Previous</button>
-                <span class="paper-count" id="paperCount" aria-live="polite"></span>
-                <button type="button" id="paperNext">Next <i class="fas fa-arrow-right"></i></button>
+            <div class="inspect-scene" data-scene="apps" hidden>
+                <div class="laptop" id="laptopScreen">
+                    <div class="laptop-bezel">
+                        <div class="laptop-display" id="laptopDisplay"></div>
+                    </div>
+                    <div class="laptop-base"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1760,12 +2007,46 @@
         // this registry later with their own renderers.
         const INSPECTABLES = {
             research: {
+                scene: 'papers',
                 title: 'Research & Grants',
+                sub: 'Click the edge of a page to pull it out, or use the arrow keys.',
                 hint: 'Click to pick up the papers',
                 buttonIcon: 'fa-file-lines',
                 buttonLabel: 'Read the papers'
+            },
+            laptop: {
+                scene: 'apps',
+                title: "Things I've built",
+                sub: 'Teaching tools and side projects. Each one opens in a new tab.',
+                hint: 'Click to open the laptop and see what I build on it',
+                buttonIcon: 'fa-laptop',
+                buttonLabel: "See what I've built"
             }
         };
+
+        // Every site Kevin has built; feeds both the header menu and the laptop screen.
+        // Names and descriptions follow each site's own title.
+        const PROJECTS = [
+            {
+                group: 'Teaching & medicine',
+                items: [
+                    { name: 'Acting Intern', desc: 'EHR simulator', url: 'https://actingintern.com', icon: 'fa-heart-pulse', tint: '#a8553f' },
+                    { name: 'Watershed', desc: 'case-based medical learning', url: 'https://aieducator.kevinkeet.com', icon: 'fa-chalkboard-user', tint: '#4f7a8a' },
+                    { name: 'MedBenefit', desc: 'what a medication will do for this patient', url: 'https://meds.kevinkeet.com', icon: 'fa-pills', tint: '#6f8f4e' },
+                    { name: 'Antibiotic Quest', desc: 'an antibiotics adventure game', url: 'https://kevinkeet.com/antibiotics/', icon: 'fa-shield-virus', tint: '#c4602d' },
+                    { name: 'Nerdify', desc: 'a personal learning feed', url: 'https://nerdify.kevinkeet.com', icon: 'fa-brain', tint: '#7b5a7f' }
+                ]
+            },
+            {
+                group: 'Side projects',
+                items: [
+                    { name: 'Capitola Flood Risk', desc: 'a live flood model for the village', url: 'https://kevinkeet.com/capitola/', icon: 'fa-house-flood-water', tint: '#4c6a86' },
+                    { name: 'Chess Trainer', desc: 'openings, drills and a coach to play', url: 'https://kevinkeet.com/chess/', icon: 'fa-chess-knight', tint: '#3f6b55' },
+                    { name: "Hold'em Coach", desc: 'poker drills and coaching', url: 'https://kevinkeet.com/poker/', icon: 'fa-diamond', tint: '#c98a2b' },
+                    { name: 'Water Polo Map', desc: 'college programs, mapped', url: 'https://kevinkeet.com/waterpolo/', icon: 'fa-map-location-dot', tint: '#2f7d8a' }
+                ]
+            }
+        ];
 
         // Checked against PubMed and Crossref, October 2026
         const PAPERS = [
@@ -1811,6 +2092,7 @@
         const inspectLift = document.getElementById('inspectLift');
         const paperStack = document.getElementById('paperStack');
         const paperCount = document.getElementById('paperCount');
+        const laptopScreen = document.getElementById('laptopScreen');
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
         const SHADOW_LOW = '0 2px 6px rgba(20, 12, 6, 0.3)';
@@ -1826,6 +2108,7 @@
         const INERT_WHILE_OPEN = ['.header', '.main-container', '#chatToggle', '#chatWindow'];
 
         let order = [];
+        let activeScene = null;      // 'papers' or 'apps'
         let inspectOpen = false;
         let busy = false;
         let liftSource = null;       // the hotspot the object was picked up from
@@ -1986,14 +2269,17 @@
         }
 
         async function openInspect(id, sourceBtn, focusReturn) {
-            if (inspectOpen || !INSPECTABLES[id]) return;
+            const item = INSPECTABLES[id];
+            if (inspectOpen || !item) return;
             inspectOpen = true;
             busy = true;
+            activeScene = item.scene;
             hideTooltip();
             liftSource = sourceBtn;
             returnFocusTo = focusReturn || sourceBtn;
-            document.getElementById('inspectTitle').textContent = INSPECTABLES[id].title;
-            buildPapers();
+            document.getElementById('inspectTitle').textContent = item.title;
+            document.getElementById('inspectSub').textContent = item.sub;
+            document.querySelectorAll('.inspect-scene').forEach(s => { s.hidden = s.dataset.scene !== activeScene; });
 
             // Freeze the room behind the close-up
             const video = document.getElementById('bgVideo');
@@ -2002,12 +2288,17 @@
             INERT_WHILE_OPEN.forEach(sel => { const el = document.querySelector(sel); if (el) el.inert = true; });
             document.body.style.overflow = 'hidden';
 
-            // Pages start gathered at the centre, invisible
-            paperStack.querySelectorAll('.paper').forEach(el => {
-                el.style.transition = 'none';
-                el.style.opacity = '0';
-                el.style.transform = tf(0, 30, 0, 0.62);
-            });
+            if (activeScene === 'papers') {
+                // Pages start gathered at the centre, invisible
+                buildPapers();
+                paperStack.querySelectorAll('.paper').forEach(el => {
+                    el.style.transition = 'none';
+                    el.style.opacity = '0';
+                    el.style.transform = tf(0, 30, 0, 0.62);
+                });
+            } else {
+                laptopScreen.classList.remove('is-up');
+            }
             inspectEl.hidden = false;
             inspectEl.classList.remove('is-closing');
             void inspectEl.offsetWidth;              // commit the start state before animating
@@ -2022,17 +2313,23 @@
                     { offset: 0.24, transform: g.lifted, boxShadow: SHADOW_LOW, opacity: 1, easing: EASE_OUT },
                     { transform: g.center, boxShadow: SHADOW_HIGH, opacity: 1 }
                 ], { duration: 580, fill: 'forwards' });
-                await wait(500);                     // start fanning just before the pile lands
+                await wait(500);                     // start unfolding just before the object lands
             }
 
-            // Fan the pages out of the lifted pile
-            const ms = motionOK() ? 440 : 0;
-            const stagger = motionOK() ? 45 : 0;
-            layout(ms, stagger);
             if (fly) {
                 inspectLift.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 280, easing: EASE_OUT, fill: 'forwards' });
             }
-            await wait(ms + stagger * (order.length - 1));
+            if (activeScene === 'papers') {
+                // Fan the pages out of the lifted pile
+                const ms = motionOK() ? 440 : 0;
+                const stagger = motionOK() ? 45 : 0;
+                layout(ms, stagger);
+                await wait(ms + stagger * (order.length - 1));
+            } else {
+                // The laptop opens up and its apps appear
+                laptopScreen.classList.add('is-up');
+                await wait(motionOK() ? 520 : 0);
+            }
             document.getElementById('inspectClose').focus({ preventScroll: true });
             busy = false;
         }
@@ -2041,12 +2338,16 @@
             if (!inspectOpen || busy) return;
             busy = true;
 
-            // Gather the pages back into a pile
-            paperStack.querySelectorAll('.paper').forEach(el => {
-                el.style.transition = motionOK() ? `transform 220ms ${EASE_OUT}, opacity 220ms ${EASE_OUT}` : 'none';
-                el.style.opacity = '0';
-                el.style.transform = tf(0, 30, 0, 0.62);
-            });
+            if (activeScene === 'papers') {
+                // Gather the pages back into a pile
+                paperStack.querySelectorAll('.paper').forEach(el => {
+                    el.style.transition = motionOK() ? `transform 220ms ${EASE_OUT}, opacity 220ms ${EASE_OUT}` : 'none';
+                    el.style.opacity = '0';
+                    el.style.transform = tf(0, 30, 0, 0.62);
+                });
+            } else {
+                laptopScreen.classList.remove('is-up');
+            }
             inspectEl.classList.add('is-closing');
 
             const fly = motionOK() && liftSource && liftSource.offsetParent !== null;
@@ -2086,15 +2387,63 @@
         document.getElementById('paperNext').addEventListener('click', nextPaper);
         document.getElementById('paperPrev').addEventListener('click', prevPaper);
         inspectEl.addEventListener('click', e => {
-            if (!e.target.closest('.paper, .paper-nav, .inspect-head, .sticky-note')) closeInspect();
+            if (!e.target.closest('.paper, .paper-nav, .inspect-head, .sticky-note, .laptop')) closeInspect();
         });
         document.addEventListener('keydown', e => {
             if (!inspectOpen) return;
             if (e.key === 'Escape') closeInspect();
+            else if (activeScene !== 'papers') return;
             else if (e.key === 'ArrowRight') { e.preventDefault(); nextPaper(); }
             else if (e.key === 'ArrowLeft') { e.preventDefault(); prevPaper(); }
         });
-        window.addEventListener('resize', () => { if (inspectOpen && !busy) layout(0); });
+        window.addEventListener('resize', () => { if (inspectOpen && !busy && activeScene === 'papers') layout(0); });
+
+        // --- PROJECTS: header menu and laptop screen, from one list ---
+        function projectsMarkup(kind) {
+            let n = 0;
+            return PROJECTS.map(g => {
+                const items = g.items.map(p => kind === 'menu'
+                    ? `<a class="project-link" href="${p.url}" target="_blank" rel="noopener">
+                           <span class="project-icon" style="--tint:${p.tint}"><i class="fas ${p.icon}"></i></span>
+                           <span class="project-text"><span class="project-name">${escapeHTML(p.name)}</span><span class="project-desc">${escapeHTML(p.desc)}</span></span>
+                       </a>`
+                    : `<a class="app" href="${p.url}" target="_blank" rel="noopener" style="--i:${n++}">
+                           <span class="app-icon" style="--tint:${p.tint}"><i class="fas ${p.icon}"></i></span>
+                           <span class="app-name">${escapeHTML(p.name)}</span>
+                           <span class="app-desc">${escapeHTML(p.desc)}</span>
+                       </a>`).join('');
+                return kind === 'menu'
+                    ? `<div class="projects-group"><p class="projects-label">${escapeHTML(g.group)}</p>${items}</div>`
+                    : `<div class="apps-group"><p class="apps-label">${escapeHTML(g.group)}</p><div class="apps-grid">${items}</div></div>`;
+            }).join('');
+        }
+
+        const projectsBox = document.getElementById('projects');
+        const projectsToggle = document.getElementById('projectsToggle');
+        const projectsMenu = document.getElementById('projectsMenu');
+        projectsMenu.innerHTML = projectsMarkup('menu');
+        document.getElementById('laptopDisplay').innerHTML = projectsMarkup('apps');
+
+        function setProjectsOpen(open) {
+            projectsMenu.hidden = !open;
+            projectsToggle.setAttribute('aria-expanded', String(open));
+        }
+
+        projectsToggle.addEventListener('click', () => setProjectsOpen(projectsMenu.hidden));
+        projectsMenu.addEventListener('click', e => { if (e.target.closest('a')) setProjectsOpen(false); });
+        projectsBox.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !projectsMenu.hidden) {
+                e.stopPropagation();
+                setProjectsOpen(false);
+                projectsToggle.focus();
+            }
+        });
+        projectsBox.addEventListener('focusout', e => {
+            if (!projectsBox.contains(e.relatedTarget)) setProjectsOpen(false);
+        });
+        document.addEventListener('click', e => {
+            if (!projectsMenu.hidden && !e.target.closest('#projects')) setProjectsOpen(false);
+        });
 
         // --- INITIALIZE ---
         async function init() {
@@ -2192,6 +2541,14 @@ RESEARCH & PUBLICATIONS:
 - Nair V, ..., Keet K, et al. "Comparing IM residency application personal statements generated by GPT-4 and authentic applicants." J Gen Intern Med (2025), research letter
 - Lai AR, Keet K, et al. Severe H1N1-associated ARDS: a case series. Am J Med (2010)
 - In progress: further resident and mentee collaborations
+
+THINGS KEVIN HAS BUILT (linked from his site's Projects menu and the laptop in the room):
+- Acting Intern (actingintern.com): an EHR clinical simulation for trainees
+- Watershed (aieducator.kevinkeet.com): case-based medical learning
+- MedBenefit (meds.kevinkeet.com): estimates what a medication will actually do for a particular patient, weighing benefit, harm and burden
+- Antibiotic Quest (kevinkeet.com/antibiotics): a Zelda-style adventure game that teaches antibiotics and resistance
+- Nerdify (nerdify.kevinkeet.com): a personal learning feed
+- Side projects: Capitola Flood Risk (kevinkeet.com/capitola), a live flood model for Capitola Village; Chess Trainer (kevinkeet.com/chess); Hold'em Coach (kevinkeet.com/poker); and a map of college water polo programs (kevinkeet.com/waterpolo)
 
 PERSONAL LIFE:
 - Lives in Santa Cruz, California
