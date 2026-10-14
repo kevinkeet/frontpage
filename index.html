@@ -6,7 +6,7 @@
     <title>Kevin Keet | Visual Resume</title>
     <meta name="description" content="Kevin Keet, MD, Stanford hospitalist and Associate Program Director. Bedside medicine, teaching, and helping doctors use AI well. Explore the room, talk to the dog.">
     <meta property="og:title" content="Kevin Keet | Visual Resume">
-    <meta property="og:description" content="Stanford hospitalist & med-ed leader. AI in medical education, bedside medicine, and a bloodhound named Frankenstein who answers questions.">
+    <meta property="og:description" content="Stanford hospitalist and Associate Program Director. Bedside medicine, teaching, and a bloodhound named Frankenstein who answers questions.">
     <meta property="og:image" content="https://kevinkeet.com/background.jpg">
     <meta property="og:url" content="https://kevinkeet.com">
     <meta property="og:type" content="website">
@@ -1563,7 +1563,7 @@
             </div>
             <div class="chat-chips" id="chatChips">
                 <button class="chat-chip" onclick="sendChip(this)">What's Kevin researching?</button>
-                <button class="chat-chip" onclick="sendChip(this)">How does Kevin care for patients?</button>
+                <button class="chat-chip" onclick="sendChip(this)">What does Kevin think makes a good doctor?</button>
                 <button class="chat-chip" onclick="sendChip(this)">Who's a good boy?</button>
             </div>
         </div>
@@ -1582,7 +1582,7 @@
         <div class="inspect-stage" role="dialog" aria-modal="true" aria-labelledby="inspectTitle">
             <div class="inspect-head">
                 <div>
-                    <h2 class="inspect-title" id="inspectTitle">Research &amp; Grants</h2>
+                    <h2 class="inspect-title" id="inspectTitle">Research</h2>
                     <p class="inspect-sub" id="inspectSub"></p>
                 </div>
                 <button class="inspect-close" id="inspectClose" type="button">
@@ -1639,7 +1639,7 @@
             {
                 id: 'diplomas',
                 icon: 'fa-graduation-cap',
-                title: 'Education & Credentials',
+                title: 'Education',
                 bullets: ['BA, UC San Diego (2002), Cognitive Science and Film', 'MD, University of Vermont (2007)', 'Internal Medicine Residency, UCSF (2007-2010)'],
                 tags: [],
                 isDog: false
@@ -1678,14 +1678,6 @@
                 isDog: false
             },
             {
-                id: 'awards',
-                icon: 'fa-trophy',
-                title: 'Awards & Recognition',
-                bullets: ['Stanford GME Outstanding Contribution Award · 2026', 'Stanford IM Residency Teaching & Mentoring Award · 2024', 'Excellent Medical Educator Award, Palo Alto VA · 2015', 'Henry J. Kaiser Family Foundation Award · 2012'],
-                tags: [],
-                isDog: false
-            },
-            {
                 id: 'bookshelf',
                 icon: 'fa-book',
                 title: 'Bookshelf',
@@ -1698,7 +1690,7 @@
                 id: 'calendar',
                 icon: 'fa-calendar-alt',
                 title: 'Talks',
-                bullets: ['SHM Converge · workshop lead, Stay Sharp: Using AI Without Losing Clinical Skills · March 2027 (upcoming)', 'SHM Converge · co-presenter, AI Competency for Hospitalists · March 2027 (upcoming)', 'UVA Hospital Medicine Grand Rounds · October 2026', 'Stanford Hospital Medicine Grand Rounds expert discussant · June 2026'],
+                bullets: ['SHM Converge · workshop lead, Stay Sharp: Using AI Without Losing Clinical Skills · March 2027 (upcoming)', 'SHM Converge · co-presenter, AI Competency for Hospitalists · March 2027 (upcoming)', 'UVA Hospital Medicine Grand Rounds · October 2026', 'Stanford Hospital Medicine Grand Rounds case discussant · June 2026'],
                 tags: [],
                 isDog: false
             },
@@ -1775,34 +1767,32 @@
             reading: [2, 54, 10, 16],        // magazine rack
             research: [0, 69, 13, 23],       // paper stacks
             laptop: [13.5, 57, 18.5, 26],    // laptop screen + keyboard
-            awards: [48.5, 46.5, 16.5, 12],  // trophy + plaques on the sill
-            bookshelf: [49, 59, 15, 19],     // bookcase under the awards
+            bookshelf: [49, 59, 15, 19],     // bookcase under the trophy and plaques
             calendar: [66.5, 53.5, 10.5, 15.5],
             dog: [58, 66, 22, 30],           // resting spot on the rug (video animates him)
             surfboard: [80.5, 10, 11, 72],   // full board, nose to tail
             whitecoat: [91, 9, 9, 59]        // coat + stethoscope on the hook
         };
 
-        // Defined in code (not the Sheet) so the strongest credentials always ship.
+        // Defined in code (not the Sheet), next to the paper stack it opens.
+        // Says what the work is about; the papers themselves live in the stack.
         // A Sheet row with id "research" overrides this content.
         const RESEARCH_HOTSPOT = {
             id: 'research',
             pos: HOTSPOT_POSITIONS.research,
             icon: 'fa-microscope',
-            title: 'Research & Grants',
+            title: 'Research',
             intro: '',
             bullets: [
-                'Stanford Site Lead, TEACH-AI: Josiah Macy Jr. Foundation / ARiSE multi-center RCT on generative AI in medical education (2025–)',
-                'Two 2026 papers in BMJ Digital Health & AI, including the editorial "From iPatient to AI-Patient"',
-                'Papers in npj Digital Medicine (2026), J Gen Intern Med (2025) and Am J Med (2010)',
-                'Stanford ICDP curriculum grant (2025)'
+                'Stanford site lead for TEACH-AI, a multi-center trial on AI in medical education',
+                'Papers with Stanford colleagues, mostly on AI and how doctors learn'
             ],
             tags: [],
             isDog: false
         };
 
         // Mobile/accessible card order: professional proof first, personality after
-        const CARD_ORDER = ['diplomas', 'laptop', 'research', 'awards', 'reading', 'calendar', 'whitecoat', 'dog', 'family', 'map', 'bookshelf', 'surfboard'];
+        const CARD_ORDER = ['diplomas', 'laptop', 'research', 'reading', 'calendar', 'whitecoat', 'dog', 'family', 'map', 'bookshelf', 'surfboard'];
 
         function rowToHotspot(row) {
             // Position from HOTSPOT_POSITIONS (by id); fall back to the Sheet's
@@ -2008,7 +1998,7 @@
         const INSPECTABLES = {
             research: {
                 scene: 'papers',
-                title: 'Research & Grants',
+                title: 'Research',
                 sub: 'Click the edge of a page to pull it out, or use the arrow keys.',
                 hint: 'Click to pick up the papers',
                 buttonIcon: 'fa-file-lines',
@@ -2503,10 +2493,10 @@ PHILOSOPHY AROUND AI:
 - Believes AI can be an incredibly efficient learning tool
 - Hopes AI will unburden doctors from administrative work and get them back to the bedside
 
-KEVIN'S APPROACH TO PATIENT CARE (bedside medicine & empathy):
-- Bedside medicine is the heart of what Kevin does. He believes the most important part of caring for a hospitalized patient is being present — pulling up a chair, listening, and making sense of a frightening experience together.
-- He sees every patient as a whole person with a story, never just a diagnosis. Helping a patient understand their own sprawling story is, to him, the core of being a good doctor.
-- He cares deeply about patients who feel unheard, and works to make sure they feel seen, respected, and included in every decision about their care.
+HOW KEVIN THINKS ABOUT PATIENT CARE (bedside medicine & empathy; these are his values, not claims about himself):
+- Bedside medicine is the heart of what Kevin does. He believes the most important part of caring for a hospitalized patient is being present: sitting down, listening, and making sense of a frightening experience together.
+- He believes every patient is a whole person with a story, never just a diagnosis, and that helping a patient understand their own sprawling story is the core of being a good doctor.
+- He believes patients deserve to feel heard and respected, and to be included in every decision about their care.
 - He knows the hospital can be scary and disorienting, and believes a doctor's warmth, patience, and honesty matter as much as any test or treatment.
 - He's genuinely hopeful about medicine: unburdening doctors from paperwork should give them more time at the bedside, where they belong.
 
@@ -2527,7 +2517,7 @@ TALKS:
 - Upcoming, SHM Converge 2027 (Las Vegas, March 30-April 2, 2027): workshop lead, "Stay Sharp: Using AI Without Losing Clinical Skills"
 - Upcoming, SHM Converge 2027: co-presenter with UCSF hospitalist colleagues, "AI Competency for Hospitalists: Practical Frameworks for Clinical Practice, Trainee Supervision, and Curriculum Design"
 - UVA Hospital Medicine Grand Rounds, on AI and learners (October 2026)
-- Expert discussant, Stanford Hospital Medicine Grand Rounds clinical problem-solving case (June 2026)
+- Case discussant, Stanford Hospital Medicine Grand Rounds clinical problem-solving case (June 2026)
 - AI in Medical Education workshop, AHME national conference, Reno (May 2026)
 
 GRANTS & FUNDED RESEARCH:
@@ -2561,10 +2551,9 @@ INTERESTS:
 - Favorite books: Project Hail Mary, Cloud Atlas, Special Topics in Calamity Physics
 - Urban planning: loves walkable, people-friendly neighborhoods
 - Reads: Asterix, Astral Codex Ten blog
-- Passionate about AI in medicine and medical education
 
 KEVIN'S WRITING & IDEAS (recent drafts on AI in medicine and clinical reasoning):
-Overarching theme: how generative AI is reshaping clinical reasoning and medical education. Kevin is optimistic but focused on preserving the cognitive skills that make doctors good. He's a clear, story-driven writer.
+Overarching theme: how generative AI is reshaping clinical reasoning and medical education. Kevin is optimistic but focused on preserving the cognitive skills that make doctors good.
 
 1. Skill-preserving AI use ("The Foundational AI Skill We Are Not Teaching"): The most important AI skill we are NOT teaching isn't prompting or spotting hallucinations — those have a short half-life as models improve. What lasts is a learner's "interaction posture": whether they ask AI to think FOR them or ALONGSIDE them. He uses the NEJM framing of three risks — never-skilling (never developing a skill because AI did it during formation), de-skilling (losing skills you had), and mis-skilling (adopting wrong AI patterns) — with evidence of skill decay from GPS use, aviation autopilot, AI-assisted colonoscopy, and radiology. He names three teachable, skill-preserving patterns: Conceptual Inquiry (ask AI about concepts, not the answer), Generation-Then-Comprehension (treat output as a hypothesis; ask "why" and "what-if" before acting), and Hybrid Reasoning (get answer + reasoning, then probe the weakest link). Memorable: he tried a Socratic system prompt on his kids' Claude account — "pedagogically beautiful and practically useless"; they just switched to a friend's account.
 
@@ -2580,9 +2569,9 @@ Overarching theme: how generative AI is reshaping clinical reasoning and medical
 
 If asked about Kevin's views, writing, or opinions on AI, draw on these. He is pro-AI but insists on protecting how doctors learn to think.
 
-IF YOU'RE TALKING WITH A PATIENT OR WORRIED FAMILY MEMBER: Be especially warm, gentle, and reassuring. Let them know doctors like Kevin care immensely about their patients, listen closely, and that no one is alone in this. Do NOT give medical advice, diagnoses, or interpretations of symptoms — kindly encourage them to bring their questions to their own care team, who genuinely want to hear them. What you can always offer is comfort, a friendly ear, and the reminder that being heard is part of good care (you're a very good dog, after all).
+IF YOU'RE TALKING WITH A PATIENT OR WORRIED FAMILY MEMBER: Be especially warm, gentle, and reassuring, and let them know they're not alone in this. Do NOT give medical advice, diagnoses, or interpretations of symptoms — kindly encourage them to bring their questions to their own care team, who genuinely want to hear them. What you can always offer is comfort, a friendly ear, and the reminder that being heard is part of good care (you're a very good dog, after all).
 
-Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occasionally playful. Keep answers very short — usually 1-2 sentences. Above all, lead with warmth — especially with anyone who seems to be a patient or a family member.`;
+Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occasionally playful. Keep answers very short, usually 1-2 sentences. Above all, lead with warmth — especially with anyone who seems to be a patient or a family member.`;
 
         // Dynamic context (will be loaded from Google Doc)
         let RESUME_CONTEXT = DEFAULT_CONTEXT;
@@ -2714,7 +2703,7 @@ Remember: You're a friendly dog who knows Kevin well. Be helpful, warm, and occa
                     body: JSON.stringify({
                         model: 'claude-sonnet-5-5',
                         max_tokens: 600,
-                        system: RESUME_CONTEXT + "\n\nRESPONSE LENGTH: Keep every reply short and conversational - ideally 1-2 sentences, and never more than 3. Be warm but brief; don't dump everything you know. If they want more, they can ask a follow-up.\n\nNEVER mention money: do not state dollar amounts, grant sums, salaries, or any funding figures, even if they appear in your context. Refer to grants and awards by name only, without their monetary value.\n\nPRIVACY: Keep Kevin's family private. You can say he is married with two teenage daughters and lives in Santa Cruz, but never share or guess names, ages, schools, workplaces, addresses or other details about him or his family.\n\nPATIENTS: Never discuss, confirm or speculate about any patient's care, even if someone says they were Kevin's patient. Thank them warmly and point medical questions to their own care team.\n\nPOLITICS: Stay out of politics and religion. If asked, say Kevin keeps this site to medicine, teaching and his dog.\n\nTONE: When describing Kevin, lead with how he treats people (patients, learners and colleagues) before credentials. Be humble and accurate; never exaggerate or invent anything that is not in your context.",
+                        system: RESUME_CONTEXT + "\n\nRESPONSE LENGTH: Keep every reply short and conversational - ideally 1-2 sentences, and never more than 3. Be warm but brief; don't dump everything you know. If they want more, they can ask a follow-up.\n\nNEVER mention money: do not state dollar amounts, grant sums, salaries, or any funding figures, even if they appear in your context. Refer to grants and awards by name only, without their monetary value.\n\nPRIVACY: Keep Kevin's family private. You can say he is married with two teenage daughters and lives in Santa Cruz, but never share or guess names, ages, schools, workplaces, addresses or other details about him or his family.\n\nPATIENTS: Never discuss, confirm or speculate about any specific patient's care, even if someone says they were Kevin's patient. Thank them warmly and point medical questions to their own care team. General questions about how Kevin approaches patient care are fine to answer, without a disclaimer.\n\nPOLITICS: Stay out of politics and religion. If asked, say Kevin keeps this site to medicine, teaching and his dog.\n\nMODESTY: Kevin is modest, and it would embarrass him to have his dog brag about him. Never praise him or vouch for his character (don't call him great, amazing, an expert, a leader, kind, caring or a good human). Don't bring up awards, titles, grants or journal names unless someone asks about them, and then state them plainly. Talk about what he works on and what he cares about, and give credit to the residents, colleagues and teams he works with. A little gentle, affectionate teasing of Kevin is welcome. Be accurate; never exaggerate or invent anything that is not in your context.",
                         messages: [{ role: 'user', content: message }]
                     })
                 });
