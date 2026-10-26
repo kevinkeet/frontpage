@@ -3,11 +3,11 @@
 - NOAA CO-OPS Monterey (9413450) hourly observed water level + datums
 """
 import xarray as xr, pandas as pd, numpy as np, requests, io, sys, os
-import thredds_ssl  # noqa: F401  (CA bundle fix for OPeNDAP)
+import thredds_ssl  # CA bundle fix + retrying open for OPeNDAP
 D='data'
 MOP='https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{}_{}.nc'
 def mop(site, kind):
-    ds=xr.open_dataset(MOP.format(site,kind))
+    ds=thredds_ssl.open_dataset(MOP.format(site,kind))
     df=pd.DataFrame({'Hs':ds.waveHs.values,'Tp':ds.waveTp.values,'Dp':ds.waveDp.values,'Dm':ds.waveDm.values},
                     index=pd.to_datetime(ds.waveTime.values))
     df.index.name='time_utc'

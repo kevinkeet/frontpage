@@ -5,7 +5,7 @@ Offset   : mean observed-minus-predicted water level at Monterey over the last 7
 Usage    : python3 forecast.py  -> writes forecast.json and prints an alert summary
 """
 import pandas as pd, numpy as np, requests, io, json, datetime as dt, xarray as xr
-import thredds_ssl  # noqa: F401  (CA bundle fix for OPeNDAP)
+import thredds_ssl  # CA bundle fix + retrying open for OPeNDAP
 from model import *
 TZ='America/Los_Angeles'
 NOAA='https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=9413450&datum=MLLW&units=english&time_zone=gmt&format=csv&application=capitola_flood'
@@ -26,7 +26,7 @@ def run(now=None):
     # nearshore forecast (MOP)
     mop=[]
     for s in ['SC111','SC112','SC113']:
-        ds=xr.open_dataset(f'https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{s}_forecast.nc')
+        ds=thredds_ssl.open_dataset(f'https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{s}_forecast.nc')
         mop.append(pd.DataFrame({'Hs':ds.waveHs.values,'Tp':ds.waveTp.values,'Dp':ds.waveDp.values},index=pd.to_datetime(ds.waveTime.values)))
     m=pd.concat(mop).groupby(level=0).mean().resample('h').interpolate()
     m['src']='CDIP nearshore'
