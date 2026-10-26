@@ -5,7 +5,7 @@ name: Refresh Capitola flood data
 
 on:
   schedule:
-    - cron: '23 13 * * *'   # 6:23 AM PDT / 5:23 AM PST, ahead of the morning king tides
+    - cron: '23 9 * * *'    # 2:23 AM PDT; GitHub starts scheduled runs 3-8 h late, so this lands in the early morning
   workflow_dispatch:
 
 permissions:

@@ -8,7 +8,9 @@ superseded). The repo is public and GitHub Pages serves this folder, so keep per
 
 ## How the site stays current
 
-- `.github/workflows/capitola-refresh.yml` runs daily at 13:23 UTC (6:23 AM PDT / 5:23 AM PST) and on demand
+- `.github/workflows/capitola-refresh.yml` is scheduled daily at 09:23 UTC (2:23 AM PDT). GitHub starts scheduled runs late
+  (3-8.5 h in Oct 2026, when it was set to 13:23 UTC and ran 9:30 AM-2:45 PM PDT), so the early slot lands in the morning.
+  The page drops forecast days already past, so a day-old run still reads right. It also runs on demand
   (Actions tab → "Refresh Capitola flood data" → Run workflow, or `gh workflow run capitola-refresh.yml`):
   `fetch_data.py mop wlrecent` → `build_tables.py coastal` → `run_weekly.py` → copies `dash/*.csv` into
   `../data/` → commits "Capitola: model run … UTC" as github-actions[bot] and pushes. Pages redeploys in ~1 min.

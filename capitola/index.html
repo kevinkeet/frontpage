@@ -123,6 +123,7 @@ tr.far td{color:var(--ink-2)}
 td.ix{width:40%;min-width:128px}
 .ixw{display:flex;align-items:center;gap:8px}
 .ixw b{min-width:2.4em;text-align:right;font-weight:inherit}
+.lvslot{flex:none;min-width:4.6em}
 .ib{position:relative;flex:1;height:8px;border-radius:4px;background:var(--grid)}
 .ib i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--low)}
 .ib.Watch i{background:var(--warning)} .ib.Flood i{background:var(--serious)} .ib.Severe i{background:var(--critical)}
@@ -199,6 +200,8 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
 @media (max-width:640px){
   .hide-narrow{display:none}
   td.ix{min-width:80px}
+  .lvslot{min-width:10px}
+  .lvslot .lv{font-size:0;gap:0}
 }
 </style>
 </head>
@@ -427,9 +430,11 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
 
   // ---------------------------------------------------------------- next 10 days: coast and creek in one table
   function renderTen() {
-    const fd = D.forecast_daily, cf = D.creek_forecast || [], L = levelLines();
+    const ahead = r => parseDay(r.date) >= todayPT;      // the morning run can be a day old; skip days already past
+    const fd = (D.forecast_daily || []).filter(ahead), cf = (D.creek_forecast || []).filter(ahead), L = levelLines();
     const tb = $('#t10 tbody'); tb.replaceChildren();
-    if (!fd || !fd.length) return;
+    if (D.forecast_daily && D.forecast_daily.length) setK('offset', sgn2(num(D.forecast_daily[0].offset_ft)) + ' ft');
+    if (!fd.length) { if (loaded) $('#status-text').textContent = 'No forecast days left until the model runs again.'; return; }
     const worst = fd.reduce((a, b) => (num(b.twl) > num(a.twl) ? b : a)), lvl = worst.level;
     const days = fd.filter(r => r.level === lvl).map(r => dayFmt(parseDay(r.date)));
     const when = joinList(days.slice(0, 3)) + (days.length > 3 ? ' and ' + (days.length - 3) + ' more' : '');
@@ -452,8 +457,9 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
       const ib = el('span', 'ib ' + r.level), fill = el('i'); fill.style.width = pos(v) + '%';
       const tw = el('s'), tf = el('s'); tw.style.left = pos(L.Watch) + '%'; tf.style.left = pos(L.Flood) + '%';
       ib.append(fill, tw, tf);
-      const ixw = el('span', 'ixw'); ixw.append(ib, el('b', null, f1(v)));
-      if (r.level !== 'Low') ixw.append(levelEl(r.level));
+      const ixw = el('span', 'ixw'), slot = el('span', 'lvslot');
+      if (r.level !== 'Low') slot.append(levelEl(r.level));
+      ixw.append(ib, el('b', null, f1(v)), slot);
       const cells = [
         el('td', 'nowrap', d3.timeFormat('%a %-d')(parseDay(r.date))), el('td', 'nowrap', r.peak_time), el('td', 'ix'),
         el('td', 'n hide-narrow', f1(num(r.tide_ft))), el('td', 'n', f1(num(r.hs_capitola_ft))), el('td', 'n hide-narrow', Math.round(num(r.period_s))),
@@ -463,7 +469,6 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
       tr.title = dayFmt(parseDay(r.date)) + ': index ' + f1(v) + ' ft at ' + r.peak_time + ' (Watch ' + f1(L.Watch) + ', Flood ' + f1(L.Flood) + '). Waves from ' + r.source + '.';
       tr.append(...cells); tb.append(tr);
     });
-    setK('offset', sgn2(num(fd[0].offset_ft)) + ' ft');
   }
 
   // ---------------------------------------------------------------- this winter: numbers, calendar, and one-line summaries
