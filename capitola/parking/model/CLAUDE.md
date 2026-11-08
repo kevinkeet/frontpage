@@ -10,9 +10,12 @@ both pages). The repo is public and Pages serves this folder, so keep personal n
 
 - `engine.js`: the traffic and parking simulation (1-D lanes, 1-second steps). Parameters in `P` at the top.
 - `world.js`: geometry. The loop, San Jose Ave, the angled leg (diag), approach lanes and the 130 spaces.
-- `app.js`: the page (canvas map, controls, trend chart, rate sweep). `PRESET` holds the default 135/hr sweep.
+- `app.js`: the page (canvas map with stopped-traffic shading, controls, day chart, rate sweep). `SWEEPS` holds the baked
+  sweeps from `sweeps.json`; other visitor numbers are computed live (8 rates, 1 run each).
 - `css_part.html`, `body_part.html`: page styles and markup. `onepager.html`: the one-pager (its chart is drawn by `build.py`
-  from `SWEEP`).
+  from `sweeps.json`; the numbers in its text and table are typed and come from `sweeps.json` too).
+- `sweeps.json`: whole-day results by crowd size and rate (1-3 PM window), from `node bake.js 6000,7500,9000 4`
+  (crowd sizes, runs per rate). 1,500 and 4,500 use 2 runs; 6,000, 7,500 and 9,000 use 4.
 - `osm/geo.json`, `osm/paths.json`: OpenStreetMap streets, buildings, shoreline, crosswalks, projected to meters
   (x east, y north, origin near 36.9725 N, 121.95 W).
 
@@ -20,24 +23,28 @@ both pages). The repo is public and Pages serves this folder, so keep personal n
 
 ## Checking the model
 
-- `node test5.js '{"param":value}' 60,135 2,3,4,5 11,23`: results by demand and rate (occupancy, trip time, circling, revenue).
-- `node prof.js '{}' 2,4.5 135`: where cars spend time, and the queue behind the Monterey Ave stop.
-- `node verify.js 2 135`: follows drivers who miss a space, splits traffic at the Monterey stop by type, and reruns with
-  drivers giving up after one miss.
+- `node day.js '{"param":value}' 6000,9000 2,4,6,8 11,23`: whole days, 1-3 PM results (occupancy, trip, standstill, circling).
+- `node where.js '{}' 2 9000`: which streets are stopped at 1-3 PM.
+- `node calib.js '[{"gearMean":10}]'`: drivers' price response (target about -0.4 between $2 and $4).
+- `node verify.js`, `prof.js`, `test5.js`: older constant-demand checks (`runHeadless`).
 
-If `engine.js`, `world.js` or the presets change, re-run the 135/hr sweep (seeds 11 and 23, warm 60, measure 120) and update
-both `PRESET` in `app.js` and `SWEEP` in `build.py`, plus the numbers typed in `onepager.html`.
+If `engine.js`, `world.js` or settings change, re-run `bake.js` for 1500,4500 (2 runs) and 6000,7500,9000 (4 runs), rebuild, and
+update the typed numbers in `onepager.html` and `body_part.html` from `sweeps.json`.
 
 ## What is measured and what is tuned
 
 - Measured: meter and lot rates and history (city records), street layout, one-way directions, crosswalks and stop signs
   (OpenStreetMap), 130 spaces (counted from Esri aerial imagery), walk from the lots (~1/4 mile).
 - Calibrated: drivers' price response, elasticity about -0.4 between $2 and $4 (Pierce and Shoup 2013).
-- Tuned to local observation (a summer loop at $2 takes 10 to 15 minutes and backs up from the Monterey/Capitola stop):
-  other traffic, drop-offs at the corner, pedestrian crossings, stop-sign service times (Monterey ~8 s, Stockton ~3 s).
-- Assumed: demand presets (20 / 60 / 135 drivers an hour), stays, value of time, patience, route shares, destinations.
-- The result is sensitive to the Monterey stop's capacity: at $2 it runs near 96% busy, so circling (about 6% of its
-  traffic) is what tips the loop into a long queue.
+- Tuned to local observation (on a busy summer Saturday at $2 the whole loop is at a standstill by midday, backing up from the
+  Monterey/Capitola stop): other traffic, drop-offs, pedestrian crossings, stop-sign service times (Monterey ~8 s,
+  Stockton ~5 s), drivers waiting on Capitola Ave to turn onto a backed-up San Jose Ave.
+- Estimated: visitors (1,500 / 4,500 / 9,000 a day; the summer figure sized from the 2008 study's peak demand of ~1,212 cars),
+  85% by car, 2.7 per car, 45% look for a loop space first, arrivals by hour in `P.profile`.
+- Assumed: stays (median 3 h; meters charge for at most 3 h; overstaying costs $10 on average), value of time, gear ($10),
+  patience, route shares, destinations, turning away from a long line into the Village.
+- Results at 1-3 PM: the rate that keeps the loop moving is ~$5.50 at 6,000 visitors, ~$6 at 7,500, ~$7.50 at 9,000; above
+  ~10,000 through traffic and drop-offs alone fill the loop. Sensitive to the visitor estimate and the tuned stop capacities.
 
 ## Engine lessons
 

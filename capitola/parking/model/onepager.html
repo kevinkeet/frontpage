@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>A Summer Rate for the Beach Loop · Capitola</title>
-<meta name="description" content="A summer peak rate on Capitola Village's beach-loop meters would end the circling and cut a trip around the loop from about 16 minutes to about 4.">
+<meta name="description" content="On busy summer days the beach loop in Capitola Village comes to a standstill. A summer peak rate on its meters, set for the crowd, would keep spaces open and traffic moving.">
 <link rel="icon" href="/capitola/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +13,7 @@
 /* One page: the ask, the numbers, one chart, why it's fair, how we know. Same palette as the model page. */
 :root {
   --paper: #F1F4F3; --card: #FFFFFF; --ink: #13232B; --ink2: #4A5D66; --ink3: #77898F; --rule: #D2DCDE; --rule2: #E5EBEC;
-  --accent: #D4452E; --blue: #2E6FB8; --muted: #A9B4B8; --band: rgba(46,158,87,.16); --btnOn: #13232B; --btnOnText: #FFFFFF;
+  --accent: #D4452E; --good: #2E9E57; --blue: #2E6FB8; --muted: #A9B4B8; --band: rgba(46,158,87,.16); --btnOn: #13232B; --btnOnText: #FFFFFF;
   --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -21,7 +21,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #0D191E; --card: #142229; --ink: #E2EBED; --ink2: #A0B3BA; --ink3: #6F848C; --rule: #2A3C44; --rule2: #1E2E35;
-    --accent: #F0664E; --blue: #6FA6E8; --muted: #5C6E75; --band: rgba(76,199,119,.16); --btnOn: #E2EBED; --btnOnText: #0D191E;
+    --accent: #F0664E; --good: #4CC777; --blue: #6FA6E8; --muted: #5C6E75; --band: rgba(76,199,119,.16); --btnOn: #E2EBED; --btnOnText: #0D191E;
     color-scheme: dark;
   }
 }
@@ -67,6 +67,13 @@ figcaption { font-size: 12.5px; color: var(--ink3); margin-top: 6px; }
 .c-prop-text { font: 600 12px var(--f-body); fill: var(--blue); }
 .c-val { font: 12px var(--f-body); fill: var(--ink); }
 .c-band { fill: var(--band); }
+.c-s1, .c-s2, .c-s3 { fill: none; stroke: var(--blue); stroke-width: 2.5; }
+.c-s1 { stroke-opacity: .35; } .c-s2 { stroke-opacity: .62; }
+.c-d1, .c-d2, .c-d3 { fill: var(--blue); } .c-d1 { fill-opacity: .35; } .c-d2 { fill-opacity: .62; }
+.c-lab1, .c-lab2, .c-lab3 { font: 600 12px var(--f-body); fill: var(--ink2); paint-order: stroke; stroke: var(--card); stroke-width: 4px; }
+.c-lab3 { fill: var(--ink); }
+.c-ring { fill: none; stroke: var(--good); stroke-width: 2.5; }
+.c-ringlab { font: 600 12px var(--f-body); fill: var(--good); paint-order: stroke; stroke: var(--card); stroke-width: 4px; }
 .sources { font-size: 13px; color: var(--ink2); }
 .sources li { margin: 3px 0; }
 footer { margin-top: 26px; font-size: 12.5px; color: var(--ink3); }
@@ -90,51 +97,51 @@ footer { margin-top: 26px; font-size: 12.5px; color: var(--ink3); }
 
   <h1>A summer rate for the beach loop</h1>
   <p class="stamp">November 2026</p>
-  <p class="lead">On busy summer days, Capitola's $2.00 beach-loop meters fill up, and drivers circling for a space back traffic up from the Monterey Avenue stop sign. A summer peak rate of about $5 an hour on those meters would end the circling and cut a trip around the loop from about 16 minutes to about 4.</p>
+  <p class="lead">On busy summer days, beachgoers fill Capitola's $2.00 beach-loop meters by late morning and hold them for hours, and drivers circling for a space bring the whole loop to a standstill. A summer peak rate set for the size of the crowd would keep spaces open and traffic moving: on a busy Saturday, a trip around the loop would drop from about 22 minutes to about 7.</p>
   <a class="cta" href="/capitola/parking/">Try the interactive model &rarr;</a>
 
   <h2>What to ask the City for</h2>
   <ul>
-    <li><b>A summer peak rate on the beach-loop meters only</b>: the Esplanade, the triangle at Monterey Avenue, Monterey Avenue and San Jose Avenue, on summer weekends and holidays, set so about one space in seven stays open.</li>
+    <li><b>A summer peak rate on the beach-loop meters only</b>: the Esplanade, the triangle at Monterey Avenue, Monterey Avenue and San Jose Avenue, on summer weekends and holidays, starting in the morning, when beachgoers claim spaces they keep all afternoon. Set it so about one space in seven stays open, roughly $5.50 to $7.50 an hour on the busiest days.</li>
     <li><b>Adjust it by the numbers</b>: count occupancy each season and move the rate in 25 to 50 cent steps, down as well as up.</li>
     <li><b>Keep the cheap option cheap</b>: the Beach &amp; Village lots stay at $1.00 an hour and the summer shuttle stays free, with the added revenue spent on running the shuttle more.</li>
   </ul>
 
-  <h2>A busy summer Saturday, today and with a $5 rate</h2>
-  <p>At $5 the meters run about 84% full, so arriving drivers find a space on their first pass instead of circling.</p>
+  <h2>A busy summer Saturday, today and with a $7.50 rate</h2>
+  <p>With about 9,000 visitors, the higher rate sends long-stay beachgoers to the $1.00 lots, so about one space in twelve stays open and drivers find one on their first pass.</p>
   <div class="tablewrap">
     <table>
-      <thead><tr><th>Per hour unless noted</th><th>$2.00 today</th><th>$5.00 summer rate</th></tr></thead>
+      <thead><tr><th>1 to 3 PM, per hour unless noted</th><th>$2.00 today</th><th>$7.50 summer rate</th></tr></thead>
       <tbody>
-        <tr><td>Trip around the loop</td><td>about 16 minutes</td><td>about 4 minutes</td></tr>
-        <tr><td>Loop meters full</td><td>98%</td><td>84%</td></tr>
-        <tr><td>Cars circling at any moment</td><td>about 8</td><td>none</td></tr>
-        <tr><td>Drivers who give up on Capitola</td><td>about 5</td><td>none</td></tr>
-        <tr><td>Extra driving from circling</td><td>about 16 miles</td><td>under 1 mile</td></tr>
-        <tr><td>Meter revenue</td><td>about $250</td><td>about $550</td></tr>
+        <tr><td>Trip around the loop</td><td>about 22 minutes</td><td>about 7 minutes</td></tr>
+        <tr><td>Share of the loop at a standstill</td><td>about 64%</td><td>about 8%</td></tr>
+        <tr><td>Cars circling at any moment</td><td>about 22</td><td>none</td></tr>
+        <tr><td>Time from arriving to parking</td><td>about 48 minutes</td><td>about 3 minutes</td></tr>
+        <tr><td>Drivers who give up on Capitola</td><td>about 9</td><td>under 1</td></tr>
+        <tr><td>Meter revenue</td><td>about $200</td><td>about $820</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">Model estimates for 135 drivers an hour looking to park on the loop. On a spring weekend, $2.00 already works, so the rate should change with the season.</p>
+  <p class="small">Model estimates for a summer Saturday with about 9,000 visitors. On a spring weekend about $3.50 is enough, and on a winter weekday $2.00 or less works, so the rate should change with the season.</p>
 
   <h2>Where the rate should be</h2>
   <figure>
     /*CHART*/
-    <figcaption>Cruising the Esplanade model · average of 2 runs per rate, 135 drivers an hour · November 2026</figcaption>
+    <figcaption>Cruising the Esplanade model · whole days from 8 AM, average of 4 runs per rate · November 2026</figcaption>
   </figure>
-  <p>Up to about $3 the meters stay full and the loop crawls. By $4.50 the circling is gone, and higher rates mostly leave spaces empty.</p>
+  <p>The rate that keeps traffic moving rises with the crowd: about $5.50 with 6,000 visitors, $6 with 7,500 and $7.50 with 9,000. That is why it should be set from counts each season rather than fixed once.</p>
 
   <h2>Why it's fair</h2>
   <ul>
     <li><b>The money stays at the coast.</b> Under the 2023 meter ordinance, parking revenue from the Coastal Zone may only fund coastal access, public safety and services there.</li>
-    <li><b>The beach stays cheap to reach.</b> The Beach &amp; Village lots, a quarter mile up Capitola Avenue, stay at $1.00 an hour for up to 12 hours. In the city's 2008 review those lots held 232 of 491 metered spaces but earned only 7 to 13 percent of meter revenue.</li>
+    <li><b>The beach stays cheap to reach.</b> The Beach &amp; Village lots, a quarter mile up Capitola Avenue, stay at $1.00 an hour for up to 12 hours, which is where all-day beachgoers would move. In the city's 2008 review those lots held 232 of 491 metered spaces but earned only 7 to 13 percent of meter revenue.</li>
     <li><b>Neighbors already charge more.</b> Santa Cruz charges $3.00 an hour to park on its wharf this summer. Capitola's Village rate rose from $1.50 to $2.00 in 2024, its first increase since 2009.</li>
     <li><b>The city has asked for this.</b> In 2023 its parking committee asked staff to find a way to tell drivers when the Esplanade is full. A rate that follows demand does that automatically.</li>
   </ul>
 
   <h2>How we know, and what we don't</h2>
-  <p>These numbers come from <a href="/capitola/parking/">an interactive model of the loop</a> where anyone can change the rate and demand and watch the result. Its streets, one-way directions, crosswalks and stop signs come from OpenStreetMap, its rates from city records, and its 130 spaces from aerial imagery. Drivers respond to price about as much as they did in San Francisco's citywide pricing program (elasticity about −0.4). Traffic is tuned so a summer loop at $2.00 takes 10 to 15 minutes and backs up from the Monterey Avenue stop, as it does in practice.</p>
-  <p>The city has no published counts of Esplanade occupancy or traffic, so demand and congestion are estimates. That is why the first summer should be a measured trial: count occupancy, time the loop, and adjust.</p>
+  <p>These numbers come from <a href="/capitola/parking/">an interactive model of the loop</a> where anyone can change the rate and the number of visitors and watch the day play out. Its streets, one-way directions, crosswalks and stop signs come from OpenStreetMap, its rates from city records, and its 130 spaces from aerial imagery. Visitors arrive through the day and mostly stay about three hours. Drivers respond to price about as much as they did in San Francisco's citywide pricing program (elasticity about −0.4). Traffic is tuned so that at $2.00 the whole loop backs up by midday on a busy summer Saturday, as it does in practice.</p>
+  <p>No one publishes daily visitor counts or Esplanade occupancy, so the crowd sizes are estimates: about 9,000 visitors on a busy Saturday, sized from the city's 2008 parking study. On the very busiest days, through traffic and drop-offs alone fill the loop, so pricing helps but is not enough by itself. That is why the first summer should be a measured trial: count occupancy, time the loop, and adjust.</p>
   <ul class="sources">
     <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-5507d6bc9fa1493c82b82c896b8403e8/ITEM-Attachment-012-e25011a82146494eb943de6d14a2ee92.pdf">Modification to Parking Meter Rates</a>, June 8, 2023</li>
     <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-7548a7c461d54c31a9683665ac4cfb79/ITEM-Attachment-001-fd05b61ca9cf45e8a80f44dcbbb18747.pdf">Temporary Village Parking Committee recommendations</a>, March 23, 2023</li>
