@@ -4,9 +4,12 @@ var P = {
   lotPrice: 1.00, walkMin: 7, limitH: 3,   // meters charge for at most 3 hours
   stayMed: 3.0, staySig: 0.45,     // hours people stay: mostly beach trips of several hours
   citeCost: 10,                    // $ expected cost of overstaying the 3-hour limit (a ticket, sometimes)
+  // the Beach & Village lots up Capitola Ave fill on busy days; then the fallback is free parking farther out
+  lotCap: 458, lotOther: 0.5,      // lot spaces (two lots, 2025-26 city fee schedule); share of other arriving cars (not trying the loop first) that park there
+  farWalkMin: 15, farGear: 1.5,    // when the lots are full: about a 15-minute walk each way, and more hauling
   // a day of visitors
   dayStart: 8,                     // the simulated day starts at 8 AM
-  carShare: 0.85, perCar: 2.7,     // visitors who come by car, people per car
+  carShare: 0.82, perCar: 2.8,     // visitors who come by car, people per car (2008 city study)
   loopShare: 0.45,                 // arriving cars that look for a space on the beach loop first
   profile: [0.03, 0.07, 0.12, 0.14, 0.14, 0.12, 0.10, 0.08, 0.07, 0.06, 0.04, 0.03],  // share of the day's arrivals, 8 AM to 8 PM
   votMed: 20, votSig: 0.8,         // $/hr value of a visitor's time
@@ -22,8 +25,9 @@ var P = {
   sjWaitMax: 25,                   // seconds a driver waits on Capitola Ave to turn onto a backed-up San Jose Ave
   balkSec: 6, balkFrac: 0.6, balkCars: 50,   // a car in line ahead costs ~6 s; drivers turn away when the wait eats much of what the space is worth
   dgSeek: 0.45, dgOther: 0.6,      // share taking the angled leg of the triangle: drivers still looking, everyone else
-  takeFirst: 0.9,                  // on a first pass, chance a driver takes an open space near or past where they're going
-  takeEarly: 0.08,                 // ... and one well short of it
+  takeEarly: 0.08,                 // on a quiet first pass, chance a driver takes an open space well short of where they're going
+  choosyFull: 0.75, grabFull: 0.9, // ... rising to every time as the loop fills from 75% to 90%
+  seeSide: 0.9,                    // chance a driver looking spots an open space down the angled leg or San Jose Ave and heads for it
   // everyone else on the loop
   bgK: 1.2, bgDropShare: 0.3, lotDropShare: 0.35, fullLoopShare: 0.5,
   dropMed: 75, dropSig: 0.55, squeezeAfter: 20,
@@ -31,7 +35,7 @@ var P = {
   pedK: 1.5, pedCross: 7, pedYield: 12,
   stopDwell: 1.5, hwJ: 5, hwM: 8, crossJ: 0.5, crossM: 0.4,   // seconds per vehicle at each all-way stop; cross traffic per seeker
   // driving
-  maneuver: 7, vLoop: 5.5, vEsp: 2.6, vApp: 6.5, gap: 7.0, ringCap: 0.92
+  maneuver: 7, vLoop: 5.5, vEsp: 2.6, vApp: 6.5, gap: 7.0, ringCap: 0.92, carLen: 4.6
 };
 
 function makeRng(seed) {
@@ -49,13 +53,15 @@ function makeDriver(rng) {
   var T = P.stayMed * Math.exp(P.staySig * randn(rng));
   var v = P.votMed * Math.exp(P.votSig * randn(rng));
   var g = -P.gearMean * Math.log(1 - rng());
-  return { T: T, v: v, walk: v * (2 * P.walkMin / 60) + g,
+  return { T: T, v: v, walk: v * (2 * P.walkMin / 60) + g, walkFar: v * (2 * P.farWalkMin / 60) + g * P.farGear,
     patience: P.patienceMin + Math.floor(rng() * (P.patienceMax - P.patienceMin + 1)) };
 }
 // $ a driver saves by parking on the loop instead of the lots: the lots charge for the whole stay (12 hours allowed),
-// the meters for at most 3 hours, plus the risk of a ticket for staying longer; the lots cost the walk
-function advantage(d, price) {
-  return P.lotPrice * Math.min(d.T, 12) - price * Math.min(d.T, P.limitH) - (d.T > P.limitH ? P.citeCost : 0) + d.walk;
+// the meters for at most 3 hours, plus the risk of a ticket for staying longer; the lots cost the walk.
+// When the lots are full the fallback is free parking farther out, which costs a longer walk.
+function advantage(d, price, lotFull) {
+  var meter = price * Math.min(d.T, P.limitH) + (d.T > P.limitH ? P.citeCost : 0);
+  return lotFull ? d.walkFar - meter : P.lotPrice * Math.min(d.T, 12) + d.walk - meter;
 }
 // cars an hour looking for a loop space, at a time of day, for a given number of daily visitors
 function arrivalsPerHour(visitors, tSec) {
@@ -64,9 +70,9 @@ function arrivalsPerHour(visitors, tSec) {
   return visitors * P.carShare / P.perCar * P.loopShare * Math.max(0, a);
 }
 var _pop = null;
-function tryShare(price) {
+function tryShare(price, lotFull) {
   if (!_pop) { var r = makeRng(7); _pop = []; for (var i = 0; i < 6000; i++) _pop.push(makeDriver(r)); }
-  var n = 0; for (var j = 0; j < _pop.length; j++) if (advantage(_pop[j], price) > 0) n++;
+  var n = 0; for (var j = 0; j < _pop.length; j++) if (advantage(_pop[j], price, lotFull) > 0) n++;
   return n / _pop.length;
 }
 function lowerBound(a, x) { var lo = 0, hi = a.length; while (lo < hi) { var m = (lo + hi) >> 1; if (a[m] < x) lo = m + 1; else hi = m; } return lo; }
@@ -97,9 +103,17 @@ function Sim(world, opts) {
     M: { queue: [], nextFree: 0, nextPh: expo(this.rng, P.crossM * this.lambda), cross: 'crossM', hw: 'hwM' }
   };
   this.nextSeek = expo(this.rng, this.lambda); this.nextBg = expo(this.rng, P.bgK * this.lambda);
+  this.nextLot = expo(this.rng, this._lotRate());
+  // the lots: cars parked there, by when they leave (sorted)
+  this.lot = { out: [] };
+  this.merge = { SJ: { s: world.sjBot, wait: null, rPassed: 1 }, DG: { s: world.sMontJoin, wait: null, rPassed: 1 } };
   this.nextAdjust = 600; this.id = 0;
   this.min = []; this._newBucket();
-  this.totals = { lotFirst: 0, diverted: 0, left: 0, parked: 0 };
+  this.totals = { lotFirst: 0, diverted: 0, left: 0, parked: 0, far: 0 };
+  if (opts.prefill) {   // the lots start the morning about as full as the loop
+    var lf = typeof opts.prefill === 'number' ? opts.prefill : 0.5;
+    for (var li = 0; li < P.lotCap * lf; li++) this._lotAdd(makeDriver(this.rng), this.rng());
+  }
   this.occNow = 0; this.circNow = 0; this.waitingIn = 0; this.ringN = 0;
   // start mid-afternoon: cars already parked at random spaces, partway through their stays
   if (opts.prefill) {
@@ -114,9 +128,24 @@ function Sim(world, opts) {
     }
   }
 }
+// other arriving cars an hour (not trying the loop first) that head straight for the lots
+Sim.prototype._lotRate = function () {
+  if (this.fixedLambda) return this.fixedLambda * (1 - P.loopShare) / P.loopShare * P.lotOther;
+  return arrivalsPerHour(this.visitors, this.t) * (1 - P.loopShare) / P.loopShare * P.lotOther;
+};
+Sim.prototype._lotFull = function () { return this.lot.out.length >= P.lotCap; };
+// park in the lots if there's room (a fraction of the stay already used, for cars there at the start), else farther out
+Sim.prototype._lotAdd = function (d, used) {
+  if (this._lotFull()) { if (this.cur) this.cur.far++; this.totals.far++; return false; }
+  var tOut = this.t + d.T * 3600 * (1 - (used || 0));
+  this.lot.out.splice(lowerBound(this.lot.out, tOut), 0, tOut);
+  if (this.cur && !used) this.cur.lotRev += P.lotPrice * Math.min(d.T, 12);
+  return true;
+};
 Sim.prototype._newBucket = function () {
   this.cur = { t: Math.floor(this.t / 60), occ: 0, circ: 0, n: 0, arr: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0,
-    cruiseM: 0, price: this.price, departs: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lam: this.lambda };
+    cruiseM: 0, price: this.price, departs: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lam: this.lambda,
+    lotOcc: 0, far: 0, lotFull: 0 };
   this.min.push(this.cur);
   if (this.min.length > 720) this.min.shift();
   // demand follows the time of day: re-time the next arrivals at the new rates (arrivals have no memory)
@@ -125,6 +154,7 @@ Sim.prototype._newBucket = function () {
     if (Math.abs(l - this.lambda) > 1e-9) {
       this.lambda = l;
       this.nextSeek = this.t + expo(this.rng, l); this.nextBg = this.t + expo(this.rng, P.bgK * l);
+      this.nextLot = this.t + expo(this.rng, this._lotRate());
       this.xw.forEach(function (x) { x.next = self.t + expo(self.rng, P.pedK * l * x.w); });
       for (var k in this.inter) this.inter[k].nextPh = this.t + expo(this.rng, P[this.inter[k].cross] * l);
     }
@@ -140,14 +170,14 @@ Sim.prototype._spawn = function (kind, d, tArr) {
   var rng = this.rng, viaM = rng() < P.viaMonterey;
   // a long line into the Village turns people away: drivers head for the lots, others go elsewhere
   var q = (viaM ? this.qAM : this.qAJ) || 0;
-  if (kind === 'seek' && d.v * (q * P.balkSec / 3600) > P.balkFrac * advantage(d, this.price)) {
-    this.cur.toLot++; this.totals.lotFirst++; this.cur.lotRev += P.lotPrice * Math.min(d.T, 12); this.cur.balked++;
+  if (kind === 'seek' && d.v * (q * P.balkSec / 3600) > P.balkFrac * advantage(d, this.price, this._lotFull())) {
+    this.cur.toLot++; this.totals.lotFirst++; this.cur.balked++; this._lotAdd(d);
     return;
   }
   if (kind !== 'seek' && rng() < Math.min(0.8, q / P.balkCars)) return;
   var c = { id: ++this.id, kind: kind, d: d, lane: viaM ? 'AM' : 'AJ', s: 0, st: kind === 'seek' ? 'loop' : 'drive', laps: 0, tArr: tArr, odo: 0, odoMark: 0,
     exit: null, route: null, searched: false, dropped: false, leaving: false };
-  if (kind === 'seek') { c.adv = advantage(d, this.price); c.target = rng(); }
+  if (kind === 'seek') { c.adv = advantage(d, this.price, this._lotFull()); c.target = rng(); }
   else if (kind === 'drop') { c.exit = rng() < 0.5 ? 'J' : 'M'; if (viaM) c.route = 'SJ'; }
   else if (kind === 'thru') {
     if (viaM) { if (rng() < 0.5) { c.exit = 'J'; c.route = 'J'; } else { c.exit = 'M'; c.route = 'SJ'; } }
@@ -162,10 +192,13 @@ Sim.prototype.step = function (dt) {
   var B = this.cur, L = w.loopLen, gap = P.gap, self = this;
 
   // 1. arrivals
+  var LO = this.lot.out;
+  while (LO.length && LO[0] <= t) LO.shift();
+  while (this.nextLot <= t) { this._lotAdd(makeDriver(rng)); this.nextLot += expo(rng, this._lotRate()); }
   while (this.nextSeek <= t) {
     var d = makeDriver(rng); B.arr++;
-    if (advantage(d, this.price) <= 0) {
-      B.toLot++; this.totals.lotFirst++; B.lotRev += P.lotPrice * d.T;
+    if (advantage(d, this.price, this._lotFull()) <= 0) {
+      B.toLot++; this.totals.lotFirst++; this._lotAdd(d);
       if (rng() < P.lotDropShare) this._spawn('drop', null, this.nextSeek);
     } else this._spawn('seek', d, this.nextSeek);
     this.nextSeek += expo(rng, this.lambda);
@@ -234,7 +267,9 @@ Sim.prototype.step = function (dt) {
     }
   });
 
-  // 5. San Jose Ave (one-way south): park, then stop and merge onto the Esplanade
+  // 5. San Jose Ave (one-way south): park, then stop and merge onto the Esplanade.
+  // Merges zipper: once a car on the main lane has gone by, the next one holds back for the waiting car.
+  var MG = this.merge; MG.SJ.wait = MG.DG.wait = null;
   var SJ = lanes.SJ, sjStop = w.sjLen - 0.6;
   for (var m2 = SJ.length - 1; m2 >= 0; m2--) {
     c = SJ[m2];
@@ -249,9 +284,11 @@ Sim.prototype.step = function (dt) {
     c.odo += ns3 - c.s; c.s = ns3;
     if ((c.st === 'loop' || c.st === 'drive') && c.s >= sjStop - 0.6) {
       if (c.tStopSJ == null) c.tStopSJ = t;
-      var waited = t - c.tStopSJ, sb = w.sjBot;
-      var room = ringRoom(sb - 3, sb + gap) && (waited >= P.zipper || ringRoom(sb - 14, sb - 3)) && R.length < P.ringCap * L / gap;
-      if (waited >= P.stopDwell && room) {
+      var waited = t - c.tStopSJ, sb = w.sjBot, capOK = R.length < P.ringCap * L / gap;
+      if (capOK && waited >= P.stopDwell) MG.SJ.wait = c;
+      var room = ringRoom(sb - P.carLen, sb + gap) && (MG.SJ.rPassed >= 1 || ringRoom(sb - 14, sb - P.carLen));
+      if (waited >= P.stopDwell && capOK && room) {
+        MG.SJ.wait = null; MG.SJ.rPassed = 0;
         c.lane = 'R'; c.s = sb; c.tStopSJ = null;
         if (c.tB != null) { B.bSum += t - c.tB; B.bN++; c.tB = null; }
         c.tEsp = t;
@@ -259,6 +296,10 @@ Sim.prototype.step = function (dt) {
       }
     }
   }
+
+  // cars already circling, waiting at the foot of San Jose, go before new cars enter the loop
+  this.sjWaiting = 0;
+  for (var m5 = 0; m5 < SJ.length; m5++) if (SJ[m5].lane === 'SJ' && SJ[m5].tStopSJ != null) this.sjWaiting++;
 
   // 5b. the angled leg on the west side of the triangle: park, then merge back where it meets the beach aisle
   var DG = lanes.DG, dgEnd = w.dgLen - 0.6, sm = w.sMontJoin;
@@ -274,7 +315,9 @@ Sim.prototype.step = function (dt) {
     c.odo += ns4 - c.s; c.s = ns4;
     if ((c.st === 'loop' || c.st === 'drive') && c.s >= dgEnd - 0.6) {
       if (c.tStopDG == null) c.tStopDG = t;
-      if (ringRoom(sm - 3, sm + gap) && (t - c.tStopDG >= P.zipper || ringRoom(sm - 14, sm - 3))) {
+      MG.DG.wait = c;
+      if (ringRoom(sm - P.carLen, sm + gap) && (MG.DG.rPassed >= 1 || ringRoom(sm - 14, sm - P.carLen))) {
+        MG.DG.wait = null; MG.DG.rPassed = 0;
         c.lane = 'R'; c.s = sm + 0.1; c.tStopDG = null;
         R.push(c); R.sort(function (p, q) { return p.s - q.s; });
       }
@@ -282,6 +325,7 @@ Sim.prototype.step = function (dt) {
   }
 
   // 6. the loop
+  for (var gk0 in MG) { var g0 = MG[gk0]; g0.hold = !!g0.wait && g0.rPassed >= 1; }
   var n = R.length, olds = new Array(n);
   for (i = 0; i < n; i++) olds[i] = R[i].s;
   var stops = w.stops;
@@ -307,6 +351,10 @@ Sim.prototype.step = function (dt) {
         if (ss <= reach) lim2 = Math.min(lim2, ss - 0.5);
       }
     }
+    for (var gk in MG) {   // zipper: when it's the merging car's turn, stop just short of the merge point and let it in
+      var g = MG[gk];
+      if (g.hold && c.s <= g.s - P.carLen - 0.1 && c.s > g.s - 40) lim2 = Math.min(lim2, g.s - P.carLen - 0.1);
+    }
     if (c.hoverSp) lim2 = this._hoverLimit(c, lim2, dt);
     var ns2 = Math.max(c.s, Math.min(c.s + v * dt, lim2));
     if (ns2 - c.s < 0.02) { if (leadLoad) c.squeeze = (c.squeeze || 0) + dt; } else c.squeeze = 0;
@@ -318,7 +366,12 @@ Sim.prototype.step = function (dt) {
     if (c.s < w.espEnd && ns2 >= w.espEnd && c.st !== 'load' && c.st !== 'pin') {
       var seeking = c.kind === 'seek' && c.st === 'loop' && !c.leaving;
       var dropping = c.kind === 'drop' && !c.dropped;
-      if (!dropping && rng() < (seeking ? P.dgSeek : P.dgOther)) {
+      var goDG = rng() < (seeking ? P.dgSeek : P.dgOther);
+      if (seeking && rng() < P.seeSide) {   // the triangle is small: a driver looking can see an open space on either side
+        var openDG = this._openOn('DG', 0, w.dgLen), openAisle = this._openOn('R', w.espEnd, w.sMontJoin);
+        if (openDG && !openAisle) goDG = true; else if (openAisle && !openDG) goDG = false;
+      }
+      if (!dropping && goDG) {
         var dgFree = true;
         for (k = 0; k < DG.length; k++) if (DG[k].lane === 'DG' && DG[k].s < gap) { dgFree = false; break; }
         if (dgFree) {
@@ -354,6 +407,7 @@ Sim.prototype.step = function (dt) {
             if (c.d.v * searchedH > c.adv || c.laps >= c.d.patience) { c.leaving = true; c.exit = 'J'; c.route = 'J'; }
             else c.route = rng() < P.sjShare ? 'SJ' : 'J';
           } else c.route = rng() < P.sjShareNew ? 'SJ' : 'J';
+          if (!c.leaving && c.route === 'J' && rng() < P.seeSide && this._openOn('SJ', 0, w.sjLen)) c.route = 'SJ';   // an open space down San Jose
         }
       }
       if (c.route === 'SJ') {
@@ -376,7 +430,7 @@ Sim.prototype.step = function (dt) {
         c.st = 'gone';
         if (c.leaving) {
           var gone = rng() < P.leaveShare;
-          if (gone) { B.left++; this.totals.left++; } else { B.toLot++; this.totals.diverted++; B.lotRev += P.lotPrice * c.d.T; }
+          if (gone) { B.left++; this.totals.left++; } else { B.toLot++; this.totals.diverted++; this._lotAdd(c.d); }
           if (this.visual) this.ghosts.push({ kind: gone ? 'left' : 'lot', path: 'spurOut', s: 0 });
         } else if (this.visual) this.ghosts.push({ kind: 'thru', path: 'spurOut', s: 0 });
         continue;
@@ -384,6 +438,7 @@ Sim.prototype.step = function (dt) {
       ns2 -= L;
     }
     if (c.granted && stopPassed(stops, c, ns2)) c.granted = c.queued = null;
+    for (var gk2 in MG) if (c.s < MG[gk2].s && ns2 >= MG[gk2].s) MG[gk2].rPassed++;
     c.odo += ns2 - c.s; c.s = ns2;
   }
 
@@ -412,6 +467,7 @@ Sim.prototype.step = function (dt) {
   for (i = 0; i < this.cars.length; i++) if (this.cars[i].st !== 'gone') keep.push(this.cars[i]);
   this.cars = keep;
   B.occ += occ / this.spaces.length * dt; B.circ += circ * dt; B.n += dt; B.price = this.price;
+  B.lotOcc += Math.min(1, LO.length / P.lotCap) * dt; if (this._lotFull()) B.lotFull += dt;
   B.waitIn += this.waitingIn * dt; B.mQ += this.inter.M.queue.length * dt;
   var stopped = 0;
   for (i = 0; i < this.cars.length; i++) {
@@ -446,11 +502,11 @@ Sim.prototype._roomPast = function (f, id, ringRoom, ringN) {
   var w = this.w, gap = P.gap, L = w.loopLen;
   if (id === 'M') {
     if (f.lane === 'R' && f.exit === 'M') return true;                   // leaving north on Monterey
-    if (f.lane === 'AM' && ringN >= P.ringCap * L / gap) return false;   // the loop is packed: wait on Monterey
+    if (f.lane === 'AM' && ringN + (this.sjWaiting || 0) >= P.ringCap * L / gap) return false;   // the loop is packed: wait on Monterey
     return ringRoom(w.exitS - 1, w.exitS + gap);
   }
   if (f.lane === 'R' && (f.exit === 'J' || f.leaving)) return true;      // leaving up Capitola Ave
-  if (f.lane === 'AJ') return ringN < P.ringCap * L / gap && ringRoom(0, 2 * gap) && ringRoom(L - 1, L + 1);
+  if (f.lane === 'AJ') return ringN + (this.sjWaiting || 0) < P.ringCap * L / gap && ringRoom(0, 2 * gap) && ringRoom(L - 1, L + 1);
   return ringRoom(0, gap);
 };
 Sim.prototype._crosswalkLimit = function (c, lane, lim, step, t) {
@@ -473,10 +529,22 @@ Sim.prototype._afterMove = function (c, ns, t) {
 };
 Sim.prototype._hoverLimit = function (c, lim, dt) {
   var hs = c.hoverSp;
+  if (hs.lane !== c.lane || hs.s < c.s - 0.5) { hs.resv = null; c.hoverSp = null; return lim; }   // took another street, or already past it
   if (!hs.car) return Math.min(lim, hs.s);
   c.hoverT = (c.hoverT || 0) + dt;
   if (c.hoverT > P.hoverMax) { hs.resv = null; c.hoverSp = null; return lim; }
   return Math.min(lim, Math.max(c.s, hs.s - 6));
+};
+// on a quiet loop drivers hold out for a space near where they're going; on a busy one they take the first they see
+Sim.prototype._takeEarly = function () {
+  var occ = this.occNow / this.spaces.length, f = (occ - P.choosyFull) / (P.grabFull - P.choosyFull);
+  return P.takeEarly + (1 - P.takeEarly) * Math.max(0, Math.min(1, f));
+};
+// is there an open, unclaimed space on this lane between a and b?
+Sim.prototype._openOn = function (lane, a, b) {
+  var arr = this.spBy[lane];
+  for (var j = 0; j < arr.length; j++) if (arr[j].s >= a && arr[j].s <= b && !arr[j].car && !arr[j].resv) return true;
+  return false;
 };
 // look for an open space passed this step, or stop to wait for someone about to leave
 Sim.prototype._scan = function (c, lane, a, b, t) {
@@ -484,7 +552,7 @@ Sim.prototype._scan = function (c, lane, a, b, t) {
   for (var j = lowerBound(sArr, a - 0.001); j < arr.length && arr[j].s <= b; j++) {
     var sp = arr[j];
     if (!sp.car && (!sp.resv || sp.resv === c)) {
-      if (c.laps === 0 && sp.resv !== c && this.rng() > (sp.pos < (c.target || 0) - 0.15 ? P.takeEarly : P.takeFirst)) continue;   // holding out for one closer
+      if (c.laps === 0 && sp.resv !== c && sp.pos < (c.target || 0) - 0.15 && this.rng() > this._takeEarly()) continue;   // holding out for one closer
       if (c.hoverSp && c.hoverSp !== sp) c.hoverSp.resv = null;
       sp.car = c; sp.resv = null; c.sp = sp; c.hoverSp = null; c.st = 'pin'; c.timer = P.maneuver;
       return sp.s;
@@ -515,7 +583,7 @@ Sim.prototype.avg = function (field, m) {
 };
 Sim.prototype.windowStats = function (m) {
   var arr = this.min.slice(-m - 1, -1); if (!arr.length) arr = this.min.slice(-1);
-  var o = { occ: 0, circ: 0, n: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0, cruiseM: 0, departs: 0, arr: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0 };
+  var o = { occ: 0, circ: 0, n: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0, cruiseM: 0, departs: 0, arr: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lotOcc: 0, far: 0, lotFull: 0 };
   for (var i = 0; i < arr.length; i++) for (var k in o) o[k] += arr[i][k];
   var hrs = arr.length / 60, segA = o.aN ? o.aSum / o.aN / 60 : 0, segB = o.bN ? o.bSum / o.bN / 60 : 0;
   return {
@@ -525,7 +593,8 @@ Sim.prototype.windowStats = function (m) {
     toLot: o.toLot / hrs, left: o.left / hrs, rev: o.rev / hrs, lotRev: o.lotRev / hrs,
     cruiseMi: o.cruiseM / 1609.34 / hrs, turnover: o.departs / hrs / this.spaces.length,
     arr: o.arr / hrs, parked: o.parked / hrs, drops: o.drops / hrs,
-    waitIn: o.n ? o.waitIn / o.n : 0, mQ: o.n ? o.mQ / o.n : 0, standstill: o.n ? o.stopLen / o.n : 0, balked: o.balked / hrs
+    waitIn: o.n ? o.waitIn / o.n : 0, mQ: o.n ? o.mQ / o.n : 0, standstill: o.n ? o.stopLen / o.n : 0, balked: o.balked / hrs,
+    lotOcc: o.n ? o.lotOcc / o.n : 0, lotFull: o.n ? o.lotFull / o.n : 0, far: o.far / hrs
   };
 };
 Sim.prototype.warm = function (minutes) { for (var i = 0; i < minutes * 60; i++) this.step(1); };

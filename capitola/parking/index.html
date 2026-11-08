@@ -163,6 +163,14 @@ td:nth-child(3) { color: var(--ink2); }
 tr:last-child td { border-bottom: 0; }
 .tag { display: inline-block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--rule); color: var(--ink3); margin-right: 6px; }
 .tag.src { color: var(--lotc); border-color: var(--lotc); }
+.tag.study { color: var(--good); border-color: var(--good); }
+.grounded { margin: 12px 0 0; max-width: 80ch; font-size: 15px; color: var(--ink2); }
+.grounded a { white-space: nowrap; font-weight: 600; }
+table.cmp td:nth-child(2), table.cmp td:nth-child(3) { font-family: inherit; font-size: 13px; white-space: normal; color: var(--ink3); min-width: 150px; }
+table.cmp td b { display: block; font-family: var(--f-display); font-weight: 600; font-size: 22px; line-height: 1.1; color: var(--ink); }
+table.cmp td:nth-child(3) b { color: var(--good); }
+table.cmp td:nth-child(4) { font-size: 13px; color: var(--ink2); }
+table.cmp th { font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
 
 footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink2); }
 footer h2 { margin: 0 0 8px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); font-weight: 600; }
@@ -199,6 +207,7 @@ details.method summary:focus-visible { outline: 2px solid var(--accent); outline
       <div><dt>Beach &amp; Village lots</dt><dd>$1.00/hr · 12 hr</dd></div>
       <div><dt>Busy summer Saturday</dt><dd>~9,000 visitors</dd></div>
     </dl>
+    <p class="grounded"><span class="tag study">City counts</span>Built on the city's own numbers: its 2008 parking study found Village parking 99% full from 11 to 5 on a summer Saturday, 82% of visitors arriving by car and visits of 3.4 hours, and the city still reports its 195 Village street spaces "typically completely occupied between 11am and 4pm" on summer weekends. <a href="#study">How the model compares &darr;</a></p>
   </header>
 
   <section class="sim" aria-label="Simulation">
@@ -234,7 +243,7 @@ details.method summary:focus-visible { outline: 2px solid var(--accent); outline
           </div>
         </div>
         <label class="slider" for="price"><span>Meter rate</span><output id="priceOut">$2.00/hr</output>
-          <input type="range" id="price" min="1" max="10" step="0.25" value="2"></label>
+          <input type="range" id="price" min="1" max="12" step="0.25" value="2"></label>
         <p class="hint">All 130 loop meters, all day. The lots stay at $1.00. Changing a setting reruns the day from 8 AM.</p>
         <hr class="divider">
         <div>
@@ -247,7 +256,7 @@ details.method summary:focus-visible { outline: 2px solid var(--accent); outline
         </div>
         <label class="slider" for="vis"><span>Visitors to Capitola that day</span><output id="visOut">9,000 a day</output>
           <input type="range" id="vis" min="500" max="12000" step="500" value="9000"></label>
-        <p class="hint">A busy summer Saturday is about 9,000, sized from the city's 2008 parking study.</p>
+        <p class="hint">A busy summer Saturday is about 9,000. At that crowd the model matches the city's 2008 counts (<a href="#study">below</a>).</p>
         
         <hr class="divider">
         <div class="row">
@@ -277,7 +286,7 @@ details.method summary:focus-visible { outline: 2px solid var(--accent); outline
 
   <section class="block" aria-labelledby="sweepH">
     <h2 id="sweepH">Where the rate should be</h2>
-    <p class="sweeptext" id="sweepText"><span class="computing">Running the model at fifteen rates from $1 to $8…</span></p>
+    <p class="sweeptext" id="sweepText"><span class="computing">Running the model at rates from $1 to $12…</span></p>
     <div class="minis">
       <figure class="card"><figcaption>Loop meter occupancy</figcaption><canvas id="sw0" aria-label="Occupancy by rate"></canvas></figure>
       <figure class="card"><figcaption>Trip around the loop, minutes</figcaption><canvas id="sw1" aria-label="Minutes for a trip around the loop by rate"></canvas></figure>
@@ -287,12 +296,32 @@ details.method summary:focus-visible { outline: 2px solid var(--accent); outline
     <p class="note">Each point is a whole day at that rate with the visitors set above, measured from 1 to 3 PM. Dashed line: today. Ringed dot: the lowest rate that keeps the loop moving. Filled dot: the slider.</p>
   </section>
 
+  <section class="block" id="study" aria-labelledby="studyH">
+    <h2 id="studyH">Checked against the city's counts</h2>
+    <p class="sweeptext">The only Capitola parking study with field counts is RBF Consulting's <a href="https://www.cityofcapitola.gov/DocumentCenter/View/883">Parking Analysis for the Capitola Village Area</a> (December 2008). Its team counted parked cars across the Village and surveyed 249 visitors on Saturday, August 18, 2007. The model uses its measured numbers where it can, and on a summer Saturday it reproduces what the counters saw. No newer study with counts exists (the city's <a href="https://www.cityofcapitola.gov/774/Capitola-Parking-Studies-and-Improvement">list of parking studies</a> ends in 2009), but the city's recent statements line up with it. In 2022 it told the Coastal Commission that the Village's 195 street spaces are <a href="https://documents.coastal.ca.gov/reports/2022/6/F12a/f12a-6-2022-report.pdf">typically full from 11 to 4</a> on summer weekends, and that its two lots, about 455 spaces since a second one opened in 2013, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-2c81460f0b214b0f821589b3388b20eb/ITEM-Attachment-001-80213fcd52dd406d9ffce84189da7856.pdf">fill for a few hours</a> on about 25 days a year.</p>
+    <div class="tablewrap">
+      <table class="cmp">
+        <thead><tr><th>Measure</th><th>City count, summer Saturday 2007</th><th>Model, 9,000 visitors at $2.00</th><th>How the model uses it</th></tr></thead>
+        <tbody>
+          <tr><td>How full parking is, 11 AM to 5 PM</td><td><b>99%</b>Village streets and lots, average and peak</td><td><b>100%</b>the 130 loop meters</td><td><span class="tag">Result</span>Not set directly. It comes out of the visitors, their stays and the lots.</td></tr>
+          <tr><td>The $1 lots behind City Hall</td><td><b>Full</b>at peak in 2007, when there was one 234-space lot; today's 455 spaces fill for a few hours on about 25 days a year (city, 2022)</td><td><b>Full about 1 to 3:30 PM</b>455 spaces</td><td><span class="tag study">From the city</span>Today's 455 spaces. How fast they fill is tuned to the city's description. Once they're full, drivers priced off the loop park farther out.</td></tr>
+          <tr><td>How long visitors stay</td><td><b>3.4 hours</b>visitors surveyed; cars in the lot, 3.3 hours</td><td><b>3.3 hours</b>on average (median 3)</td><td><span class="tag study">From the study</span>Each driver's stay is drawn around this.</td></tr>
+          <tr><td>Visitors who come by car</td><td><b>82%</b>of 248 surveyed</td><td><b>82%</b></td><td><span class="tag study">From the study</span>Used as is.</td></tr>
+          <tr><td>People per car</td><td><b>2.8</b>the study's figure for beach visitors</td><td><b>2.8</b></td><td><span class="tag study">From the study</span>Used as is.</td></tr>
+          <tr><td>Traffic along the Esplanade</td><td><b>3,055</b>vehicles a day, county count, July 2007 (3,607 in May 1998)</td><td><b>~2,600</b>from 8 AM to 8 PM</td><td><span class="tag">Check</span>On the tuned traffic: through trips, drop-offs and circling together.</td></tr>
+          <tr><td>Cars parked at the peak</td><td><b>1,212</b>calculated demand, residents and workers included, for 1,036 spaces</td><td><b>~1,050</b>visitors' cars at 2 PM</td><td><span class="tag">Estimated</span>No one counts daily visitors. 9,000 is sized from this.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">No one has counted circling or timed a lap, so those parts of the model are tuned to what locals report on a busy summer Saturday: a 10 to 15 minute crawl around the loop at midday. The city's 2008 <a href="https://web.archive.org/web/20220320182130/https://www.cityofcapitola.org/sites/default/files/fileattachments/public_works/page/2492/rbf_report_2008_v3.pdf">one-way traffic study</a> listed "eliminate grid-lock on the Esplanade" among its goals. The parking study's first recommendation was parking fees that rise when demand is high.</p>
+  </section>
+
   <details class="method block">
     <summary><span>How the model works, assumptions and sources</span></summary>
     <div class="methodbody">
     <div class="prose">
-      <p>The day runs from 8 AM. Visitors arrive by car through the morning, most between 10 AM and 2 PM, and a share of them look for a space on the loop first. Each driver has a stay in mind (usually a few hours at the beach), a value on their time, and gear and kids to haul. They compare the cost of a loop meter (which charges for at most 3 hours, with some risk of a ticket for staying longer) with the lots (cheaper, 12 hours allowed, a quarter-mile walk each way) and try the loop if it comes out ahead. Drivers who find the curb full circle and look again, usually cutting down San Jose Avenue, and stop to wait when they see someone about to pull out; after each lap they decide whether a space is still worth the time. Drivers who see a long line into the Village turn into the lots instead.</p>
-      <p>They share the loop with everyone else: through traffic, deliveries and people headed elsewhere in the Village, and drivers stopping at the corner by the triangle to unload people and gear. People cross at the marked crosswalks. Every car takes its turn at the two all-way stops, and drivers waiting to turn onto a backed-up San Jose Avenue hold up Capitola Avenue behind them. When the loop is packed, cars wait to get in.</p>
+      <p>The day runs from 8 AM. Visitors arrive by car through the morning, most between 10 AM and 2 PM, and a share of them look for a space on the loop first. Each driver has a stay in mind (usually a few hours at the beach), a value on their time, and gear and kids to haul. They compare the cost of a loop meter (which charges for at most 3 hours, with some risk of a ticket for staying longer) with the lots (cheaper, 12 hours allowed, a quarter-mile walk each way) and try the loop if it comes out ahead. On the busiest days the lots fill around midday, as the city reports; after that the comparison is with free parking farther out, about a 15-minute walk each way. On a quiet loop drivers hold out for a space near where they're going; once it's nearly full they take the first open space they see, including one they spot down the angled leg or San Jose Avenue. Drivers who find the curb full circle and look again, usually cutting down San Jose Avenue, and stop to wait when they see someone about to pull out; after each lap they decide whether a space is still worth the time. Drivers who see a long line into the Village turn into the lots instead.</p>
+      <p>They share the loop with everyone else: through traffic, deliveries and people headed elsewhere in the Village, and drivers stopping at the corner by the triangle to unload people and gear. People cross at the marked crosswalks. Every car takes its turn at the two all-way stops, cars merging from San Jose Avenue and the angled leg take turns with the cars already on the loop, and drivers waiting to turn onto a backed-up San Jose Avenue hold up Capitola Avenue behind them. When the loop is packed, cars wait to get in.</p>
     </div>
     <div class="tablewrap">
       <table>
@@ -303,24 +332,30 @@ details.method summary:focus-visible { outline: 2px solid var(--accent); outline
           <tr><td>Beach &amp; Village lots</td><td>$1.00/hr, 12 hr max</td><td><span class="tag src">City</span>Raised from $0.50 in the same 2023 ordinance.</td></tr>
           <tr><td>Walk from the lots</td><td>~¼ mile, 7 min each way</td><td><span class="tag src">Map</span>OpenStreetMap distance from the lots behind City Hall to the Esplanade.</td></tr>
           <tr><td>The loop</td><td>0.31 mile</td><td><span class="tag src">Map</span>Esplanade, then either the one-way aisle around the beach side of the triangle or Monterey Ave's angled leg on its west side, Monterey Ave, Capitola Ave, Stockton Ave, with one-way San Jose Ave as a shortcut back to the beach. Eleven marked crosswalks and two all-way stops, all from OpenStreetMap.</td></tr>
-          <tr><td>How long people stay</td><td>median 3 hr</td><td><span class="tag">Assumed</span>Mostly beach trips of several hours. Meters charge for at most 3 hours; staying longer risks a ticket (counted as $10 on average), and many do.</td></tr>
+          <tr><td>How long people stay</td><td>median 3 hr, avg 3.3</td><td><span class="tag study">2008 study</span>Visitors surveyed in August 2007 stayed 3.4 hours on average; cars in the Pacific Cove lot, 3.3. Meters charge for at most 3 hours; staying longer risks a ticket (counted as $10 on average), and many do.</td></tr>
+          <tr><td>The lots fill</td><td>455 spaces</td><td><span class="tag src">City</span>The upper and lower Pacific Cove lots (the lower one opened in 2013). The city says they fill for a few hours on about 25 days a year. Half of the other arriving drivers park there (<span class="tag">Tuned</span> so the lots fill around midday on a 9,000-visitor day and not at 6,000), plus everyone priced or turned off the loop. When they're full, the fallback is free parking farther out: a 15-minute walk each way and more hauling (<span class="tag">Assumed</span>).</td></tr>
           <tr><td>Value of a visitor's time</td><td>median $20/hr</td><td><span class="tag">Assumed</span>Wide spread. Set with the gear cost so drivers' price response matches SFpark's −0.4.</td></tr>
           <tr><td>Hauling gear and kids</td><td>avg $10 per visit</td><td><span class="tag">Assumed</span>The hassle of carrying umbrellas, coolers, chairs and children a quarter mile and back.</td></tr>
           <tr><td>Patience</td><td>3 to 8 laps</td><td><span class="tag">Assumed</span>Or until the time lost is worth more to them than the space. With a summer loop taking 15 minutes, most drivers who miss give up after one more lap; a third of those who keep going make two or three. Drivers stop up to 40 s for someone they see pulling out.</td></tr>
           <tr><td>Where drivers come from</td><td>35% down Monterey</td><td><span class="tag">Assumed</span>The rest come down Capitola Ave. Circling drivers cut down San Jose Ave two times in three. At the triangle, nearly half the drivers still looking take the angled leg, as do 60% of everyone else; drop-offs go around to the corner.</td></tr>
-          <tr><td>Where they're headed</td><td>anywhere on the loop</td><td><span class="tag">Assumed</span>Each driver has a destination somewhere along the beach and the shops. On a first pass they pass up most open spaces well short of it, and take any space on later laps.</td></tr>
-          <tr><td>Drivers who give up</td><td>1 in 5 leave town</td><td><span class="tag">Assumed</span>The rest go to the lots.</td></tr>
-          <tr><td>Visitors</td><td>1,500 / 4,500 / 9,000 a day</td><td><span class="tag">Estimated</span>Winter weekday, spring weekend, busy summer Saturday. No one publishes daily counts. The summer figure is sized from the city's 2008 parking study, which found peak Village parking demand of about 1,212 cars for about 1,036 spaces. 85% arrive by car, 2.7 to a car, and 45% of those look for a loop space first.</td></tr>
+          <tr><td>Where they're headed</td><td>anywhere on the loop</td><td><span class="tag">Assumed</span>Each driver has a destination somewhere along the beach and the shops. On a quiet first pass they pass up most open spaces well short of it; as the loop passes 75% full they grow less picky, and above 90% they take the first open space they see. Later laps, any space.</td></tr>
+          <tr><td>Drivers who give up</td><td>1 in 5 leave town</td><td><span class="tag">Assumed</span>The rest go to the lots, or farther out once the lots are full.</td></tr>
+          <tr><td>Visitors</td><td>1,500 / 4,500 / 9,000 a day</td><td><span class="tag">Estimated</span>Winter weekday, spring weekend, busy summer Saturday. No one publishes daily counts. The summer figure is sized from the city's 2008 parking study, which calculated peak Village parking demand of about 1,212 cars for 1,036 spaces; 9,000 visitors puts about 1,050 visitors' cars in the Village at once at 2 PM. 82% arrive by car and 2.8 to a car (both from the 2008 study); 45% of those look for a loop space first (<span class="tag">Assumed</span>).</td></tr>
           <tr><td>Other traffic</td><td>1.2 vehicles per driver looking</td><td><span class="tag">Tuned</span>Through trips, deliveries and drivers headed elsewhere. Three in ten stop at the corner for about 75 seconds to drop off; so do a third of the drivers headed for the lots. A long line into the Village turns some away.</td></tr>
           <tr><td>People crossing</td><td>up to 200 groups/hr</td><td><span class="tag">Tuned</span>Per busy crosswalk on a summer Saturday, each holding it about 7 seconds. A waiting driver gets a gap within 12 seconds.</td></tr>
           <tr><td>All-way stops</td><td>~8 s and ~5 s per vehicle</td><td><span class="tag">Tuned</span>Monterey/Capitola and Stockton/Capitola, each taking turns with cross traffic and crowds crossing. Cars crawl at about 6 mph along the beach.</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a busy summer Saturday at $2.00 the whole loop backs up by midday, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; the Stockton Avenue bridge as a separate way in; and the residential permit areas nearby. The demand-responsive setting starts from today's $2.00 and changes the rate every 10 simulated minutes so you can watch it work, and it overshoots a little. A real program would set rates by season and time of day from a few weeks of counts.</p></div>
+    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a busy summer Saturday at $2.00 the whole loop backs up by midday, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; the Stockton Avenue bridge as a separate way in; and the residential permit areas nearby. "Matched to the crowd" picks the lowest all-day rate that keeps the loop moving for the visitors set. A real program would set rates by season and time of day from a few weeks of counts.</p></div>
   
     <h3 class="srch">Sources</h3>
     <ol>
+      <li>RBF Consulting for the City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/883">Parking Analysis for the Capitola Village Area</a>, December 11, 2008. Occupancy and duration counts and a visitor intercept survey, August 2007 and January 2008.</li>
+      <li>City of Capitola, <a href="https://www.cityofcapitola.gov/774/Capitola-Parking-Studies-and-Improvement">Capitola Parking Studies and Improvements</a> (list of the city's parking studies, 2001 to 2009).</li>
+      <li>RBF Consulting for the City of Capitola, <a href="https://web.archive.org/web/20220320182130/https://www.cityofcapitola.org/sites/default/files/fileattachments/public_works/page/2492/rbf_report_2008_v3.pdf">One-Way Traffic Analysis for the Capitola Village Area</a>, March 21, 2008 (archived copy). Table 1: Santa Cruz County RTC daily counts on the Esplanade.</li>
+      <li>California Coastal Commission, <a href="https://documents.coastal.ca.gov/reports/2022/6/F12a/f12a-6-2022-report.pdf">Capitola LCP Amendment LCP-3-CAP-21-0083-1 (Parklets)</a>, staff report, May 27, 2022, p. 10: 195 Village street spaces, about 455 lot spaces, and the city's account of summer occupancy.</li>
+      <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-2c81460f0b214b0f821589b3388b20eb/ITEM-Attachment-001-80213fcd52dd406d9ffce84189da7856.pdf">Capitola's Outdoor Dining Program: Proposed Coastal Access Enhancements and Mitigation</a>, 2022: the lots are full for a few hours on about 25 days a year.</li>
       <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-5507d6bc9fa1493c82b82c896b8403e8/ITEM-Attachment-012-e25011a82146494eb943de6d14a2ee92.pdf">Modification to Parking Meter Rates</a>, City Council agenda report, June 8, 2023.</li>
       <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-7548a7c461d54c31a9683665ac4cfb79/ITEM-Attachment-001-fd05b61ca9cf45e8a80f44dcbbb18747.pdf">Temporary Village Parking Committee Summary and Recommendations</a>, March 23, 2023.</li>
       <li>City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/884">Parking Committee Summary and Recommendations</a>, December 1, 2008.</li>
@@ -432,9 +467,12 @@ var P = {
   lotPrice: 1.00, walkMin: 7, limitH: 3,   // meters charge for at most 3 hours
   stayMed: 3.0, staySig: 0.45,     // hours people stay: mostly beach trips of several hours
   citeCost: 10,                    // $ expected cost of overstaying the 3-hour limit (a ticket, sometimes)
+  // the Beach & Village lots up Capitola Ave fill on busy days; then the fallback is free parking farther out
+  lotCap: 458, lotOther: 0.5,      // lot spaces (two lots, 2025-26 city fee schedule); share of other arriving cars (not trying the loop first) that park there
+  farWalkMin: 15, farGear: 1.5,    // when the lots are full: about a 15-minute walk each way, and more hauling
   // a day of visitors
   dayStart: 8,                     // the simulated day starts at 8 AM
-  carShare: 0.85, perCar: 2.7,     // visitors who come by car, people per car
+  carShare: 0.82, perCar: 2.8,     // visitors who come by car, people per car (2008 city study)
   loopShare: 0.45,                 // arriving cars that look for a space on the beach loop first
   profile: [0.03, 0.07, 0.12, 0.14, 0.14, 0.12, 0.10, 0.08, 0.07, 0.06, 0.04, 0.03],  // share of the day's arrivals, 8 AM to 8 PM
   votMed: 20, votSig: 0.8,         // $/hr value of a visitor's time
@@ -450,8 +488,9 @@ var P = {
   sjWaitMax: 25,                   // seconds a driver waits on Capitola Ave to turn onto a backed-up San Jose Ave
   balkSec: 6, balkFrac: 0.6, balkCars: 50,   // a car in line ahead costs ~6 s; drivers turn away when the wait eats much of what the space is worth
   dgSeek: 0.45, dgOther: 0.6,      // share taking the angled leg of the triangle: drivers still looking, everyone else
-  takeFirst: 0.9,                  // on a first pass, chance a driver takes an open space near or past where they're going
-  takeEarly: 0.08,                 // ... and one well short of it
+  takeEarly: 0.08,                 // on a quiet first pass, chance a driver takes an open space well short of where they're going
+  choosyFull: 0.75, grabFull: 0.9, // ... rising to every time as the loop fills from 75% to 90%
+  seeSide: 0.9,                    // chance a driver looking spots an open space down the angled leg or San Jose Ave and heads for it
   // everyone else on the loop
   bgK: 1.2, bgDropShare: 0.3, lotDropShare: 0.35, fullLoopShare: 0.5,
   dropMed: 75, dropSig: 0.55, squeezeAfter: 20,
@@ -459,7 +498,7 @@ var P = {
   pedK: 1.5, pedCross: 7, pedYield: 12,
   stopDwell: 1.5, hwJ: 5, hwM: 8, crossJ: 0.5, crossM: 0.4,   // seconds per vehicle at each all-way stop; cross traffic per seeker
   // driving
-  maneuver: 7, vLoop: 5.5, vEsp: 2.6, vApp: 6.5, gap: 7.0, ringCap: 0.92
+  maneuver: 7, vLoop: 5.5, vEsp: 2.6, vApp: 6.5, gap: 7.0, ringCap: 0.92, carLen: 4.6
 };
 
 function makeRng(seed) {
@@ -477,13 +516,15 @@ function makeDriver(rng) {
   var T = P.stayMed * Math.exp(P.staySig * randn(rng));
   var v = P.votMed * Math.exp(P.votSig * randn(rng));
   var g = -P.gearMean * Math.log(1 - rng());
-  return { T: T, v: v, walk: v * (2 * P.walkMin / 60) + g,
+  return { T: T, v: v, walk: v * (2 * P.walkMin / 60) + g, walkFar: v * (2 * P.farWalkMin / 60) + g * P.farGear,
     patience: P.patienceMin + Math.floor(rng() * (P.patienceMax - P.patienceMin + 1)) };
 }
 // $ a driver saves by parking on the loop instead of the lots: the lots charge for the whole stay (12 hours allowed),
-// the meters for at most 3 hours, plus the risk of a ticket for staying longer; the lots cost the walk
-function advantage(d, price) {
-  return P.lotPrice * Math.min(d.T, 12) - price * Math.min(d.T, P.limitH) - (d.T > P.limitH ? P.citeCost : 0) + d.walk;
+// the meters for at most 3 hours, plus the risk of a ticket for staying longer; the lots cost the walk.
+// When the lots are full the fallback is free parking farther out, which costs a longer walk.
+function advantage(d, price, lotFull) {
+  var meter = price * Math.min(d.T, P.limitH) + (d.T > P.limitH ? P.citeCost : 0);
+  return lotFull ? d.walkFar - meter : P.lotPrice * Math.min(d.T, 12) + d.walk - meter;
 }
 // cars an hour looking for a loop space, at a time of day, for a given number of daily visitors
 function arrivalsPerHour(visitors, tSec) {
@@ -492,9 +533,9 @@ function arrivalsPerHour(visitors, tSec) {
   return visitors * P.carShare / P.perCar * P.loopShare * Math.max(0, a);
 }
 var _pop = null;
-function tryShare(price) {
+function tryShare(price, lotFull) {
   if (!_pop) { var r = makeRng(7); _pop = []; for (var i = 0; i < 6000; i++) _pop.push(makeDriver(r)); }
-  var n = 0; for (var j = 0; j < _pop.length; j++) if (advantage(_pop[j], price) > 0) n++;
+  var n = 0; for (var j = 0; j < _pop.length; j++) if (advantage(_pop[j], price, lotFull) > 0) n++;
   return n / _pop.length;
 }
 function lowerBound(a, x) { var lo = 0, hi = a.length; while (lo < hi) { var m = (lo + hi) >> 1; if (a[m] < x) lo = m + 1; else hi = m; } return lo; }
@@ -525,9 +566,17 @@ function Sim(world, opts) {
     M: { queue: [], nextFree: 0, nextPh: expo(this.rng, P.crossM * this.lambda), cross: 'crossM', hw: 'hwM' }
   };
   this.nextSeek = expo(this.rng, this.lambda); this.nextBg = expo(this.rng, P.bgK * this.lambda);
+  this.nextLot = expo(this.rng, this._lotRate());
+  // the lots: cars parked there, by when they leave (sorted)
+  this.lot = { out: [] };
+  this.merge = { SJ: { s: world.sjBot, wait: null, rPassed: 1 }, DG: { s: world.sMontJoin, wait: null, rPassed: 1 } };
   this.nextAdjust = 600; this.id = 0;
   this.min = []; this._newBucket();
-  this.totals = { lotFirst: 0, diverted: 0, left: 0, parked: 0 };
+  this.totals = { lotFirst: 0, diverted: 0, left: 0, parked: 0, far: 0 };
+  if (opts.prefill) {   // the lots start the morning about as full as the loop
+    var lf = typeof opts.prefill === 'number' ? opts.prefill : 0.5;
+    for (var li = 0; li < P.lotCap * lf; li++) this._lotAdd(makeDriver(this.rng), this.rng());
+  }
   this.occNow = 0; this.circNow = 0; this.waitingIn = 0; this.ringN = 0;
   // start mid-afternoon: cars already parked at random spaces, partway through their stays
   if (opts.prefill) {
@@ -542,9 +591,24 @@ function Sim(world, opts) {
     }
   }
 }
+// other arriving cars an hour (not trying the loop first) that head straight for the lots
+Sim.prototype._lotRate = function () {
+  if (this.fixedLambda) return this.fixedLambda * (1 - P.loopShare) / P.loopShare * P.lotOther;
+  return arrivalsPerHour(this.visitors, this.t) * (1 - P.loopShare) / P.loopShare * P.lotOther;
+};
+Sim.prototype._lotFull = function () { return this.lot.out.length >= P.lotCap; };
+// park in the lots if there's room (a fraction of the stay already used, for cars there at the start), else farther out
+Sim.prototype._lotAdd = function (d, used) {
+  if (this._lotFull()) { if (this.cur) this.cur.far++; this.totals.far++; return false; }
+  var tOut = this.t + d.T * 3600 * (1 - (used || 0));
+  this.lot.out.splice(lowerBound(this.lot.out, tOut), 0, tOut);
+  if (this.cur && !used) this.cur.lotRev += P.lotPrice * Math.min(d.T, 12);
+  return true;
+};
 Sim.prototype._newBucket = function () {
   this.cur = { t: Math.floor(this.t / 60), occ: 0, circ: 0, n: 0, arr: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0,
-    cruiseM: 0, price: this.price, departs: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lam: this.lambda };
+    cruiseM: 0, price: this.price, departs: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lam: this.lambda,
+    lotOcc: 0, far: 0, lotFull: 0 };
   this.min.push(this.cur);
   if (this.min.length > 720) this.min.shift();
   // demand follows the time of day: re-time the next arrivals at the new rates (arrivals have no memory)
@@ -553,6 +617,7 @@ Sim.prototype._newBucket = function () {
     if (Math.abs(l - this.lambda) > 1e-9) {
       this.lambda = l;
       this.nextSeek = this.t + expo(this.rng, l); this.nextBg = this.t + expo(this.rng, P.bgK * l);
+      this.nextLot = this.t + expo(this.rng, this._lotRate());
       this.xw.forEach(function (x) { x.next = self.t + expo(self.rng, P.pedK * l * x.w); });
       for (var k in this.inter) this.inter[k].nextPh = this.t + expo(this.rng, P[this.inter[k].cross] * l);
     }
@@ -568,14 +633,14 @@ Sim.prototype._spawn = function (kind, d, tArr) {
   var rng = this.rng, viaM = rng() < P.viaMonterey;
   // a long line into the Village turns people away: drivers head for the lots, others go elsewhere
   var q = (viaM ? this.qAM : this.qAJ) || 0;
-  if (kind === 'seek' && d.v * (q * P.balkSec / 3600) > P.balkFrac * advantage(d, this.price)) {
-    this.cur.toLot++; this.totals.lotFirst++; this.cur.lotRev += P.lotPrice * Math.min(d.T, 12); this.cur.balked++;
+  if (kind === 'seek' && d.v * (q * P.balkSec / 3600) > P.balkFrac * advantage(d, this.price, this._lotFull())) {
+    this.cur.toLot++; this.totals.lotFirst++; this.cur.balked++; this._lotAdd(d);
     return;
   }
   if (kind !== 'seek' && rng() < Math.min(0.8, q / P.balkCars)) return;
   var c = { id: ++this.id, kind: kind, d: d, lane: viaM ? 'AM' : 'AJ', s: 0, st: kind === 'seek' ? 'loop' : 'drive', laps: 0, tArr: tArr, odo: 0, odoMark: 0,
     exit: null, route: null, searched: false, dropped: false, leaving: false };
-  if (kind === 'seek') { c.adv = advantage(d, this.price); c.target = rng(); }
+  if (kind === 'seek') { c.adv = advantage(d, this.price, this._lotFull()); c.target = rng(); }
   else if (kind === 'drop') { c.exit = rng() < 0.5 ? 'J' : 'M'; if (viaM) c.route = 'SJ'; }
   else if (kind === 'thru') {
     if (viaM) { if (rng() < 0.5) { c.exit = 'J'; c.route = 'J'; } else { c.exit = 'M'; c.route = 'SJ'; } }
@@ -590,10 +655,13 @@ Sim.prototype.step = function (dt) {
   var B = this.cur, L = w.loopLen, gap = P.gap, self = this;
 
   // 1. arrivals
+  var LO = this.lot.out;
+  while (LO.length && LO[0] <= t) LO.shift();
+  while (this.nextLot <= t) { this._lotAdd(makeDriver(rng)); this.nextLot += expo(rng, this._lotRate()); }
   while (this.nextSeek <= t) {
     var d = makeDriver(rng); B.arr++;
-    if (advantage(d, this.price) <= 0) {
-      B.toLot++; this.totals.lotFirst++; B.lotRev += P.lotPrice * d.T;
+    if (advantage(d, this.price, this._lotFull()) <= 0) {
+      B.toLot++; this.totals.lotFirst++; this._lotAdd(d);
       if (rng() < P.lotDropShare) this._spawn('drop', null, this.nextSeek);
     } else this._spawn('seek', d, this.nextSeek);
     this.nextSeek += expo(rng, this.lambda);
@@ -662,7 +730,9 @@ Sim.prototype.step = function (dt) {
     }
   });
 
-  // 5. San Jose Ave (one-way south): park, then stop and merge onto the Esplanade
+  // 5. San Jose Ave (one-way south): park, then stop and merge onto the Esplanade.
+  // Merges zipper: once a car on the main lane has gone by, the next one holds back for the waiting car.
+  var MG = this.merge; MG.SJ.wait = MG.DG.wait = null;
   var SJ = lanes.SJ, sjStop = w.sjLen - 0.6;
   for (var m2 = SJ.length - 1; m2 >= 0; m2--) {
     c = SJ[m2];
@@ -677,9 +747,11 @@ Sim.prototype.step = function (dt) {
     c.odo += ns3 - c.s; c.s = ns3;
     if ((c.st === 'loop' || c.st === 'drive') && c.s >= sjStop - 0.6) {
       if (c.tStopSJ == null) c.tStopSJ = t;
-      var waited = t - c.tStopSJ, sb = w.sjBot;
-      var room = ringRoom(sb - 3, sb + gap) && (waited >= P.zipper || ringRoom(sb - 14, sb - 3)) && R.length < P.ringCap * L / gap;
-      if (waited >= P.stopDwell && room) {
+      var waited = t - c.tStopSJ, sb = w.sjBot, capOK = R.length < P.ringCap * L / gap;
+      if (capOK && waited >= P.stopDwell) MG.SJ.wait = c;
+      var room = ringRoom(sb - P.carLen, sb + gap) && (MG.SJ.rPassed >= 1 || ringRoom(sb - 14, sb - P.carLen));
+      if (waited >= P.stopDwell && capOK && room) {
+        MG.SJ.wait = null; MG.SJ.rPassed = 0;
         c.lane = 'R'; c.s = sb; c.tStopSJ = null;
         if (c.tB != null) { B.bSum += t - c.tB; B.bN++; c.tB = null; }
         c.tEsp = t;
@@ -687,6 +759,10 @@ Sim.prototype.step = function (dt) {
       }
     }
   }
+
+  // cars already circling, waiting at the foot of San Jose, go before new cars enter the loop
+  this.sjWaiting = 0;
+  for (var m5 = 0; m5 < SJ.length; m5++) if (SJ[m5].lane === 'SJ' && SJ[m5].tStopSJ != null) this.sjWaiting++;
 
   // 5b. the angled leg on the west side of the triangle: park, then merge back where it meets the beach aisle
   var DG = lanes.DG, dgEnd = w.dgLen - 0.6, sm = w.sMontJoin;
@@ -702,7 +778,9 @@ Sim.prototype.step = function (dt) {
     c.odo += ns4 - c.s; c.s = ns4;
     if ((c.st === 'loop' || c.st === 'drive') && c.s >= dgEnd - 0.6) {
       if (c.tStopDG == null) c.tStopDG = t;
-      if (ringRoom(sm - 3, sm + gap) && (t - c.tStopDG >= P.zipper || ringRoom(sm - 14, sm - 3))) {
+      MG.DG.wait = c;
+      if (ringRoom(sm - P.carLen, sm + gap) && (MG.DG.rPassed >= 1 || ringRoom(sm - 14, sm - P.carLen))) {
+        MG.DG.wait = null; MG.DG.rPassed = 0;
         c.lane = 'R'; c.s = sm + 0.1; c.tStopDG = null;
         R.push(c); R.sort(function (p, q) { return p.s - q.s; });
       }
@@ -710,6 +788,7 @@ Sim.prototype.step = function (dt) {
   }
 
   // 6. the loop
+  for (var gk0 in MG) { var g0 = MG[gk0]; g0.hold = !!g0.wait && g0.rPassed >= 1; }
   var n = R.length, olds = new Array(n);
   for (i = 0; i < n; i++) olds[i] = R[i].s;
   var stops = w.stops;
@@ -735,6 +814,10 @@ Sim.prototype.step = function (dt) {
         if (ss <= reach) lim2 = Math.min(lim2, ss - 0.5);
       }
     }
+    for (var gk in MG) {   // zipper: when it's the merging car's turn, stop just short of the merge point and let it in
+      var g = MG[gk];
+      if (g.hold && c.s <= g.s - P.carLen - 0.1 && c.s > g.s - 40) lim2 = Math.min(lim2, g.s - P.carLen - 0.1);
+    }
     if (c.hoverSp) lim2 = this._hoverLimit(c, lim2, dt);
     var ns2 = Math.max(c.s, Math.min(c.s + v * dt, lim2));
     if (ns2 - c.s < 0.02) { if (leadLoad) c.squeeze = (c.squeeze || 0) + dt; } else c.squeeze = 0;
@@ -746,7 +829,12 @@ Sim.prototype.step = function (dt) {
     if (c.s < w.espEnd && ns2 >= w.espEnd && c.st !== 'load' && c.st !== 'pin') {
       var seeking = c.kind === 'seek' && c.st === 'loop' && !c.leaving;
       var dropping = c.kind === 'drop' && !c.dropped;
-      if (!dropping && rng() < (seeking ? P.dgSeek : P.dgOther)) {
+      var goDG = rng() < (seeking ? P.dgSeek : P.dgOther);
+      if (seeking && rng() < P.seeSide) {   // the triangle is small: a driver looking can see an open space on either side
+        var openDG = this._openOn('DG', 0, w.dgLen), openAisle = this._openOn('R', w.espEnd, w.sMontJoin);
+        if (openDG && !openAisle) goDG = true; else if (openAisle && !openDG) goDG = false;
+      }
+      if (!dropping && goDG) {
         var dgFree = true;
         for (k = 0; k < DG.length; k++) if (DG[k].lane === 'DG' && DG[k].s < gap) { dgFree = false; break; }
         if (dgFree) {
@@ -782,6 +870,7 @@ Sim.prototype.step = function (dt) {
             if (c.d.v * searchedH > c.adv || c.laps >= c.d.patience) { c.leaving = true; c.exit = 'J'; c.route = 'J'; }
             else c.route = rng() < P.sjShare ? 'SJ' : 'J';
           } else c.route = rng() < P.sjShareNew ? 'SJ' : 'J';
+          if (!c.leaving && c.route === 'J' && rng() < P.seeSide && this._openOn('SJ', 0, w.sjLen)) c.route = 'SJ';   // an open space down San Jose
         }
       }
       if (c.route === 'SJ') {
@@ -804,7 +893,7 @@ Sim.prototype.step = function (dt) {
         c.st = 'gone';
         if (c.leaving) {
           var gone = rng() < P.leaveShare;
-          if (gone) { B.left++; this.totals.left++; } else { B.toLot++; this.totals.diverted++; B.lotRev += P.lotPrice * c.d.T; }
+          if (gone) { B.left++; this.totals.left++; } else { B.toLot++; this.totals.diverted++; this._lotAdd(c.d); }
           if (this.visual) this.ghosts.push({ kind: gone ? 'left' : 'lot', path: 'spurOut', s: 0 });
         } else if (this.visual) this.ghosts.push({ kind: 'thru', path: 'spurOut', s: 0 });
         continue;
@@ -812,6 +901,7 @@ Sim.prototype.step = function (dt) {
       ns2 -= L;
     }
     if (c.granted && stopPassed(stops, c, ns2)) c.granted = c.queued = null;
+    for (var gk2 in MG) if (c.s < MG[gk2].s && ns2 >= MG[gk2].s) MG[gk2].rPassed++;
     c.odo += ns2 - c.s; c.s = ns2;
   }
 
@@ -840,6 +930,7 @@ Sim.prototype.step = function (dt) {
   for (i = 0; i < this.cars.length; i++) if (this.cars[i].st !== 'gone') keep.push(this.cars[i]);
   this.cars = keep;
   B.occ += occ / this.spaces.length * dt; B.circ += circ * dt; B.n += dt; B.price = this.price;
+  B.lotOcc += Math.min(1, LO.length / P.lotCap) * dt; if (this._lotFull()) B.lotFull += dt;
   B.waitIn += this.waitingIn * dt; B.mQ += this.inter.M.queue.length * dt;
   var stopped = 0;
   for (i = 0; i < this.cars.length; i++) {
@@ -874,11 +965,11 @@ Sim.prototype._roomPast = function (f, id, ringRoom, ringN) {
   var w = this.w, gap = P.gap, L = w.loopLen;
   if (id === 'M') {
     if (f.lane === 'R' && f.exit === 'M') return true;                   // leaving north on Monterey
-    if (f.lane === 'AM' && ringN >= P.ringCap * L / gap) return false;   // the loop is packed: wait on Monterey
+    if (f.lane === 'AM' && ringN + (this.sjWaiting || 0) >= P.ringCap * L / gap) return false;   // the loop is packed: wait on Monterey
     return ringRoom(w.exitS - 1, w.exitS + gap);
   }
   if (f.lane === 'R' && (f.exit === 'J' || f.leaving)) return true;      // leaving up Capitola Ave
-  if (f.lane === 'AJ') return ringN < P.ringCap * L / gap && ringRoom(0, 2 * gap) && ringRoom(L - 1, L + 1);
+  if (f.lane === 'AJ') return ringN + (this.sjWaiting || 0) < P.ringCap * L / gap && ringRoom(0, 2 * gap) && ringRoom(L - 1, L + 1);
   return ringRoom(0, gap);
 };
 Sim.prototype._crosswalkLimit = function (c, lane, lim, step, t) {
@@ -901,10 +992,22 @@ Sim.prototype._afterMove = function (c, ns, t) {
 };
 Sim.prototype._hoverLimit = function (c, lim, dt) {
   var hs = c.hoverSp;
+  if (hs.lane !== c.lane || hs.s < c.s - 0.5) { hs.resv = null; c.hoverSp = null; return lim; }   // took another street, or already past it
   if (!hs.car) return Math.min(lim, hs.s);
   c.hoverT = (c.hoverT || 0) + dt;
   if (c.hoverT > P.hoverMax) { hs.resv = null; c.hoverSp = null; return lim; }
   return Math.min(lim, Math.max(c.s, hs.s - 6));
+};
+// on a quiet loop drivers hold out for a space near where they're going; on a busy one they take the first they see
+Sim.prototype._takeEarly = function () {
+  var occ = this.occNow / this.spaces.length, f = (occ - P.choosyFull) / (P.grabFull - P.choosyFull);
+  return P.takeEarly + (1 - P.takeEarly) * Math.max(0, Math.min(1, f));
+};
+// is there an open, unclaimed space on this lane between a and b?
+Sim.prototype._openOn = function (lane, a, b) {
+  var arr = this.spBy[lane];
+  for (var j = 0; j < arr.length; j++) if (arr[j].s >= a && arr[j].s <= b && !arr[j].car && !arr[j].resv) return true;
+  return false;
 };
 // look for an open space passed this step, or stop to wait for someone about to leave
 Sim.prototype._scan = function (c, lane, a, b, t) {
@@ -912,7 +1015,7 @@ Sim.prototype._scan = function (c, lane, a, b, t) {
   for (var j = lowerBound(sArr, a - 0.001); j < arr.length && arr[j].s <= b; j++) {
     var sp = arr[j];
     if (!sp.car && (!sp.resv || sp.resv === c)) {
-      if (c.laps === 0 && sp.resv !== c && this.rng() > (sp.pos < (c.target || 0) - 0.15 ? P.takeEarly : P.takeFirst)) continue;   // holding out for one closer
+      if (c.laps === 0 && sp.resv !== c && sp.pos < (c.target || 0) - 0.15 && this.rng() > this._takeEarly()) continue;   // holding out for one closer
       if (c.hoverSp && c.hoverSp !== sp) c.hoverSp.resv = null;
       sp.car = c; sp.resv = null; c.sp = sp; c.hoverSp = null; c.st = 'pin'; c.timer = P.maneuver;
       return sp.s;
@@ -943,7 +1046,7 @@ Sim.prototype.avg = function (field, m) {
 };
 Sim.prototype.windowStats = function (m) {
   var arr = this.min.slice(-m - 1, -1); if (!arr.length) arr = this.min.slice(-1);
-  var o = { occ: 0, circ: 0, n: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0, cruiseM: 0, departs: 0, arr: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0 };
+  var o = { occ: 0, circ: 0, n: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0, cruiseM: 0, departs: 0, arr: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lotOcc: 0, far: 0, lotFull: 0 };
   for (var i = 0; i < arr.length; i++) for (var k in o) o[k] += arr[i][k];
   var hrs = arr.length / 60, segA = o.aN ? o.aSum / o.aN / 60 : 0, segB = o.bN ? o.bSum / o.bN / 60 : 0;
   return {
@@ -953,7 +1056,8 @@ Sim.prototype.windowStats = function (m) {
     toLot: o.toLot / hrs, left: o.left / hrs, rev: o.rev / hrs, lotRev: o.lotRev / hrs,
     cruiseMi: o.cruiseM / 1609.34 / hrs, turnover: o.departs / hrs / this.spaces.length,
     arr: o.arr / hrs, parked: o.parked / hrs, drops: o.drops / hrs,
-    waitIn: o.n ? o.waitIn / o.n : 0, mQ: o.n ? o.mQ / o.n : 0, standstill: o.n ? o.stopLen / o.n : 0, balked: o.balked / hrs
+    waitIn: o.n ? o.waitIn / o.n : 0, mQ: o.n ? o.mQ / o.n : 0, standstill: o.n ? o.stopLen / o.n : 0, balked: o.balked / hrs,
+    lotOcc: o.n ? o.lotOcc / o.n : 0, lotFull: o.n ? o.lotFull / o.n : 0, far: o.far / hrs
   };
 };
 Sim.prototype.warm = function (minutes) { for (var i = 0; i < minutes * 60; i++) this.step(1); };
@@ -1297,9 +1401,12 @@ if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, runHeadles
     var compact = MW < 520;
     var sx = X(-282) + (compact ? -2 : 0), sy = Y(88), fs = compact ? 10 : Math.round(Math.max(10, Math.min(12.5, 3.3 * K)));
     var w = sim.windowStats(60);
+    var lotPct = Math.round(Math.min(1, sim.lot.out.length / P.lotCap) * 100), lotFull = lotPct >= 99;
     var lines = compact
-      ? [['600', '↑ Lots · $1.00/hr', T.signText], ['600', Math.round(w.toLot) + '/hr sent here', T.lotc]]
-      : [['600', '↑ Beach & Village lots', T.signText], ['400', '$1.00/hr · ¼ mile walk', T.signText], ['600', Math.round(w.toLot) + ' drivers/hr sent here', T.lotc]];
+      ? [['600', '↑ Lots · $1.00/hr', T.signText], ['600', lotFull ? 'FULL' : lotPct + '% full', lotFull ? T.accent : T.signText], ['600', Math.round(w.toLot) + '/hr sent', T.lotc]]
+      : [['600', '↑ Beach & Village lots', T.signText], ['400', '$1.00/hr · ¼ mile walk', T.signText],
+         ['600', lotFull ? 'FULL: drivers park farther out' : lotPct + '% full', lotFull ? T.accent : T.signText],
+         ['600', Math.round(w.toLot) + ' drivers/hr turned away from the loop', T.lotc]];
     var bw = 0;
     lines.forEach(function (ln) { c.font = ln[0] + ' ' + fs + 'px ' + T.fMono; bw = Math.max(bw, c.measureText(ln[1]).width); });
     bw += compact ? 10 : 16;
@@ -1365,9 +1472,10 @@ if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, runHeadles
   function fmtV(v) { return v.toLocaleString('en-US'); }
   function updatePanel() {
     var p = sim.price, w = sim.windowStats(60), open = NSP - sim.occNow;
-    var share = tryShare(p), txt;
-    if (ui.mode === 'match') txt = 'Matched to the crowd: ' + money(p) + ' all day is the lowest rate the model finds keeps the loop moving with ' + fmtV(ui.visitors) + ' visitors. ' + Math.round(share * 100) + '% of arriving drivers try the loop first.';
-    else txt = 'At ' + money(p) + ', ' + Math.round(share * 100) + '% of arriving drivers try the loop first. The rest head for the $1.00 lots.';
+    var full = sim.lot.out.length >= 0.99 * P.lotCap, share = tryShare(p, full), txt;
+    var rest = full ? 'The $1.00 lots are full, so the rest park farther out and walk about 15 minutes.' : 'The rest head for the $1.00 lots.';
+    if (ui.mode === 'match') txt = 'Matched to the crowd: ' + money(p) + ' all day is the lowest rate the model finds keeps the loop moving with ' + fmtV(ui.visitors) + ' visitors. ' + Math.round(share * 100) + '% of arriving drivers try the loop first. ' + rest;
+    else txt = 'At ' + money(p) + ', ' + Math.round(share * 100) + '% of arriving drivers try the loop first. ' + rest;
     var stop = Math.round((sim.stopShare || 0) * 100);
     $('status').innerHTML = txt + '<span class="live">' + open + ' of ' + NSP + ' spaces open · ' + sim.circNow + ' circling · ' + stop + '% of the loop stopped · ' + sim.waitingIn + ' waiting to get in</span>';
     var occ = sim.occNow / NSP;
@@ -1389,15 +1497,15 @@ if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, runHeadles
   }
 
   /* ---------- the rate sweep: whole days at each rate, 1 to 3 PM ---------- */
-  var sweep = null, sweepJob = 0;
+  var sweep = null, sweepJob = 0, PMAX = 12;
   // computed ahead with the same engine (bake.js): two runs per rate, so the charts open complete
-  var SWEEPS = {"1500":[{"p":1,"occ":0.579,"trip":3,"circ":0,"standstill":0.003,"left":0,"rev":66.6,"search":1.3,"cruiseMi":0},{"p":1.5,"occ":0.486,"trip":3.1,"circ":0,"standstill":0.003,"left":0,"rev":82.3,"search":1.3,"cruiseMi":0},{"p":2,"occ":0.455,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":106,"search":1.2,"cruiseMi":0},{"p":2.5,"occ":0.387,"trip":3.2,"circ":0,"standstill":0.004,"left":0,"rev":109.1,"search":1.2,"cruiseMi":0},{"p":3,"occ":0.452,"trip":3,"circ":0,"standstill":0.003,"left":0,"rev":159.2,"search":1.3,"cruiseMi":0},{"p":3.5,"occ":0.376,"trip":3.2,"circ":0,"standstill":0.004,"left":0,"rev":157.4,"search":1.2,"cruiseMi":0},{"p":4,"occ":0.297,"trip":3.2,"circ":0,"standstill":0.004,"left":0,"rev":139.8,"search":1.2,"cruiseMi":0},{"p":4.5,"occ":0.251,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":133.1,"search":1.1,"cruiseMi":0},{"p":5,"occ":0.28,"trip":3.3,"circ":0,"standstill":0.003,"left":0,"rev":164.1,"search":1.1,"cruiseMi":0},{"p":5.5,"occ":0.234,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":155.2,"search":1.2,"cruiseMi":0},{"p":6,"occ":0.16,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":112,"search":1.2,"cruiseMi":0},{"p":6.5,"occ":0.189,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":139.3,"search":1,"cruiseMi":0},{"p":7,"occ":0.172,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":141.5,"search":1,"cruiseMi":0},{"p":7.5,"occ":0.218,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":195,"search":1.1,"cruiseMi":0},{"p":8,"occ":0.147,"trip":3.5,"circ":0,"standstill":0.005,"left":0,"rev":138.7,"search":1,"cruiseMi":0}],"4500":[{"p":1,"occ":0.997,"trip":4.5,"circ":8.6,"standstill":0.062,"left":6.3,"rev":105.2,"search":8.5,"cruiseMi":32.6},{"p":1.5,"occ":0.997,"trip":4,"circ":8.1,"standstill":0.066,"left":4.3,"rev":161.9,"search":8.8,"cruiseMi":32.3},{"p":2,"occ":0.994,"trip":3.2,"circ":2.9,"standstill":0.015,"left":4,"rev":220.7,"search":5.1,"cruiseMi":16.9},{"p":2.5,"occ":0.995,"trip":3.6,"circ":5.4,"standstill":0.028,"left":2.8,"rev":276.6,"search":6.4,"cruiseMi":26.4},{"p":3,"occ":0.988,"trip":3.3,"circ":1.9,"standstill":0.016,"left":2,"rev":334.8,"search":4.2,"cruiseMi":12.4},{"p":3.5,"occ":0.971,"trip":3.2,"circ":0.8,"standstill":0.011,"left":0.8,"rev":380.9,"search":3.2,"cruiseMi":7.1},{"p":4,"occ":0.907,"trip":3.4,"circ":0.1,"standstill":0.012,"left":0.3,"rev":412.4,"search":2,"cruiseMi":1.4},{"p":4.5,"occ":0.884,"trip":3.4,"circ":0.1,"standstill":0.012,"left":0,"rev":469.3,"search":1.8,"cruiseMi":0.8},{"p":5,"occ":0.843,"trip":3.3,"circ":0,"standstill":0.01,"left":0,"rev":508.6,"search":1.7,"cruiseMi":0.2},{"p":5.5,"occ":0.7,"trip":3.5,"circ":0,"standstill":0.013,"left":0,"rev":460.3,"search":1.5,"cruiseMi":0},{"p":6,"occ":0.615,"trip":3.4,"circ":0,"standstill":0.011,"left":0,"rev":442.1,"search":1.5,"cruiseMi":0},{"p":6.5,"occ":0.56,"trip":3.5,"circ":0,"standstill":0.012,"left":0,"rev":442,"search":1.5,"cruiseMi":0},{"p":7,"occ":0.487,"trip":3.4,"circ":0,"standstill":0.011,"left":0,"rev":409.1,"search":1.4,"cruiseMi":0},{"p":7.5,"occ":0.484,"trip":3.5,"circ":0,"standstill":0.012,"left":0,"rev":442.7,"search":1.4,"cruiseMi":0},{"p":8,"occ":0.394,"trip":3.6,"circ":0,"standstill":0.013,"left":0,"rev":383.8,"search":1.3,"cruiseMi":0}],"6000":[{"p":1,"occ":0.994,"trip":16.5,"circ":25.2,"standstill":0.466,"left":10.5,"rev":99.3,"search":29.3,"cruiseMi":25.6},{"p":1.5,"occ":0.996,"trip":13.9,"circ":22.1,"standstill":0.384,"left":10.1,"rev":152.6,"search":24.8,"cruiseMi":29.3},{"p":2,"occ":0.994,"trip":13.5,"circ":20.6,"standstill":0.37,"left":7.9,"rev":209.5,"search":25.2,"cruiseMi":25.6},{"p":2.5,"occ":0.995,"trip":7.2,"circ":10.8,"standstill":0.156,"left":7,"rev":262,"search":12.5,"cruiseMi":31.9},{"p":3,"occ":0.994,"trip":6.2,"circ":6.7,"standstill":0.095,"left":4.8,"rev":328.7,"search":9.4,"cruiseMi":24.6},{"p":3.5,"occ":0.992,"trip":5.3,"circ":6.4,"standstill":0.138,"left":4.5,"rev":378.9,"search":9.8,"cruiseMi":24.8},{"p":4,"occ":0.987,"trip":4.7,"circ":4.1,"standstill":0.051,"left":4,"rev":431.4,"search":6.5,"cruiseMi":18.7},{"p":4.5,"occ":0.981,"trip":3.8,"circ":2.1,"standstill":0.025,"left":2.3,"rev":509,"search":4.5,"cruiseMi":12.6},{"p":5,"occ":0.973,"trip":3.9,"circ":2.1,"standstill":0.033,"left":1.9,"rev":568.4,"search":4.2,"cruiseMi":12.1},{"p":5.5,"occ":0.92,"trip":3.6,"circ":0.3,"standstill":0.018,"left":0,"rev":598.9,"search":2.3,"cruiseMi":2.9},{"p":6,"occ":0.861,"trip":3.7,"circ":0,"standstill":0.019,"left":0.1,"rev":596.1,"search":1.8,"cruiseMi":0.4},{"p":6.5,"occ":0.835,"trip":3.6,"circ":0,"standstill":0.016,"left":0,"rev":627.7,"search":1.8,"cruiseMi":0.1},{"p":7,"occ":0.73,"trip":3.7,"circ":0,"standstill":0.018,"left":0,"rev":605.9,"search":1.6,"cruiseMi":0},{"p":7.5,"occ":0.611,"trip":3.8,"circ":0,"standstill":0.019,"left":0,"rev":557.4,"search":1.6,"cruiseMi":0},{"p":8,"occ":0.52,"trip":3.6,"circ":0,"standstill":0.017,"left":0,"rev":494.2,"search":1.4,"cruiseMi":0}],"7500":[{"p":1,"occ":0.975,"trip":22.2,"circ":25.4,"standstill":0.603,"left":13.8,"rev":100.9,"search":48,"cruiseMi":24.2},{"p":1.5,"occ":0.989,"trip":19.9,"circ":24.3,"standstill":0.556,"left":11.8,"rev":148.9,"search":46,"cruiseMi":27.6},{"p":2,"occ":0.984,"trip":19.5,"circ":21.5,"standstill":0.557,"left":11.6,"rev":198,"search":39.9,"cruiseMi":26.9},{"p":2.5,"occ":0.989,"trip":18.6,"circ":18.7,"standstill":0.513,"left":10.5,"rev":251.5,"search":28.1,"cruiseMi":22.9},{"p":3,"occ":0.996,"trip":14.9,"circ":16.4,"standstill":0.398,"left":7.6,"rev":325.1,"search":22.6,"cruiseMi":24.4},{"p":3.5,"occ":0.992,"trip":15.2,"circ":13.9,"standstill":0.382,"left":9,"rev":375.7,"search":20.9,"cruiseMi":24.6},{"p":4,"occ":0.995,"trip":13.2,"circ":11.3,"standstill":0.312,"left":8.3,"rev":430.7,"search":18.7,"cruiseMi":22},{"p":4.5,"occ":0.991,"trip":8.4,"circ":6,"standstill":0.16,"left":4.1,"rev":497.1,"search":10.7,"cruiseMi":20},{"p":5,"occ":0.996,"trip":6.6,"circ":5.4,"standstill":0.116,"left":4.6,"rev":563.7,"search":8.8,"cruiseMi":20.4},{"p":5.5,"occ":0.973,"trip":5.2,"circ":1.7,"standstill":0.059,"left":1.6,"rev":597.1,"search":4.9,"cruiseMi":9.1},{"p":6,"occ":0.947,"trip":4.5,"circ":0.7,"standstill":0.041,"left":0.8,"rev":664.4,"search":3,"cruiseMi":4.6},{"p":6.5,"occ":0.94,"trip":4.1,"circ":0.5,"standstill":0.034,"left":0.3,"rev":736.5,"search":2.7,"cruiseMi":3.8},{"p":7,"occ":0.871,"trip":4,"circ":0,"standstill":0.027,"left":0,"rev":723.3,"search":2,"cruiseMi":0.6},{"p":7.5,"occ":0.814,"trip":3.9,"circ":0,"standstill":0.025,"left":0,"rev":720.1,"search":1.8,"cruiseMi":0.2},{"p":8,"occ":0.711,"trip":3.9,"circ":0,"standstill":0.024,"left":0,"rev":683,"search":1.7,"cruiseMi":0}],"9000":[{"p":1,"occ":0.974,"trip":25.9,"circ":20.8,"standstill":0.67,"left":8.9,"rev":92.6,"search":49.6,"cruiseMi":16.1},{"p":1.5,"occ":0.973,"trip":22.9,"circ":23,"standstill":0.619,"left":9.8,"rev":144.7,"search":44.7,"cruiseMi":20.3},{"p":2,"occ":0.964,"trip":22.4,"circ":21.6,"standstill":0.639,"left":9.4,"rev":197.2,"search":48.4,"cruiseMi":19.4},{"p":2.5,"occ":0.97,"trip":22.7,"circ":21.3,"standstill":0.629,"left":10.3,"rev":249,"search":46.5,"cruiseMi":21.8},{"p":3,"occ":0.98,"trip":21.6,"circ":18.6,"standstill":0.575,"left":12.1,"rev":298.5,"search":41,"cruiseMi":23.2},{"p":3.5,"occ":0.984,"trip":19.5,"circ":17.1,"standstill":0.532,"left":11.3,"rev":378.4,"search":31.8,"cruiseMi":24.6},{"p":4,"occ":0.987,"trip":20.8,"circ":11.4,"standstill":0.512,"left":8.4,"rev":427.7,"search":27,"cruiseMi":18.3},{"p":4.5,"occ":0.988,"trip":19.6,"circ":11,"standstill":0.503,"left":7,"rev":497,"search":27.5,"cruiseMi":17.8},{"p":5,"occ":0.992,"trip":18.3,"circ":8.7,"standstill":0.457,"left":5.6,"rev":544.9,"search":19.4,"cruiseMi":15.6},{"p":5.5,"occ":0.986,"trip":17.3,"circ":7.2,"standstill":0.411,"left":7.3,"rev":612.4,"search":20.2,"cruiseMi":16.1},{"p":6,"occ":0.987,"trip":16.1,"circ":3.7,"standstill":0.328,"left":2.3,"rev":670.1,"search":12.8,"cruiseMi":9.7},{"p":6.5,"occ":0.984,"trip":11.9,"circ":2.4,"standstill":0.221,"left":1.6,"rev":722,"search":8.8,"cruiseMi":8},{"p":7,"occ":0.973,"trip":11.5,"circ":1.8,"standstill":0.208,"left":1.5,"rev":805.4,"search":6.9,"cruiseMi":5.7},{"p":7.5,"occ":0.92,"trip":6.7,"circ":0.3,"standstill":0.082,"left":0.5,"rev":821,"search":3.4,"cruiseMi":2.3},{"p":8,"occ":0.824,"trip":5.9,"circ":0,"standstill":0.073,"left":0.3,"rev":782.2,"search":2.2,"cruiseMi":0.7}]};
+  var SWEEPS = {"1500":[{"p":1,"occ":0.475,"trip":3,"circ":0,"standstill":0.003,"left":0,"rev":55.3,"search":1.2,"cruiseMi":0,"lotOcc":0.143,"lotFull":0,"far":0,"toLot":3.5},{"p":1.5,"occ":0.433,"trip":3,"circ":0,"standstill":0.003,"left":0,"rev":73.7,"search":1.2,"cruiseMi":0,"lotOcc":0.145,"lotFull":0,"far":0,"toLot":5},{"p":2,"occ":0.425,"trip":3.1,"circ":0,"standstill":0.004,"left":0,"rev":94.9,"search":1.1,"cruiseMi":0,"lotOcc":0.138,"lotFull":0,"far":0,"toLot":4.8},{"p":2.5,"occ":0.35,"trip":3.1,"circ":0,"standstill":0.003,"left":0,"rev":96.8,"search":1,"cruiseMi":0,"lotOcc":0.157,"lotFull":0,"far":0,"toLot":5},{"p":3,"occ":0.453,"trip":3.2,"circ":0,"standstill":0.004,"left":0,"rev":152.4,"search":1.2,"cruiseMi":0,"lotOcc":0.189,"lotFull":0,"far":0,"toLot":9.3},{"p":3.5,"occ":0.377,"trip":3.2,"circ":0,"standstill":0.004,"left":0,"rev":147.7,"search":1.1,"cruiseMi":0,"lotOcc":0.188,"lotFull":0,"far":0,"toLot":10},{"p":4,"occ":0.265,"trip":3.3,"circ":0,"standstill":0.003,"left":0,"rev":114.5,"search":0.9,"cruiseMi":0,"lotOcc":0.188,"lotFull":0,"far":0,"toLot":5.8},{"p":4.5,"occ":0.251,"trip":3.2,"circ":0,"standstill":0.003,"left":0,"rev":126.9,"search":1,"cruiseMi":0,"lotOcc":0.219,"lotFull":0,"far":0,"toLot":14.3},{"p":5,"occ":0.28,"trip":3.1,"circ":0,"standstill":0.003,"left":0,"rev":154.3,"search":1,"cruiseMi":0,"lotOcc":0.209,"lotFull":0,"far":0,"toLot":12.3},{"p":5.5,"occ":0.256,"trip":3.1,"circ":0,"standstill":0.003,"left":0,"rev":158.7,"search":1,"cruiseMi":0,"lotOcc":0.232,"lotFull":0,"far":0,"toLot":10.3},{"p":6,"occ":0.227,"trip":3.2,"circ":0,"standstill":0.004,"left":0,"rev":159.7,"search":0.9,"cruiseMi":0,"lotOcc":0.196,"lotFull":0,"far":0,"toLot":16.5},{"p":6.5,"occ":0.201,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":152.5,"search":1,"cruiseMi":0,"lotOcc":0.196,"lotFull":0,"far":0,"toLot":12.8},{"p":7,"occ":0.154,"trip":3.4,"circ":0,"standstill":0.005,"left":0,"rev":120.3,"search":0.9,"cruiseMi":0,"lotOcc":0.208,"lotFull":0,"far":0,"toLot":11.8},{"p":7.5,"occ":0.185,"trip":3.4,"circ":0,"standstill":0.004,"left":0,"rev":162.1,"search":1,"cruiseMi":0,"lotOcc":0.22,"lotFull":0,"far":0,"toLot":18.3},{"p":8,"occ":0.144,"trip":3.3,"circ":0,"standstill":0.004,"left":0,"rev":126.8,"search":1.1,"cruiseMi":0,"lotOcc":0.242,"lotFull":0,"far":0,"toLot":19.8},{"p":8.5,"occ":0.148,"trip":3.5,"circ":0,"standstill":0.004,"left":0,"rev":136.6,"search":0.9,"cruiseMi":0,"lotOcc":0.257,"lotFull":0,"far":0,"toLot":22},{"p":9,"occ":0.139,"trip":3.4,"circ":0,"standstill":0.004,"left":0,"rev":139.4,"search":0.9,"cruiseMi":0,"lotOcc":0.251,"lotFull":0,"far":0,"toLot":18.5},{"p":9.5,"occ":0.088,"trip":3.4,"circ":0,"standstill":0.004,"left":0,"rev":88.3,"search":0.9,"cruiseMi":0,"lotOcc":0.274,"lotFull":0,"far":0,"toLot":20.8},{"p":10,"occ":0.093,"trip":3.3,"circ":0,"standstill":0.003,"left":0,"rev":102.9,"search":0.9,"cruiseMi":0,"lotOcc":0.269,"lotFull":0,"far":0,"toLot":19},{"p":10.5,"occ":0.088,"trip":3.4,"circ":0,"standstill":0.004,"left":0,"rev":100.8,"search":0.9,"cruiseMi":0,"lotOcc":0.225,"lotFull":0,"far":0,"toLot":18.5},{"p":11,"occ":0.072,"trip":3.4,"circ":0,"standstill":0.005,"left":0,"rev":84.5,"search":0.8,"cruiseMi":0,"lotOcc":0.242,"lotFull":0,"far":0,"toLot":18.3},{"p":11.5,"occ":0.076,"trip":3.4,"circ":0,"standstill":0.004,"left":0,"rev":93.8,"search":1,"cruiseMi":0,"lotOcc":0.241,"lotFull":0,"far":0,"toLot":17},{"p":12,"occ":0.075,"trip":3.2,"circ":0,"standstill":0.004,"left":0,"rev":94.1,"search":0.8,"cruiseMi":0,"lotOcc":0.265,"lotFull":0,"far":0,"toLot":16}],"4500":[{"p":1,"occ":0.999,"trip":3.6,"circ":7,"standstill":0.028,"left":4.8,"rev":101.4,"search":7.9,"cruiseMi":31.5,"lotOcc":0.54,"lotFull":0,"far":0,"toLot":31.3},{"p":1.5,"occ":0.988,"trip":3.3,"circ":2.7,"standstill":0.013,"left":3.3,"rev":151.2,"search":4.5,"cruiseMi":16,"lotOcc":0.481,"lotFull":0,"far":0,"toLot":17.5},{"p":2,"occ":0.984,"trip":3.3,"circ":3.6,"standstill":0.017,"left":3.8,"rev":208.4,"search":5.6,"cruiseMi":18.1,"lotOcc":0.522,"lotFull":0,"far":0,"toLot":26.5},{"p":2.5,"occ":0.986,"trip":3.3,"circ":1.6,"standstill":0.013,"left":0.8,"rev":276.6,"search":3.8,"cruiseMi":9.1,"lotOcc":0.514,"lotFull":0,"far":0,"toLot":18.3},{"p":3,"occ":0.985,"trip":3.3,"circ":2.5,"standstill":0.014,"left":2,"rev":320.2,"search":4.5,"cruiseMi":15.3,"lotOcc":0.514,"lotFull":0,"far":0,"toLot":27.8},{"p":3.5,"occ":0.971,"trip":3.1,"circ":0.9,"standstill":0.009,"left":0.3,"rev":383.6,"search":3,"cruiseMi":6.5,"lotOcc":0.516,"lotFull":0,"far":0,"toLot":25.5},{"p":4,"occ":0.926,"trip":3.3,"circ":0,"standstill":0.011,"left":0,"rev":424.6,"search":1.7,"cruiseMi":0.2,"lotOcc":0.535,"lotFull":0,"far":0,"toLot":25},{"p":4.5,"occ":0.868,"trip":3.3,"circ":0,"standstill":0.011,"left":0,"rev":466.3,"search":1.5,"cruiseMi":0,"lotOcc":0.587,"lotFull":0,"far":0,"toLot":30.3},{"p":5,"occ":0.805,"trip":3.4,"circ":0,"standstill":0.011,"left":0,"rev":465.7,"search":1.4,"cruiseMi":0,"lotOcc":0.658,"lotFull":0,"far":0,"toLot":34.5},{"p":5.5,"occ":0.692,"trip":3.4,"circ":0,"standstill":0.01,"left":0,"rev":435.4,"search":1.5,"cruiseMi":0,"lotOcc":0.635,"lotFull":0,"far":0,"toLot":35.5},{"p":6,"occ":0.645,"trip":3.5,"circ":0,"standstill":0.012,"left":0,"rev":466.8,"search":1.5,"cruiseMi":0,"lotOcc":0.639,"lotFull":0,"far":0,"toLot":37},{"p":6.5,"occ":0.556,"trip":3.5,"circ":0,"standstill":0.012,"left":0,"rev":420.6,"search":1.3,"cruiseMi":0,"lotOcc":0.665,"lotFull":0,"far":0,"toLot":36.8},{"p":7,"occ":0.469,"trip":3.4,"circ":0,"standstill":0.01,"left":0,"rev":380.1,"search":1.2,"cruiseMi":0,"lotOcc":0.658,"lotFull":0,"far":0,"toLot":38.5},{"p":7.5,"occ":0.432,"trip":3.6,"circ":0,"standstill":0.014,"left":0,"rev":362.2,"search":1.2,"cruiseMi":0,"lotOcc":0.67,"lotFull":0,"far":0,"toLot":46.3},{"p":8,"occ":0.45,"trip":3.4,"circ":0,"standstill":0.01,"left":0,"rev":418.6,"search":1.2,"cruiseMi":0,"lotOcc":0.72,"lotFull":0,"far":0,"toLot":47.8},{"p":8.5,"occ":0.36,"trip":3.5,"circ":0,"standstill":0.012,"left":0,"rev":358.8,"search":1.1,"cruiseMi":0,"lotOcc":0.745,"lotFull":0,"far":0,"toLot":48.3},{"p":9,"occ":0.387,"trip":3.6,"circ":0,"standstill":0.013,"left":0,"rev":400.7,"search":1.2,"cruiseMi":0,"lotOcc":0.699,"lotFull":0,"far":0,"toLot":51.8},{"p":9.5,"occ":0.276,"trip":3.4,"circ":0,"standstill":0.011,"left":0,"rev":301.9,"search":1.1,"cruiseMi":0,"lotOcc":0.764,"lotFull":0,"far":0,"toLot":49.3},{"p":10,"occ":0.275,"trip":3.6,"circ":0,"standstill":0.013,"left":0,"rev":314.2,"search":1.1,"cruiseMi":0,"lotOcc":0.759,"lotFull":0,"far":0,"toLot":51.5},{"p":10.5,"occ":0.219,"trip":3.5,"circ":0,"standstill":0.012,"left":0,"rev":257.6,"search":1,"cruiseMi":0,"lotOcc":0.774,"lotFull":0,"far":0,"toLot":52.8},{"p":11,"occ":0.254,"trip":3.6,"circ":0,"standstill":0.012,"left":0,"rev":316.8,"search":1.1,"cruiseMi":0,"lotOcc":0.782,"lotFull":0,"far":0,"toLot":49.5},{"p":11.5,"occ":0.164,"trip":3.5,"circ":0,"standstill":0.01,"left":0,"rev":202.6,"search":1,"cruiseMi":0,"lotOcc":0.731,"lotFull":0,"far":0,"toLot":51},{"p":12,"occ":0.214,"trip":3.5,"circ":0,"standstill":0.011,"left":0,"rev":285.6,"search":1,"cruiseMi":0,"lotOcc":0.736,"lotFull":0,"far":0,"toLot":55.3}],"6000":[{"p":1,"occ":0.999,"trip":7.4,"circ":14,"standstill":0.179,"left":8,"rev":101.3,"search":15.5,"cruiseMi":36.2,"lotOcc":0.766,"lotFull":0,"far":0,"toLot":42.4},{"p":1.5,"occ":0.998,"trip":7.3,"circ":11.5,"standstill":0.166,"left":6.6,"rev":153,"search":11.9,"cruiseMi":32.4,"lotOcc":0.723,"lotFull":0,"far":0,"toLot":45.3},{"p":2,"occ":0.998,"trip":6.5,"circ":10.1,"standstill":0.128,"left":5.8,"rev":208.1,"search":11.8,"cruiseMi":31.1,"lotOcc":0.728,"lotFull":0,"far":0,"toLot":45.4},{"p":2.5,"occ":0.998,"trip":4.8,"circ":6.4,"standstill":0.062,"left":6.9,"rev":262.9,"search":8.1,"cruiseMi":26.1,"lotOcc":0.733,"lotFull":0,"far":0,"toLot":39.6},{"p":3,"occ":0.997,"trip":4.3,"circ":4.8,"standstill":0.044,"left":2.8,"rev":324.9,"search":6.7,"cruiseMi":23.3,"lotOcc":0.768,"lotFull":0,"far":0,"toLot":43.8},{"p":3.5,"occ":0.99,"trip":3.6,"circ":3.3,"standstill":0.025,"left":2.9,"rev":383.8,"search":5.3,"cruiseMi":17.4,"lotOcc":0.771,"lotFull":0,"far":0,"toLot":39.3},{"p":4,"occ":0.988,"trip":3.8,"circ":2.1,"standstill":0.026,"left":1.6,"rev":435.1,"search":4.6,"cruiseMi":11.7,"lotOcc":0.777,"lotFull":0,"far":0,"toLot":40},{"p":4.5,"occ":0.977,"trip":3.6,"circ":1.2,"standstill":0.02,"left":0.9,"rev":497.7,"search":3.3,"cruiseMi":7.9,"lotOcc":0.796,"lotFull":0,"far":0,"toLot":44.9},{"p":5,"occ":0.959,"trip":3.6,"circ":1.1,"standstill":0.018,"left":0.4,"rev":549.2,"search":3.2,"cruiseMi":6.9,"lotOcc":0.803,"lotFull":0,"far":0,"toLot":44},{"p":5.5,"occ":0.871,"trip":3.5,"circ":0.4,"standstill":0.015,"left":0.5,"rev":550.6,"search":2.2,"cruiseMi":2.4,"lotOcc":0.826,"lotFull":0,"far":0,"toLot":47},{"p":6,"occ":0.849,"trip":3.6,"circ":0,"standstill":0.015,"left":0,"rev":584.3,"search":1.6,"cruiseMi":0.2,"lotOcc":0.818,"lotFull":0,"far":0,"toLot":52},{"p":6.5,"occ":0.797,"trip":3.7,"circ":0,"standstill":0.017,"left":0,"rev":588.7,"search":1.5,"cruiseMi":0,"lotOcc":0.87,"lotFull":0.002,"far":0.1,"toLot":55.1},{"p":7,"occ":0.655,"trip":3.5,"circ":0,"standstill":0.015,"left":0,"rev":532.3,"search":1.4,"cruiseMi":0,"lotOcc":0.919,"lotFull":0,"far":0,"toLot":58.5},{"p":7.5,"occ":0.537,"trip":3.6,"circ":0,"standstill":0.015,"left":0,"rev":474.6,"search":1.3,"cruiseMi":0,"lotOcc":0.898,"lotFull":0,"far":0,"toLot":54.9},{"p":8,"occ":0.495,"trip":3.6,"circ":0,"standstill":0.017,"left":0,"rev":474.3,"search":1.3,"cruiseMi":0,"lotOcc":0.899,"lotFull":0,"far":0,"toLot":59.3},{"p":8.5,"occ":0.486,"trip":3.6,"circ":0,"standstill":0.015,"left":0,"rev":489.3,"search":1.3,"cruiseMi":0,"lotOcc":0.954,"lotFull":0.019,"far":2.3,"toLot":61.5},{"p":9,"occ":0.422,"trip":3.7,"circ":0,"standstill":0.018,"left":0,"rev":453.5,"search":1.3,"cruiseMi":0,"lotOcc":0.956,"lotFull":0.038,"far":3.6,"toLot":68},{"p":9.5,"occ":0.36,"trip":3.6,"circ":0,"standstill":0.017,"left":0,"rev":406.2,"search":1.2,"cruiseMi":0,"lotOcc":0.933,"lotFull":0.021,"far":2.3,"toLot":65.4},{"p":10,"occ":0.301,"trip":3.6,"circ":0,"standstill":0.015,"left":0,"rev":356.4,"search":1.2,"cruiseMi":0,"lotOcc":0.947,"lotFull":0.053,"far":4.1,"toLot":68},{"p":10.5,"occ":0.317,"trip":3.6,"circ":0,"standstill":0.016,"left":0,"rev":396.1,"search":1.1,"cruiseMi":0,"lotOcc":0.969,"lotFull":0.071,"far":6.8,"toLot":70.6},{"p":11,"occ":0.28,"trip":3.7,"circ":0,"standstill":0.016,"left":0,"rev":372.1,"search":1.1,"cruiseMi":0,"lotOcc":0.974,"lotFull":0.054,"far":6.1,"toLot":66.6},{"p":11.5,"occ":0.287,"trip":3.7,"circ":0,"standstill":0.017,"left":0,"rev":392.7,"search":1.1,"cruiseMi":0,"lotOcc":0.977,"lotFull":0.112,"far":13.8,"toLot":71.5},{"p":12,"occ":0.233,"trip":3.7,"circ":0,"standstill":0.016,"left":0,"rev":337,"search":1.1,"cruiseMi":0,"lotOcc":0.971,"lotFull":0.1,"far":11.9,"toLot":72.3}],"7500":[{"p":1,"occ":0.999,"trip":11.2,"circ":18.4,"standstill":0.346,"left":13.3,"rev":98.8,"search":26.4,"cruiseMi":40.9,"lotOcc":0.949,"lotFull":0.102,"far":11.5,"toLot":69.5},{"p":1.5,"occ":0.999,"trip":11.1,"circ":14.8,"standstill":0.33,"left":11.5,"rev":155.2,"search":22.2,"cruiseMi":36,"lotOcc":0.929,"lotFull":0.033,"far":4,"toLot":61.5},{"p":2,"occ":0.999,"trip":10.9,"circ":15.4,"standstill":0.33,"left":11.3,"rev":205.2,"search":23.5,"cruiseMi":37.1,"lotOcc":0.963,"lotFull":0.084,"far":11.8,"toLot":67.3},{"p":2.5,"occ":0.999,"trip":10.6,"circ":12.4,"standstill":0.308,"left":8.9,"rev":264.6,"search":22.8,"cruiseMi":33.6,"lotOcc":0.966,"lotFull":0.081,"far":8.6,"toLot":65.8},{"p":3,"occ":0.999,"trip":9.4,"circ":12.4,"standstill":0.261,"left":9.6,"rev":325.1,"search":17.2,"cruiseMi":32.1,"lotOcc":0.966,"lotFull":0.074,"far":9.9,"toLot":63.9},{"p":3.5,"occ":0.997,"trip":8.9,"circ":9.7,"standstill":0.231,"left":7.3,"rev":370.8,"search":15.6,"cruiseMi":28,"lotOcc":0.977,"lotFull":0.102,"far":12.3,"toLot":69.3},{"p":4,"occ":0.997,"trip":7.1,"circ":6.4,"standstill":0.147,"left":6.3,"rev":441.7,"search":11.3,"cruiseMi":22.6,"lotOcc":0.978,"lotFull":0.1,"far":11.3,"toLot":64.6},{"p":4.5,"occ":0.996,"trip":6.5,"circ":5.9,"standstill":0.116,"left":4.3,"rev":493.6,"search":8.5,"cruiseMi":22.2,"lotOcc":0.983,"lotFull":0.157,"far":21.3,"toLot":68.8},{"p":5,"occ":0.987,"trip":5,"circ":4,"standstill":0.066,"left":2.9,"rev":563.2,"search":6,"cruiseMi":16.5,"lotOcc":0.979,"lotFull":0.148,"far":19.6,"toLot":63},{"p":5.5,"occ":0.979,"trip":4.5,"circ":2,"standstill":0.048,"left":2.3,"rev":616.8,"search":4.9,"cruiseMi":10.3,"lotOcc":0.965,"lotFull":0.075,"far":9.9,"toLot":54.8},{"p":6,"occ":0.976,"trip":4.6,"circ":2.2,"standstill":0.047,"left":1.3,"rev":672.1,"search":4.4,"cruiseMi":10.3,"lotOcc":0.98,"lotFull":0.142,"far":19.1,"toLot":68.3},{"p":6.5,"occ":0.94,"trip":4.1,"circ":0.9,"standstill":0.031,"left":0.8,"rev":719.7,"search":2.7,"cruiseMi":4.3,"lotOcc":0.986,"lotFull":0.161,"far":20.8,"toLot":66.3},{"p":7,"occ":0.953,"trip":3.8,"circ":0.5,"standstill":0.025,"left":0.8,"rev":777.8,"search":2.5,"cruiseMi":3.4,"lotOcc":0.981,"lotFull":0.112,"far":14.4,"toLot":65.1},{"p":7.5,"occ":0.87,"trip":3.8,"circ":0.1,"standstill":0.022,"left":0,"rev":781.8,"search":1.8,"cruiseMi":0.5,"lotOcc":0.981,"lotFull":0.163,"far":18.5,"toLot":64.6},{"p":8,"occ":0.747,"trip":3.8,"circ":0,"standstill":0.022,"left":0,"rev":701.5,"search":1.5,"cruiseMi":0,"lotOcc":0.985,"lotFull":0.121,"far":17.8,"toLot":72.3},{"p":8.5,"occ":0.681,"trip":3.8,"circ":0,"standstill":0.022,"left":0,"rev":683.1,"search":1.5,"cruiseMi":0,"lotOcc":0.984,"lotFull":0.13,"far":18.3,"toLot":74.8},{"p":9,"occ":0.687,"trip":3.8,"circ":0,"standstill":0.023,"left":0,"rev":737.4,"search":1.5,"cruiseMi":0,"lotOcc":0.988,"lotFull":0.173,"far":21,"toLot":76},{"p":9.5,"occ":0.573,"trip":3.8,"circ":0,"standstill":0.021,"left":0,"rev":658.2,"search":1.4,"cruiseMi":0,"lotOcc":0.982,"lotFull":0.157,"far":21,"toLot":82.8},{"p":10,"occ":0.571,"trip":3.8,"circ":0,"standstill":0.022,"left":0,"rev":684.6,"search":1.4,"cruiseMi":0,"lotOcc":0.982,"lotFull":0.124,"far":14.3,"toLot":80.1},{"p":10.5,"occ":0.503,"trip":3.8,"circ":0,"standstill":0.02,"left":0,"rev":631.8,"search":1.3,"cruiseMi":0,"lotOcc":0.991,"lotFull":0.18,"far":23.6,"toLot":85.9},{"p":11,"occ":0.517,"trip":3.7,"circ":0,"standstill":0.02,"left":0,"rev":685.4,"search":1.3,"cruiseMi":0,"lotOcc":0.99,"lotFull":0.167,"far":19.1,"toLot":85.6},{"p":11.5,"occ":0.405,"trip":3.8,"circ":0,"standstill":0.02,"left":0,"rev":567.4,"search":1.2,"cruiseMi":0,"lotOcc":0.985,"lotFull":0.144,"far":19.4,"toLot":87.1},{"p":12,"occ":0.397,"trip":3.9,"circ":0,"standstill":0.024,"left":0,"rev":571.5,"search":1.3,"cruiseMi":0,"lotOcc":0.989,"lotFull":0.2,"far":31.4,"toLot":89.1}],"9000":[{"p":1,"occ":0.999,"trip":13.7,"circ":23.4,"standstill":0.42,"left":10,"rev":100.3,"search":31.7,"cruiseMi":38.6,"lotOcc":0.994,"lotFull":0.262,"far":34,"toLot":81.8},{"p":1.5,"occ":0.999,"trip":13.3,"circ":22.1,"standstill":0.409,"left":12,"rev":152.2,"search":31.7,"cruiseMi":40.4,"lotOcc":0.994,"lotFull":0.298,"far":44.6,"toLot":86.5},{"p":2,"occ":0.999,"trip":12.1,"circ":20.4,"standstill":0.379,"left":14.3,"rev":213,"search":33.8,"cruiseMi":43.6,"lotOcc":0.994,"lotFull":0.295,"far":48.4,"toLot":84.5},{"p":2.5,"occ":0.999,"trip":12.7,"circ":18.2,"standstill":0.39,"left":12,"rev":260.2,"search":33.8,"cruiseMi":40,"lotOcc":0.994,"lotFull":0.298,"far":45,"toLot":85.9},{"p":3,"occ":0.999,"trip":11.9,"circ":17.5,"standstill":0.364,"left":14.4,"rev":309.4,"search":32,"cruiseMi":38.1,"lotOcc":0.994,"lotFull":0.263,"far":39.4,"toLot":87},{"p":3.5,"occ":0.999,"trip":12,"circ":14.2,"standstill":0.361,"left":12.1,"rev":374.9,"search":25.5,"cruiseMi":33.4,"lotOcc":0.994,"lotFull":0.253,"far":36.4,"toLot":87.5},{"p":4,"occ":0.998,"trip":11.6,"circ":14.2,"standstill":0.353,"left":8.4,"rev":434.1,"search":25.4,"cruiseMi":31.9,"lotOcc":0.996,"lotFull":0.356,"far":58.4,"toLot":97.5},{"p":4.5,"occ":0.998,"trip":11.6,"circ":12,"standstill":0.347,"left":9.3,"rev":486.1,"search":23.2,"cruiseMi":29.8,"lotOcc":0.989,"lotFull":0.301,"far":42,"toLot":88.8},{"p":5,"occ":0.998,"trip":10.7,"circ":10.6,"standstill":0.304,"left":8.3,"rev":554.8,"search":20.2,"cruiseMi":27.4,"lotOcc":0.994,"lotFull":0.279,"far":44.4,"toLot":92.3},{"p":5.5,"occ":0.998,"trip":10.3,"circ":7.5,"standstill":0.284,"left":7.5,"rev":617.4,"search":17.8,"cruiseMi":22.8,"lotOcc":0.994,"lotFull":0.268,"far":42.1,"toLot":89.9},{"p":6,"occ":0.995,"trip":9.3,"circ":5.9,"standstill":0.23,"left":4.5,"rev":678.6,"search":13.9,"cruiseMi":19.1,"lotOcc":0.992,"lotFull":0.261,"far":41.8,"toLot":93},{"p":6.5,"occ":0.996,"trip":9.3,"circ":4.6,"standstill":0.224,"left":3,"rev":744.1,"search":12.1,"cruiseMi":15.8,"lotOcc":0.992,"lotFull":0.295,"far":44.5,"toLot":93.9},{"p":7,"occ":0.989,"trip":6.7,"circ":2.5,"standstill":0.113,"left":2.6,"rev":829.3,"search":6.6,"cruiseMi":10.8,"lotOcc":0.992,"lotFull":0.194,"far":30.4,"toLot":81.6},{"p":7.5,"occ":0.983,"trip":4.7,"circ":1.9,"standstill":0.05,"left":1.3,"rev":879.8,"search":4.1,"cruiseMi":9.1,"lotOcc":0.992,"lotFull":0.261,"far":37.8,"toLot":81},{"p":8,"occ":0.957,"trip":5.8,"circ":2.5,"standstill":0.083,"left":2.4,"rev":909.9,"search":5.1,"cruiseMi":9.5,"lotOcc":0.993,"lotFull":0.246,"far":34.9,"toLot":90.6},{"p":8.5,"occ":0.866,"trip":5.5,"circ":0.5,"standstill":0.075,"left":0.1,"rev":877.3,"search":3.5,"cruiseMi":1.2,"lotOcc":0.993,"lotFull":0.264,"far":45.5,"toLot":91.5},{"p":9,"occ":0.917,"trip":4.2,"circ":0.3,"standstill":0.035,"left":0.1,"rev":982.8,"search":2.2,"cruiseMi":1.8,"lotOcc":0.993,"lotFull":0.278,"far":42.6,"toLot":91},{"p":9.5,"occ":0.812,"trip":4.1,"circ":0,"standstill":0.031,"left":0,"rev":938.5,"search":1.7,"cruiseMi":0,"lotOcc":0.994,"lotFull":0.258,"far":43.5,"toLot":96.5},{"p":10,"occ":0.733,"trip":4.3,"circ":0,"standstill":0.037,"left":0,"rev":895.4,"search":1.7,"cruiseMi":0,"lotOcc":0.992,"lotFull":0.214,"far":33.3,"toLot":94.3},{"p":10.5,"occ":0.73,"trip":4.1,"circ":0,"standstill":0.03,"left":0,"rev":931.8,"search":1.6,"cruiseMi":0,"lotOcc":0.992,"lotFull":0.257,"far":40.5,"toLot":96.8},{"p":11,"occ":0.694,"trip":4,"circ":0,"standstill":0.029,"left":0,"rev":935,"search":1.6,"cruiseMi":0,"lotOcc":0.994,"lotFull":0.287,"far":46.4,"toLot":95.4},{"p":11.5,"occ":0.53,"trip":4,"circ":0,"standstill":0.028,"left":0,"rev":743.7,"search":1.4,"cruiseMi":0,"lotOcc":0.994,"lotFull":0.263,"far":41.3,"toLot":98.5},{"p":12,"occ":0.552,"trip":4,"circ":0,"standstill":0.029,"left":0,"rev":820.3,"search":1.4,"cruiseMi":0,"lotOcc":0.994,"lotFull":0.289,"far":50.3,"toLot":104.3}]};
   function runSweep() {
-    var job = ++sweepJob, v = ui.visitors, res = [], k = 0, prices = [1, 2, 3, 4, 5, 6, 7, 8];
+    var job = ++sweepJob, v = ui.visitors, res = [], k = 0, prices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     if (SWEEPS[v]) { sweep = { v: v, rows: SWEEPS[v] }; drawSweep(); afterSweep(); return; }
     function next() {
       if (job !== sweepJob) return;
-      $('sweepText').innerHTML = '<span class="computing">Running whole days at eight rates for ' + fmtV(v) + ' visitors… ' + k + ' of 8</span>';
+      $('sweepText').innerHTML = '<span class="computing">Running whole days at twelve rates for ' + fmtV(v) + ' visitors… ' + k + ' of 12</span>';
       var p = prices[k], a = runDay(world, p, v, 11, 300, 420), r = { p: p };
       ['occ', 'circ', 'rev', 'left', 'search', 'trip', 'standstill', 'cruiseMi'].forEach(function (f) { r[f] = a[f]; });
       res.push(r); k++;
@@ -1425,7 +1533,7 @@ if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, runHeadles
     } else {
       t = 'With ' + who + ', $2.00 leaves the loop meters ' + Math.round(at2.occ * 100) + '% full at 1 to 3 PM. ' + Math.round(at2.standstill * 100) + '% of the loop is at a standstill, a trip around takes about <b>' + Math.round(at2.trip) + ' minutes</b>, about ' + Math.round(at2.circ) + ' cars are circling, and drivers take ' + Math.round(at2.search) + ' minutes from arriving to parking.';
       if (best) t += ' At about <b>' + money(best.p) + '</b> all day, the meters run ' + Math.round(best.occ * 100) + '% full, traffic moves, a trip around takes about <b>' + Math.round(best.trip) + ' minutes</b>, and the meters take in $' + Math.round(best.rev) + ' an hour instead of $' + Math.round(at2.rev) + '.';
-      else t += ' Even $8.00 doesn\'t keep the loop moving with this many visitors: through traffic and drop-offs alone fill it.';
+      else t += ' Even $12.00 doesn\'t keep the loop moving with this many visitors: through traffic and drop-offs alone fill it.';
     }
     $('sweepText').innerHTML = t;
     markSweep(true);
@@ -1447,21 +1555,21 @@ if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, runHeadles
       var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
       var padL = 40, padR = 10, y0 = 10, bot = 22, ph = H - y0 - bot, pw = W - padL - padR;
       var max = sp.max; if (!max) { max = 0; rows.forEach(function (r) { max = Math.max(max, r[sp.f]); }); max = niceMax(max); }
-      function xp(v) { return padL + pw * (v - 1) / 7; }
+      function xp(v) { return padL + pw * (v - 1) / (PMAX - 1); }
       function yv(v) { return y0 + ph * (1 - v / max); }
       if (sp.band) { c.fillStyle = T.band; c.fillRect(padL, yv(0.9), pw, yv(0.8) - yv(0.9)); }
       c.strokeStyle = T.rule2; c.lineWidth = 1; c.font = '10px ' + T.fMono; c.fillStyle = T.ink3; c.textAlign = 'right'; c.textBaseline = 'middle';
       [0, 0.5, 1].forEach(function (g) { var y = yv(max * g); c.beginPath(); c.moveTo(padL, y + 0.5); c.lineTo(W - padR, y + 0.5); c.stroke(); c.fillText(sp.fmt(max * g), padL - 5, y); });
       c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-      for (var d = 1; d <= 8; d++) c.fillText('$' + d, xp(d), H - 5);
+      for (var d = 1; d <= PMAX; d += (W < 300 ? 2 : 1)) c.fillText('$' + d, xp(d), H - 5);
       c.setLineDash([3, 3]); c.strokeStyle = T.ink3; c.beginPath(); c.moveTo(xp(2) + 0.5, y0); c.lineTo(xp(2) + 0.5, y0 + ph); c.stroke(); c.setLineDash([]);
       c.fillStyle = T.ink3; c.textAlign = 'left'; c.fillText('today', xp(2) + 4, y0 + 10);
       c.strokeStyle = sp.color; c.lineWidth = 2.2; c.beginPath();
       rows.forEach(function (r, i) { var x = xp(r.p), y = yv(r[sp.f]); if (i) c.lineTo(x, y); else c.moveTo(x, y); }); c.stroke();
       c.fillStyle = sp.color; rows.forEach(function (r) { c.beginPath(); c.arc(xp(r.p), yv(r[sp.f]), 2, 0, Math.PI * 2); c.fill(); });
       if (best) { c.strokeStyle = T.good; c.lineWidth = 2; c.beginPath(); c.arc(xp(best.p), yv(best[sp.f]), 6, 0, Math.PI * 2); c.stroke(); }
-      var vv = interp(rows, Math.min(8, p), sp.f);
-      c.fillStyle = T.ink; c.beginPath(); c.arc(xp(Math.min(8, p)), yv(vv), 4.5, 0, Math.PI * 2); c.fill();
+      var vv = interp(rows, Math.min(PMAX, p), sp.f);
+      c.fillStyle = T.ink; c.beginPath(); c.arc(xp(Math.min(PMAX, p)), yv(vv), 4.5, 0, Math.PI * 2); c.fill();
     });
   }
   function niceMax(v) { if (v <= 0) return 1; var e = Math.pow(10, Math.floor(Math.log10(v))), m = v / e; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * e; }

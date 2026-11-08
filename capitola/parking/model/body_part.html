@@ -11,6 +11,7 @@
       <div><dt>Beach &amp; Village lots</dt><dd>$1.00/hr · 12 hr</dd></div>
       <div><dt>Busy summer Saturday</dt><dd>~9,000 visitors</dd></div>
     </dl>
+    <p class="grounded"><span class="tag study">City counts</span>Built on the city's own numbers: its 2008 parking study found Village parking 99% full from 11 to 5 on a summer Saturday, 82% of visitors arriving by car and visits of 3.4 hours, and the city still reports its 195 Village street spaces "typically completely occupied between 11am and 4pm" on summer weekends. <a href="#study">How the model compares &darr;</a></p>
   </header>
 
   <section class="sim" aria-label="Simulation">
@@ -46,7 +47,7 @@
           </div>
         </div>
         <label class="slider" for="price"><span>Meter rate</span><output id="priceOut">$2.00/hr</output>
-          <input type="range" id="price" min="1" max="10" step="0.25" value="2"></label>
+          <input type="range" id="price" min="1" max="12" step="0.25" value="2"></label>
         <p class="hint">All 130 loop meters, all day. The lots stay at $1.00. Changing a setting reruns the day from 8 AM.</p>
         <hr class="divider">
         <div>
@@ -59,7 +60,7 @@
         </div>
         <label class="slider" for="vis"><span>Visitors to Capitola that day</span><output id="visOut">9,000 a day</output>
           <input type="range" id="vis" min="500" max="12000" step="500" value="9000"></label>
-        <p class="hint">A busy summer Saturday is about 9,000, sized from the city's 2008 parking study.</p>
+        <p class="hint">A busy summer Saturday is about 9,000. At that crowd the model matches the city's 2008 counts (<a href="#study">below</a>).</p>
         
         <hr class="divider">
         <div class="row">
@@ -89,7 +90,7 @@
 
   <section class="block" aria-labelledby="sweepH">
     <h2 id="sweepH">Where the rate should be</h2>
-    <p class="sweeptext" id="sweepText"><span class="computing">Running the model at fifteen rates from $1 to $8…</span></p>
+    <p class="sweeptext" id="sweepText"><span class="computing">Running the model at rates from $1 to $12…</span></p>
     <div class="minis">
       <figure class="card"><figcaption>Loop meter occupancy</figcaption><canvas id="sw0" aria-label="Occupancy by rate"></canvas></figure>
       <figure class="card"><figcaption>Trip around the loop, minutes</figcaption><canvas id="sw1" aria-label="Minutes for a trip around the loop by rate"></canvas></figure>
@@ -99,12 +100,32 @@
     <p class="note">Each point is a whole day at that rate with the visitors set above, measured from 1 to 3 PM. Dashed line: today. Ringed dot: the lowest rate that keeps the loop moving. Filled dot: the slider.</p>
   </section>
 
+  <section class="block" id="study" aria-labelledby="studyH">
+    <h2 id="studyH">Checked against the city's counts</h2>
+    <p class="sweeptext">The only Capitola parking study with field counts is RBF Consulting's <a href="https://www.cityofcapitola.gov/DocumentCenter/View/883">Parking Analysis for the Capitola Village Area</a> (December 2008). Its team counted parked cars across the Village and surveyed 249 visitors on Saturday, August 18, 2007. The model uses its measured numbers where it can, and on a summer Saturday it reproduces what the counters saw. No newer study with counts exists (the city's <a href="https://www.cityofcapitola.gov/774/Capitola-Parking-Studies-and-Improvement">list of parking studies</a> ends in 2009), but the city's recent statements line up with it. In 2022 it told the Coastal Commission that the Village's 195 street spaces are <a href="https://documents.coastal.ca.gov/reports/2022/6/F12a/f12a-6-2022-report.pdf">typically full from 11 to 4</a> on summer weekends, and that its two lots, about 455 spaces since a second one opened in 2013, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-2c81460f0b214b0f821589b3388b20eb/ITEM-Attachment-001-80213fcd52dd406d9ffce84189da7856.pdf">fill for a few hours</a> on about 25 days a year.</p>
+    <div class="tablewrap">
+      <table class="cmp">
+        <thead><tr><th>Measure</th><th>City count, summer Saturday 2007</th><th>Model, 9,000 visitors at $2.00</th><th>How the model uses it</th></tr></thead>
+        <tbody>
+          <tr><td>How full parking is, 11 AM to 5 PM</td><td><b>99%</b>Village streets and lots, average and peak</td><td><b>100%</b>the 130 loop meters</td><td><span class="tag">Result</span>Not set directly. It comes out of the visitors, their stays and the lots.</td></tr>
+          <tr><td>The $1 lots behind City Hall</td><td><b>Full</b>at peak in 2007, when there was one 234-space lot; today's 455 spaces fill for a few hours on about 25 days a year (city, 2022)</td><td><b>Full about 1 to 3:30 PM</b>455 spaces</td><td><span class="tag study">From the city</span>Today's 455 spaces. How fast they fill is tuned to the city's description. Once they're full, drivers priced off the loop park farther out.</td></tr>
+          <tr><td>How long visitors stay</td><td><b>3.4 hours</b>visitors surveyed; cars in the lot, 3.3 hours</td><td><b>3.3 hours</b>on average (median 3)</td><td><span class="tag study">From the study</span>Each driver's stay is drawn around this.</td></tr>
+          <tr><td>Visitors who come by car</td><td><b>82%</b>of 248 surveyed</td><td><b>82%</b></td><td><span class="tag study">From the study</span>Used as is.</td></tr>
+          <tr><td>People per car</td><td><b>2.8</b>the study's figure for beach visitors</td><td><b>2.8</b></td><td><span class="tag study">From the study</span>Used as is.</td></tr>
+          <tr><td>Traffic along the Esplanade</td><td><b>3,055</b>vehicles a day, county count, July 2007 (3,607 in May 1998)</td><td><b>~2,600</b>from 8 AM to 8 PM</td><td><span class="tag">Check</span>On the tuned traffic: through trips, drop-offs and circling together.</td></tr>
+          <tr><td>Cars parked at the peak</td><td><b>1,212</b>calculated demand, residents and workers included, for 1,036 spaces</td><td><b>~1,050</b>visitors' cars at 2 PM</td><td><span class="tag">Estimated</span>No one counts daily visitors. 9,000 is sized from this.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">No one has counted circling or timed a lap, so those parts of the model are tuned to what locals report on a busy summer Saturday: a 10 to 15 minute crawl around the loop at midday. The city's 2008 <a href="https://web.archive.org/web/20220320182130/https://www.cityofcapitola.org/sites/default/files/fileattachments/public_works/page/2492/rbf_report_2008_v3.pdf">one-way traffic study</a> listed "eliminate grid-lock on the Esplanade" among its goals. The parking study's first recommendation was parking fees that rise when demand is high.</p>
+  </section>
+
   <details class="method block">
     <summary><span>How the model works, assumptions and sources</span></summary>
     <div class="methodbody">
     <div class="prose">
-      <p>The day runs from 8 AM. Visitors arrive by car through the morning, most between 10 AM and 2 PM, and a share of them look for a space on the loop first. Each driver has a stay in mind (usually a few hours at the beach), a value on their time, and gear and kids to haul. They compare the cost of a loop meter (which charges for at most 3 hours, with some risk of a ticket for staying longer) with the lots (cheaper, 12 hours allowed, a quarter-mile walk each way) and try the loop if it comes out ahead. Drivers who find the curb full circle and look again, usually cutting down San Jose Avenue, and stop to wait when they see someone about to pull out; after each lap they decide whether a space is still worth the time. Drivers who see a long line into the Village turn into the lots instead.</p>
-      <p>They share the loop with everyone else: through traffic, deliveries and people headed elsewhere in the Village, and drivers stopping at the corner by the triangle to unload people and gear. People cross at the marked crosswalks. Every car takes its turn at the two all-way stops, and drivers waiting to turn onto a backed-up San Jose Avenue hold up Capitola Avenue behind them. When the loop is packed, cars wait to get in.</p>
+      <p>The day runs from 8 AM. Visitors arrive by car through the morning, most between 10 AM and 2 PM, and a share of them look for a space on the loop first. Each driver has a stay in mind (usually a few hours at the beach), a value on their time, and gear and kids to haul. They compare the cost of a loop meter (which charges for at most 3 hours, with some risk of a ticket for staying longer) with the lots (cheaper, 12 hours allowed, a quarter-mile walk each way) and try the loop if it comes out ahead. On the busiest days the lots fill around midday, as the city reports; after that the comparison is with free parking farther out, about a 15-minute walk each way. On a quiet loop drivers hold out for a space near where they're going; once it's nearly full they take the first open space they see, including one they spot down the angled leg or San Jose Avenue. Drivers who find the curb full circle and look again, usually cutting down San Jose Avenue, and stop to wait when they see someone about to pull out; after each lap they decide whether a space is still worth the time. Drivers who see a long line into the Village turn into the lots instead.</p>
+      <p>They share the loop with everyone else: through traffic, deliveries and people headed elsewhere in the Village, and drivers stopping at the corner by the triangle to unload people and gear. People cross at the marked crosswalks. Every car takes its turn at the two all-way stops, cars merging from San Jose Avenue and the angled leg take turns with the cars already on the loop, and drivers waiting to turn onto a backed-up San Jose Avenue hold up Capitola Avenue behind them. When the loop is packed, cars wait to get in.</p>
     </div>
     <div class="tablewrap">
       <table>
@@ -115,24 +136,30 @@
           <tr><td>Beach &amp; Village lots</td><td>$1.00/hr, 12 hr max</td><td><span class="tag src">City</span>Raised from $0.50 in the same 2023 ordinance.</td></tr>
           <tr><td>Walk from the lots</td><td>~¼ mile, 7 min each way</td><td><span class="tag src">Map</span>OpenStreetMap distance from the lots behind City Hall to the Esplanade.</td></tr>
           <tr><td>The loop</td><td>0.31 mile</td><td><span class="tag src">Map</span>Esplanade, then either the one-way aisle around the beach side of the triangle or Monterey Ave's angled leg on its west side, Monterey Ave, Capitola Ave, Stockton Ave, with one-way San Jose Ave as a shortcut back to the beach. Eleven marked crosswalks and two all-way stops, all from OpenStreetMap.</td></tr>
-          <tr><td>How long people stay</td><td>median 3 hr</td><td><span class="tag">Assumed</span>Mostly beach trips of several hours. Meters charge for at most 3 hours; staying longer risks a ticket (counted as $10 on average), and many do.</td></tr>
+          <tr><td>How long people stay</td><td>median 3 hr, avg 3.3</td><td><span class="tag study">2008 study</span>Visitors surveyed in August 2007 stayed 3.4 hours on average; cars in the Pacific Cove lot, 3.3. Meters charge for at most 3 hours; staying longer risks a ticket (counted as $10 on average), and many do.</td></tr>
+          <tr><td>The lots fill</td><td>455 spaces</td><td><span class="tag src">City</span>The upper and lower Pacific Cove lots (the lower one opened in 2013). The city says they fill for a few hours on about 25 days a year. Half of the other arriving drivers park there (<span class="tag">Tuned</span> so the lots fill around midday on a 9,000-visitor day and not at 6,000), plus everyone priced or turned off the loop. When they're full, the fallback is free parking farther out: a 15-minute walk each way and more hauling (<span class="tag">Assumed</span>).</td></tr>
           <tr><td>Value of a visitor's time</td><td>median $20/hr</td><td><span class="tag">Assumed</span>Wide spread. Set with the gear cost so drivers' price response matches SFpark's −0.4.</td></tr>
           <tr><td>Hauling gear and kids</td><td>avg $10 per visit</td><td><span class="tag">Assumed</span>The hassle of carrying umbrellas, coolers, chairs and children a quarter mile and back.</td></tr>
           <tr><td>Patience</td><td>3 to 8 laps</td><td><span class="tag">Assumed</span>Or until the time lost is worth more to them than the space. With a summer loop taking 15 minutes, most drivers who miss give up after one more lap; a third of those who keep going make two or three. Drivers stop up to 40 s for someone they see pulling out.</td></tr>
           <tr><td>Where drivers come from</td><td>35% down Monterey</td><td><span class="tag">Assumed</span>The rest come down Capitola Ave. Circling drivers cut down San Jose Ave two times in three. At the triangle, nearly half the drivers still looking take the angled leg, as do 60% of everyone else; drop-offs go around to the corner.</td></tr>
-          <tr><td>Where they're headed</td><td>anywhere on the loop</td><td><span class="tag">Assumed</span>Each driver has a destination somewhere along the beach and the shops. On a first pass they pass up most open spaces well short of it, and take any space on later laps.</td></tr>
-          <tr><td>Drivers who give up</td><td>1 in 5 leave town</td><td><span class="tag">Assumed</span>The rest go to the lots.</td></tr>
-          <tr><td>Visitors</td><td>1,500 / 4,500 / 9,000 a day</td><td><span class="tag">Estimated</span>Winter weekday, spring weekend, busy summer Saturday. No one publishes daily counts. The summer figure is sized from the city's 2008 parking study, which found peak Village parking demand of about 1,212 cars for about 1,036 spaces. 85% arrive by car, 2.7 to a car, and 45% of those look for a loop space first.</td></tr>
+          <tr><td>Where they're headed</td><td>anywhere on the loop</td><td><span class="tag">Assumed</span>Each driver has a destination somewhere along the beach and the shops. On a quiet first pass they pass up most open spaces well short of it; as the loop passes 75% full they grow less picky, and above 90% they take the first open space they see. Later laps, any space.</td></tr>
+          <tr><td>Drivers who give up</td><td>1 in 5 leave town</td><td><span class="tag">Assumed</span>The rest go to the lots, or farther out once the lots are full.</td></tr>
+          <tr><td>Visitors</td><td>1,500 / 4,500 / 9,000 a day</td><td><span class="tag">Estimated</span>Winter weekday, spring weekend, busy summer Saturday. No one publishes daily counts. The summer figure is sized from the city's 2008 parking study, which calculated peak Village parking demand of about 1,212 cars for 1,036 spaces; 9,000 visitors puts about 1,050 visitors' cars in the Village at once at 2 PM. 82% arrive by car and 2.8 to a car (both from the 2008 study); 45% of those look for a loop space first (<span class="tag">Assumed</span>).</td></tr>
           <tr><td>Other traffic</td><td>1.2 vehicles per driver looking</td><td><span class="tag">Tuned</span>Through trips, deliveries and drivers headed elsewhere. Three in ten stop at the corner for about 75 seconds to drop off; so do a third of the drivers headed for the lots. A long line into the Village turns some away.</td></tr>
           <tr><td>People crossing</td><td>up to 200 groups/hr</td><td><span class="tag">Tuned</span>Per busy crosswalk on a summer Saturday, each holding it about 7 seconds. A waiting driver gets a gap within 12 seconds.</td></tr>
           <tr><td>All-way stops</td><td>~8 s and ~5 s per vehicle</td><td><span class="tag">Tuned</span>Monterey/Capitola and Stockton/Capitola, each taking turns with cross traffic and crowds crossing. Cars crawl at about 6 mph along the beach.</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a busy summer Saturday at $2.00 the whole loop backs up by midday, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; the Stockton Avenue bridge as a separate way in; and the residential permit areas nearby. The demand-responsive setting starts from today's $2.00 and changes the rate every 10 simulated minutes so you can watch it work, and it overshoots a little. A real program would set rates by season and time of day from a few weeks of counts.</p></div>
+    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a busy summer Saturday at $2.00 the whole loop backs up by midday, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; the Stockton Avenue bridge as a separate way in; and the residential permit areas nearby. "Matched to the crowd" picks the lowest all-day rate that keeps the loop moving for the visitors set. A real program would set rates by season and time of day from a few weeks of counts.</p></div>
   
     <h3 class="srch">Sources</h3>
     <ol>
+      <li>RBF Consulting for the City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/883">Parking Analysis for the Capitola Village Area</a>, December 11, 2008. Occupancy and duration counts and a visitor intercept survey, August 2007 and January 2008.</li>
+      <li>City of Capitola, <a href="https://www.cityofcapitola.gov/774/Capitola-Parking-Studies-and-Improvement">Capitola Parking Studies and Improvements</a> (list of the city's parking studies, 2001 to 2009).</li>
+      <li>RBF Consulting for the City of Capitola, <a href="https://web.archive.org/web/20220320182130/https://www.cityofcapitola.org/sites/default/files/fileattachments/public_works/page/2492/rbf_report_2008_v3.pdf">One-Way Traffic Analysis for the Capitola Village Area</a>, March 21, 2008 (archived copy). Table 1: Santa Cruz County RTC daily counts on the Esplanade.</li>
+      <li>California Coastal Commission, <a href="https://documents.coastal.ca.gov/reports/2022/6/F12a/f12a-6-2022-report.pdf">Capitola LCP Amendment LCP-3-CAP-21-0083-1 (Parklets)</a>, staff report, May 27, 2022, p. 10: 195 Village street spaces, about 455 lot spaces, and the city's account of summer occupancy.</li>
+      <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-2c81460f0b214b0f821589b3388b20eb/ITEM-Attachment-001-80213fcd52dd406d9ffce84189da7856.pdf">Capitola's Outdoor Dining Program: Proposed Coastal Access Enhancements and Mitigation</a>, 2022: the lots are full for a few hours on about 25 days a year.</li>
       <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-5507d6bc9fa1493c82b82c896b8403e8/ITEM-Attachment-012-e25011a82146494eb943de6d14a2ee92.pdf">Modification to Parking Meter Rates</a>, City Council agenda report, June 8, 2023.</li>
       <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-7548a7c461d54c31a9683665ac4cfb79/ITEM-Attachment-001-fd05b61ca9cf45e8a80f44dcbbb18747.pdf">Temporary Village Parking Committee Summary and Recommendations</a>, March 23, 2023.</li>
       <li>City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/884">Parking Committee Summary and Recommendations</a>, December 1, 2008.</li>
