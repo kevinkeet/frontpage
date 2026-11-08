@@ -1,0 +1,1478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A live model of Capitola Village's beach loop: change the meter rate and watch circling, the backup at the Monterey Avenue stop, and meter revenue respond.">
+<link rel="icon" href="/capitola/favicon.svg">
+<title>Cruising the Esplanade</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Layout: a field instrument for a council meeting. Live map of the Village loop on the left, controls and live counts on the right, then the argument in plain sections. Fog-white paper, marine ink, Venetian Court coral for the cars that are circling. */
+:root {
+  --paper: #F1F4F3; --card: #FFFFFF; --ink: #13232B; --ink2: #4A5D66; --ink3: #77898F;
+  --rule: #D2DCDE; --rule2: #E5EBEC;
+  --accent: #D4452E; --amber: #DE9426; --parked: #386B93; --lotc: #7A5BC4; --out: #97A5AB; --good: #2E9E57; --open: #34B25C;
+  --hazard: #F5C518; --ped: #1B2A33; --pedRing: #FFFFFF; --zebra: rgba(255,255,255,.78);
+  --band: rgba(46,158,87,.15); --btn: #F4F7F7; --btnOn: #13232B; --btnOnText: #FFFFFF;
+  --land: #E5E8E1; --sand: #EBDFC3; --sea: #A6C9D4; --creek: #9CC2CC; --park: #D2E1C6;
+  --asph: #4B5258; --bldg: #D5D2C9; --bldgEdge: #C3BFB4; --stall: rgba(255,255,255,.6);
+  --label: #2E3D44; --halo: rgba(241,244,243,.9); --pay: #2C63B8; --signBg: #13232B; --signText: #FFFFFF;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D191E; --card: #142229; --ink: #E2EBED; --ink2: #A0B3BA; --ink3: #6F848C;
+    --rule: #2A3C44; --rule2: #1E2E35;
+    --accent: #F0664E; --amber: #F0AE48; --parked: #6B9DC6; --lotc: #A88DEB; --out: #6C7C83; --good: #4CC777; --open: #43C46C;
+    --hazard: #F5C518; --ped: #F2F5F5; --pedRing: #0D191E; --zebra: rgba(255,255,255,.55);
+    --band: rgba(76,199,119,.16); --btn: #1B2B33; --btnOn: #E2EBED; --btnOnText: #0D191E;
+    --land: #182329; --sand: #36342A; --sea: #15303A; --creek: #1D3F4B; --park: #20322A;
+    --asph: #39424A; --bldg: #27333A; --bldgEdge: #313F47; --stall: rgba(255,255,255,.32);
+    --label: #C5D3D7; --halo: rgba(13,25,30,.88); --pay: #6E9EEA; --signBg: #E2EBED; --signText: #0D191E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D191E; --card: #142229; --ink: #E2EBED; --ink2: #A0B3BA; --ink3: #6F848C;
+  --rule: #2A3C44; --rule2: #1E2E35;
+  --accent: #F0664E; --amber: #F0AE48; --parked: #6B9DC6; --lotc: #A88DEB; --out: #6C7C83; --good: #4CC777; --open: #43C46C;
+  --hazard: #F5C518; --ped: #F2F5F5; --pedRing: #0D191E; --zebra: rgba(255,255,255,.55);
+  --band: rgba(76,199,119,.16); --btn: #1B2B33; --btnOn: #E2EBED; --btnOnText: #0D191E;
+  --land: #182329; --sand: #36342A; --sea: #15303A; --creek: #1D3F4B; --park: #20322A;
+  --asph: #39424A; --bldg: #27333A; --bldgEdge: #313F47; --stall: rgba(255,255,255,.32);
+  --label: #C5D3D7; --halo: rgba(13,25,30,.88); --pay: #6E9EEA; --signBg: #E2EBED; --signText: #0D191E;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--parked); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; }
+
+/* header */
+.top { display: grid; gap: 10px; margin-bottom: 22px; }
+.eyebrow { margin: 0; font-family: var(--f-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink2); }
+.eyebrow a { color: inherit; }
+.eyebrow .sep { margin: 0 .5em; opacity: .6; }
+.sections { display: flex; gap: 6px; margin: 2px 0 4px; }
+.sections a { padding: 5px 14px; border: 1px solid var(--rule); border-radius: 999px; text-decoration: none; color: var(--ink2); font-size: 14px; font-weight: 600; background: var(--card); }
+.sections a:hover { border-color: var(--ink3); color: var(--ink); }
+.sections a[aria-current="page"] { background: var(--btnOn); color: var(--btnOnText); border-color: var(--btnOn); }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(42px, 7vw, 76px); line-height: .95; letter-spacing: -.01em; }
+.lede { margin: 4px 0 0; max-width: 64ch; font-size: 18px; color: var(--ink2); }
+.facts { margin: 10px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.facts div { padding: 10px 14px 12px 0; min-width: 0; }
+.facts div + div { padding-left: 14px; border-left: 1px solid var(--rule); }
+.facts dt { font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+.facts dd { margin: 2px 0 0; font-family: var(--f-display); font-weight: 600; font-size: 24px; line-height: 1.1; }
+@media (max-width: 720px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .facts div:nth-child(3) { padding-left: 0; border-left: 0; } .facts div:nth-child(n+3) { border-top: 1px solid var(--rule); } }
+
+/* simulator */
+.sim { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 16px; align-items: start; }
+@media (max-width: 960px) { .sim { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; }
+.mapcard { padding: 12px; min-width: 0; }
+.maphead { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; padding: 2px 4px 10px; }
+.clock { font-family: var(--f-mono); font-size: 13px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.clock b { color: var(--ink); font-weight: 600; }
+.mapwrap { position: relative; border-radius: 6px; overflow: hidden; background: var(--land); }
+#map { display: block; width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 10px 4px 2px; padding: 0; list-style: none; font-size: 13px; color: var(--ink2); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.chip { width: 16px; height: 8px; border-radius: 2px; display: inline-block; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--ped); box-shadow: 0 0 0 1.5px var(--pedRing), 0 0 0 2.5px var(--rule); }
+.mapnote { margin: 8px 4px 0; font-size: 12.5px; color: var(--ink3); }
+
+.panel { display: grid; gap: 16px; min-width: 0; }
+.controls { padding: 16px; display: grid; gap: 14px; }
+.status { margin: 0; padding: 12px 14px; background: var(--btn); border-radius: 8px; font-size: 14.5px; line-height: 1.5; min-height: 6.2em; }
+.status .live { display: block; margin-top: 6px; font-family: var(--f-mono); font-size: 12.5px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.grouplabel { margin: 0 0 6px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); background: var(--btn); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 11px; cursor: pointer; }
+button:hover { border-color: var(--ink3); }
+button[aria-pressed="true"] { background: var(--btnOn); color: var(--btnOnText); border-color: var(--btnOn); }
+.slider { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: baseline; font-size: 14px; }
+.slider output { font-family: var(--f-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+.slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--ink); }
+.slider input:disabled { opacity: .55; }
+.hint { margin: -4px 0 0; font-size: 12.5px; color: var(--ink3); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; }
+.divider { border: 0; border-top: 1px solid var(--rule2); margin: 0; }
+
+.occ { padding: 16px; display: grid; gap: 12px; }
+.cardh { margin: 0; font-family: var(--f-mono); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink2); }
+.sub { margin: -8px 0 0; font-size: 12.5px; color: var(--ink3); }
+.bar { position: relative; height: 30px; border-radius: 5px; background: var(--rule2); overflow: hidden; }
+.bar .band { position: absolute; top: 0; bottom: 0; left: 80%; width: 10%; background: var(--band); border-left: 1px dashed var(--good); border-right: 1px dashed var(--good); z-index: 2; }
+.bar .fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: var(--parked); transition: width .4s, background-color .4s; }
+.bar .fill.full { background: var(--accent); }
+.bar span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: #fff; z-index: 3; text-shadow: 0 1px 2px rgba(0,0,0,.35); font-variant-numeric: tabular-nums; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 6px; }
+.tile { padding: 10px 12px; min-width: 0; }
+.tile:nth-child(odd) { border-right: 1px solid var(--rule); }
+.tile:nth-child(n+3) { border-top: 1px solid var(--rule); }
+.tile .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+.tile .v { font-family: var(--f-mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.tile .v small { font-size: 12px; font-weight: 400; color: var(--ink2); margin-left: 4px; }
+.tile .v.hot { color: var(--accent); }
+.tile .v.ok { color: var(--good); }
+#trend { display: block; width: 100%; height: 176px; }
+.chartnote { margin: -4px 0 0; font-size: 12px; color: var(--ink3); }
+
+/* sections below the simulator */
+section.block { margin-top: 44px; padding-top: 18px; border-top: 2px solid var(--ink); }
+section.block > h2 { margin: 0 0 8px; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 4.4vw, 44px); line-height: 1.02; }
+.prose { max-width: 68ch; }
+.prose p { margin: 0 0 12px; }
+.sweeptext { font-size: 18px; max-width: 70ch; margin: 0 0 16px; }
+.sweeptext b { font-weight: 600; }
+.minis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1080px) { .minis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .minis { grid-template-columns: minmax(0, 1fr); } }
+.minis figure { margin: 0; padding: 12px; min-width: 0; }
+.minis figcaption { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); margin-bottom: 6px; }
+.minis canvas { display: block; width: 100%; height: 180px; }
+.note { margin: 10px 0 0; font-size: 13px; color: var(--ink3); max-width: 80ch; }
+.computing { color: var(--ink3); font-style: italic; }
+
+.points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 34px; margin-top: 14px; }
+@media (max-width: 760px) { .points { grid-template-columns: minmax(0, 1fr); } }
+.points div { min-width: 0; }
+.points h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; line-height: 1.3; }
+.points p { margin: 0; color: var(--ink2); }
+.ask { margin-top: 26px; padding: 16px 18px; border-left: 4px solid var(--accent); background: var(--card); border-radius: 0 8px 8px 0; max-width: 78ch; }
+.ask h3 { margin: 0 0 6px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.ask ul { margin: 0; padding-left: 20px; }
+.ask li { margin: 4px 0; }
+
+.tablewrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule2); }
+th { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); font-weight: 500; }
+td:nth-child(2) { font-family: var(--f-mono); font-size: 13px; white-space: nowrap; }
+td:nth-child(3) { color: var(--ink2); }
+tr:last-child td { border-bottom: 0; }
+.tag { display: inline-block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--rule); color: var(--ink3); margin-right: 6px; }
+.tag.src { color: var(--lotc); border-color: var(--lotc); }
+
+footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink2); }
+footer h2 { margin: 0 0 8px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); font-weight: 600; }
+footer ol { margin: 0 0 16px; padding-left: 20px; max-width: 90ch; }
+footer li { margin: 4px 0; }
+footer p { max-width: 90ch; }
+
+details.method { margin-top: 44px; border-top: 2px solid var(--ink); padding-top: 14px; }
+details.method summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1.1; }
+details.method summary::-webkit-details-marker { display: none; }
+details.method summary::before { content: '+'; font-family: var(--f-mono); font-size: 20px; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--rule); border-radius: 6px; color: var(--ink2); flex: none; }
+details.method[open] summary::before { content: '\2212'; }
+details.method summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.methodbody { margin-top: 14px; }
+.methodbody ol { font-size: 13.5px; color: var(--ink2); padding-left: 20px; max-width: 90ch; }
+.methodbody li { margin: 4px 0; }
+.srch { margin: 22px 0 6px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+.lede a { white-space: nowrap; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .bar .fill { transition: none; } }
+</style>
+
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow"><a href="/">kevinkeet.com</a><span class="sep" aria-hidden="true">/</span>Capitola Village, Santa Cruz County</p>
+    <nav class="sections" aria-label="Capitola"><a href="/capitola/">Flooding</a><a href="/capitola/parking/" aria-current="page">Parking</a></nav>
+    <h1>Cruising the Esplanade</h1>
+    <p class="lede">A live model of Capitola Village's beach loop on a busy day. Change the meter rate and watch what happens to circling, the backup at the Monterey Avenue stop, and meter revenue. <a href="/capitola/parking/summer-rate/">Read the one-page case &rarr;</a></p>
+    <dl class="facts">
+      <div><dt>Meters on the loop</dt><dd>~130 spaces</dd></div>
+      <div><dt>Rate today</dt><dd>$2.00/hr · 3 hr max</dd></div>
+      <div><dt>Beach &amp; Village lots</dt><dd>$1.00/hr · 12 hr</dd></div>
+      <div><dt>The Village loop</dt><dd>0.31 mile</dd></div>
+    </dl>
+  </header>
+
+  <section class="sim" aria-label="Simulation">
+    <div class="card mapcard">
+      <div class="maphead">
+        <span class="clock" id="clock">Saturday <b>1:00 PM</b></span>
+        <span class="clock">One-way: Esplanade → either side of the triangle → Monterey Ave stop → Capitola Ave → back down San Jose Ave or Stockton Ave</span>
+      </div>
+      <div class="mapwrap"><canvas id="map" role="img" aria-label="Animated map of Capitola Village. Cars drive the one-way Esplanade along the beach, around the triangle, up Monterey Avenue to the stop sign at Capitola Avenue, and back down San Jose Avenue or Stockton Avenue. Green spaces are open."></canvas></div>
+      <ul class="legend" aria-label="Legend">
+        <li><span class="chip" style="background:var(--open)"></span>Open space</li>
+        <li><span class="chip" style="background:var(--parked)"></span>Parked</li>
+        <li><span class="chip" style="background:var(--amber)"></span>Looking, first pass</li>
+        <li><span class="chip" style="background:var(--accent)"></span>Missed a space, circling</li>
+        <li><span class="chip" style="background:var(--out)"></span>Other traffic, drop-offs, leaving</li>
+        <li><span class="chip" style="background:var(--lotc)"></span>Off to the lots</li>
+        <li><span class="dot"></span>People crossing</li>
+        <li><span class="chip" style="background:var(--hazard);width:10px"></span>Dropping off</li>
+      </ul>
+      <p class="mapnote">Streets, crosswalks and stop signs from OpenStreetMap; the 130 spaces counted from aerial imagery.</p>
+    </div>
+
+    <aside class="panel">
+      <div class="card controls">
+        <p class="status" id="status" aria-live="polite">Loading the model…</p>
+        <div>
+          <p class="grouplabel" id="rateLabel">Meter rate on the loop</p>
+          <div class="seg" role="group" aria-labelledby="rateLabel">
+            <button id="pToday" aria-pressed="true">Today: $2.00</button>
+            <button id="pTry" aria-pressed="false">Try a rate</button>
+            <button id="pResp" aria-pressed="false">Demand-responsive</button>
+          </div>
+        </div>
+        <label class="slider" for="price"><span>Meter rate</span><output id="priceOut">$2.00/hr</output>
+          <input type="range" id="price" min="1" max="8" step="0.25" value="2"></label>
+        <p class="hint">All 130 loop meters. The lots stay at $1.00. Changing a setting restarts the afternoon at that setting.</p>
+        <hr class="divider">
+        <div>
+          <p class="grouplabel" id="dayLabel">Demand</p>
+          <div class="seg" role="group" aria-labelledby="dayLabel">
+            <button id="dWinter" aria-pressed="false">Winter weekday</button>
+            <button id="dSpring" aria-pressed="false">Spring weekend</button>
+            <button id="dSummer" aria-pressed="true">Summer Saturday</button>
+          </div>
+        </div>
+        <label class="slider" for="lam"><span>Drivers looking to park on the loop</span><output id="lamOut">135 / hr</output>
+          <input type="range" id="lam" min="5" max="200" step="5" value="135"></label>
+        
+        <hr class="divider">
+        <div class="row">
+          <button id="pause">Pause</button>
+          <button id="speed">Speed: Normal</button>
+          <button id="reset">Reset</button>
+        </div>
+      </div>
+
+      <div class="card occ">
+        <h2 class="cardh" id="occH">Occupancy, all 130 loop meters</h2>
+        <p class="sub">Shaded band = 80–90% target, about one space in seven open</p>
+        <div class="bar"><div class="band"></div><div class="fill" id="occFill"></div><span id="occText">–</span></div>
+        <div class="tiles">
+          <div class="tile"><div class="k">Trip around the loop</div><div class="v" id="tTrip">–</div></div>
+          <div class="tile"><div class="k">Circling now</div><div class="v" id="tCirc">–</div></div>
+          <div class="tile"><div class="k">Arrival to parked</div><div class="v" id="tSearch">–</div></div>
+          <div class="tile"><div class="k">Extra driving</div><div class="v" id="tCruise">–</div></div>
+          <div class="tile"><div class="k">Gave up, left town</div><div class="v" id="tLeft">–</div></div>
+          <div class="tile"><div class="k">Meter revenue</div><div class="v" id="tRev">–</div></div>
+        </div>
+        <canvas id="trend" aria-label="Chart of occupancy, cars circling and the rate over the last two simulated hours"></canvas>
+        <p class="chartnote">Last 2 hours: occupancy (line), cars circling (shaded), rate (steps). Figures average the last hour.</p>
+      </div>
+    </aside>
+  </section>
+
+  <section class="block" aria-labelledby="sweepH">
+    <h2 id="sweepH">Where the rate should be</h2>
+    <p class="sweeptext" id="sweepText"><span class="computing">Running the model at fifteen rates from $1 to $8…</span></p>
+    <div class="minis">
+      <figure class="card"><figcaption>Loop meter occupancy</figcaption><canvas id="sw0" aria-label="Occupancy by rate"></canvas></figure>
+      <figure class="card"><figcaption>Trip around the loop, minutes</figcaption><canvas id="sw1" aria-label="Minutes for a trip around the loop by rate"></canvas></figure>
+      <figure class="card"><figcaption>Cars circling at any moment</figcaption><canvas id="sw2" aria-label="Cars circling by rate"></canvas></figure>
+      <figure class="card"><figcaption>Meter revenue, $ per hour</figcaption><canvas id="sw3" aria-label="Meter revenue by rate"></canvas></figure>
+    </div>
+    <p class="note">Each point is the model run at that rate, at the demand set above. Dashed line: today. Ringed dot: the lowest rate with no circling and at most 90% full. Filled dot: the slider.</p>
+  </section>
+
+  <details class="method block">
+    <summary><span>How the model works, assumptions and sources</span></summary>
+    <div class="methodbody">
+    <div class="prose">
+      <p>Each arriving driver has a stay in mind, a value on their time, and some amount of gear and kids to haul. They compare the full cost of a loop meter with the full cost of the lots (a cheaper meter plus a quarter-mile walk each way) and try the loop if it comes out ahead. Anyone who wants more than three hours goes straight to the lots. Drivers come in down Capitola Avenue to the Stockton corner, or down Monterey Avenue to the stop at Capitola. Drivers who find the curb full circle and look again, usually cutting down San Jose Avenue, and stop to wait when they see someone about to pull out. After each lap they decide whether a space is still worth the time; those who give up head for the lots or leave town. A new rate applies to drivers who arrive after you change it.</p>
+      <p>They share the loop with everyone else: through traffic, deliveries and people headed elsewhere in the Village, and drivers stopping at the corner by the triangle to unload people and gear, including some who then park in the lots. People cross at the marked crosswalks. Every car takes its turn at the two all-way stops, and the one at Monterey and Capitola, which every car leaving the Esplanade has to clear, is the slowest. When the loop is packed, cars wait to get in.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Input</th><th>Value</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Metered spaces</td><td>130</td><td><span class="tag">Counted</span>From aerial imagery: Esplanade 75 (62 angled, 13 parallel), the triangle lot 18, the angled leg of Monterey Ave on the triangle's west side 4, Monterey Ave 12, San Jose Ave 21. All in the same Village meter zone. The city's 2008 count was 184 metered spaces in the whole Village.</td></tr>
+          <tr><td>Meter rate</td><td>$2.00/hr, 3 hr max</td><td><span class="tag src">City</span>Village meter rate since January 2024, covering the Esplanade, Monterey, San Jose and Capitola Avenues.</td></tr>
+          <tr><td>Beach &amp; Village lots</td><td>$1.00/hr, 12 hr max</td><td><span class="tag src">City</span>Raised from $0.50 in the same 2023 ordinance.</td></tr>
+          <tr><td>Walk from the lots</td><td>~¼ mile, 7 min each way</td><td><span class="tag src">Map</span>OpenStreetMap distance from the lots behind City Hall to the Esplanade.</td></tr>
+          <tr><td>The loop</td><td>0.31 mile</td><td><span class="tag src">Map</span>Esplanade, then either the one-way aisle around the beach side of the triangle or Monterey Ave's angled leg on its west side, Monterey Ave, Capitola Ave, Stockton Ave, with one-way San Jose Ave as a shortcut back to the beach. Eleven marked crosswalks and two all-way stops, all from OpenStreetMap.</td></tr>
+          <tr><td>Stay drivers want</td><td>median 1¾ hr</td><td><span class="tag">Assumed</span>About 1 in 8 want more than 3 hours and use the lots.</td></tr>
+          <tr><td>Value of a visitor's time</td><td>median $20/hr</td><td><span class="tag">Assumed</span>Wide spread. Set with the gear cost so drivers' price response matches SFpark's −0.4.</td></tr>
+          <tr><td>Hauling gear and kids</td><td>avg $3 per visit</td><td><span class="tag">Assumed</span>The extra hassle of carrying chairs, coolers and children a quarter mile.</td></tr>
+          <tr><td>Patience</td><td>3 to 8 laps</td><td><span class="tag">Assumed</span>Or until the time lost is worth more to them than the space. With a summer loop taking 15 minutes, most drivers who miss give up after one more lap; a third of those who keep going make two or three. Drivers stop up to 40 s for someone they see pulling out.</td></tr>
+          <tr><td>Where drivers come from</td><td>35% down Monterey</td><td><span class="tag">Assumed</span>The rest come down Capitola Ave. Circling drivers cut down San Jose Ave two times in three. At the triangle, nearly half the drivers still looking take the angled leg, as do 60% of everyone else; drop-offs go around to the corner.</td></tr>
+          <tr><td>Where they're headed</td><td>anywhere on the loop</td><td><span class="tag">Assumed</span>Each driver has a destination somewhere along the beach and the shops. On a first pass they pass up most open spaces well short of it, and take any space on later laps.</td></tr>
+          <tr><td>Drivers who give up</td><td>1 in 5 leave town</td><td><span class="tag">Assumed</span>The rest go to the lots.</td></tr>
+          <tr><td>Demand</td><td>20 / 60 / 135 per hr</td><td><span class="tag">Assumed</span>Drivers looking to park on the loop on a winter weekday, spring weekend and summer Saturday. The city doesn't publish counts, so try your own with the slider.</td></tr>
+          <tr><td>Other traffic</td><td>1.2 vehicles per driver above</td><td><span class="tag">Tuned</span>About 160 an hour on a summer Saturday. Three in ten stop at the corner for about 75 seconds to drop off; so do a third of the drivers headed for the lots.</td></tr>
+          <tr><td>People crossing</td><td>up to 200 groups/hr</td><td><span class="tag">Tuned</span>Per busy crosswalk on a summer Saturday, each holding it about 7 seconds. A waiting driver gets a gap within 12 seconds.</td></tr>
+          <tr><td>Monterey/Capitola stop</td><td>~8 s per vehicle</td><td><span class="tag">Tuned</span>Every car leaving the Esplanade, cars coming down Monterey, and some cross traffic take turns, with crowds crossing. The Stockton/Capitola stop takes about 3 s per vehicle. Cars crawl at about 6 mph along the beach.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a summer Saturday at $2.00 traffic backs up from the Monterey Ave stop and a trip around the loop takes about 14 minutes, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; the Stockton Avenue bridge as a separate way in; and the residential permit areas nearby. The demand-responsive setting starts from today's $2.00 and changes the rate every 10 simulated minutes so you can watch it work, and it overshoots a little. A real program would set rates by season and time of day from a few weeks of counts.</p></div>
+  
+    <h3 class="srch">Sources</h3>
+    <ol>
+      <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-5507d6bc9fa1493c82b82c896b8403e8/ITEM-Attachment-012-e25011a82146494eb943de6d14a2ee92.pdf">Modification to Parking Meter Rates</a>, City Council agenda report, June 8, 2023.</li>
+      <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-7548a7c461d54c31a9683665ac4cfb79/ITEM-Attachment-001-fd05b61ca9cf45e8a80f44dcbbb18747.pdf">Temporary Village Parking Committee Summary and Recommendations</a>, March 23, 2023.</li>
+      <li>City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/884">Parking Committee Summary and Recommendations</a>, December 1, 2008.</li>
+      <li>City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/1926">Capitola Village public parking and shuttle map</a>.</li>
+      <li>City of Santa Cruz, <a href="https://www.santacruzca.gov/Government/City-Departments/Parks-Recreation/Santa-Cruz-Wharf/Wharf-Parking-Information">Wharf Parking Information</a> (summer rate $3/hour, 2026).</li>
+      <li>Pierce, G. and Shoup, D. (2013). <a href="https://doi.org/10.1080/01944363.2013.787307">Getting the Prices Right: An Evaluation of Pricing Parking by Demand in San Francisco</a>. Journal of the American Planning Association 79(1): 67–81.</li>
+      <li>Weinberger, R., Millard-Ball, A. and Hampshire, R. (2020). <a href="https://millardball.its.ucla.edu/wp-content/uploads/sites/22/2022/06/Weinberger_Millard-Ball_Hampshire_2020_Parking_search_caused_congestion_fuss_preprint.pdf">Parking search caused congestion: Where's all the fuss?</a> Transportation Research Part C 120.</li>
+      <li>Shoup, D. (2005). The High Cost of Free Parking. APA Planners Press.</li>
+    </ol>
+    </div>
+  </details>
+
+  <footer><p>Map data, crosswalks and stop signs © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL). Space count from Esri World Imagery. The idea and layout follow Paul Supawanich's <a href="https://civicmotion.org/resources/cruising-the-block">Cruising the Block</a> (CivicMotion Consulting, CC BY-NC 4.0); this Capitola version is a separate model built for non-commercial use.</p></footer>
+</div>
+
+<script>
+var GEO = {"roads":[{"c":3,"p":[[-48.2,33.7],[-177.7,66.0]]},{"c":2,"p":[[-47.9,20.5],[-11.9,20.4]]},{"c":2,"p":[[-227.9,23.1],[-220.0,15.1],[-207.4,7.2],[-200.3,0.1],[-197.0,-6.5],[-191.4,-22.3],[-186.6,-31.0],[-180.7,-38.5],[-172.2,-45.2],[-161.0,-50.9],[-155.0,-52.9],[-125.5,-59.7],[-109.9,-60.8],[-88.2,-59.2]]},{"c":2,"p":[[-88.2,-59.2],[-72.7,-47.8],[-64.0,-39.7],[-58.0,-31.1]]},{"c":0,"p":[[-57.8,-8.4],[-130.6,10.6]]},{"c":0,"p":[[-100.2,-53.5],[-101.0,-48.5],[-77.8,41.3]]},{"c":2,"p":[[-217.5,94.3],[-198.3,171.2]]},{"c":3,"p":[[-285.4,-17.1],[-250.4,4.9]]},{"c":2,"p":[[-45.6,94.4],[-53.0,97.0]]},{"c":2,"p":[[-212.8,35.6],[-235.2,59.0]]},{"c":2,"p":[[-33.8,265.6],[-76.0,271.9],[-88.1,272.1],[-101.4,269.9],[-109.8,267.8],[-132.9,260.1],[-152.5,251.9],[-166.4,244.1],[-184.9,231.0],[-208.8,212.5],[-215.0,210.3],[-225.2,209.7],[-231.5,207.4],[-238.2,201.5],[-250.3,184.0]]},{"c":2,"p":[[141.1,35.3],[54.9,183.1],[-1.2,282.2]]},{"c":2,"p":[[-97.5,145.8],[-147.9,158.9],[-244.0,182.0],[-250.3,184.0]]},{"c":2,"p":[[54.9,183.1],[-3.0,150.7]]},{"c":2,"p":[[-120.7,51.8],[-130.6,10.6],[-148.0,-54.7]]},{"c":3,"p":[[-478.1,137.3],[-470.8,135.7],[-451.4,124.2],[-394.4,81.0],[-381.7,70.8],[-365.7,56.3],[-352.4,41.8],[-340.0,22.3],[-332.7,8.8],[-324.6,-14.1]]},{"c":3,"p":[[-48.2,33.7],[-45.6,94.4],[-43.9,119.5],[-44.6,209.4],[-27.1,297.1],[-21.9,346.0]]},{"c":2,"p":[[-120.7,51.8],[-119.6,59.5],[-114.6,79.9],[-97.5,145.8]]},{"c":2,"p":[[-327.8,-45.4],[-324.8,-54.6],[-332.6,-69.7],[-337.7,-85.8],[-339.8,-98.9],[-339.6,-118.5]]},{"c":3,"p":[[-177.7,66.0],[-188.6,69.5],[-192.1,71.9],[-262.8,134.3],[-272.6,143.5]]},{"c":2,"p":[[-147.9,158.9],[-168.6,78.3],[-171.2,71.0],[-177.7,66.0]]},{"c":3,"p":[[-250.4,4.9],[-227.9,23.1]]},{"c":2,"p":[[-235.2,59.0],[-232.5,34.4],[-231.8,31.1],[-227.9,23.1]]},{"c":2,"p":[[-235.2,59.0],[-283.6,107.1],[-297.7,123.2],[-306.9,128.0],[-309.0,130.3],[-349.4,193.7],[-362.3,215.6],[-371.8,230.0]]},{"c":2,"p":[[127.5,20.5],[29.7,9.0],[27.3,29.4],[24.2,68.7],[19.8,93.8],[17.4,102.0],[11.8,114.4],[-3.6,141.0],[-5.0,146.2],[-4.4,148.8],[-3.0,150.7]]},{"c":2,"p":[[-97.5,145.8],[-90.2,174.9],[-89.1,188.5],[-89.7,199.1],[-90.5,202.1],[-92.0,204.5],[-93.9,206.2],[-97.0,207.5]]},{"c":2,"p":[[-53.0,97.0],[-106.6,111.7]]},{"c":0,"p":[[-33.2,166.6],[-23.8,146.2],[-9.6,153.5],[-8.9,152.0],[-11.9,147.9],[-10.1,140.1]]},{"c":0,"p":[[-23.8,146.2],[-10.1,140.1],[-3.6,141.0]]},{"c":2,"p":[[-43.9,119.5],[-33.7,117.1],[-22.5,112.4],[-18.8,109.5],[-15.3,105.5],[-12.2,101.0],[-10.4,96.6],[-8.7,86.6],[-8.8,37.7],[-10.1,33.2],[-11.9,20.4]]},{"c":0,"p":[[-241.7,11.8],[-253.8,18.4],[-264.6,32.3],[-311.5,88.3],[-329.6,101.4],[-349.4,132.6],[-351.7,140.2],[-370.4,169.0],[-379.5,182.0],[-387.5,195.2],[-392.2,198.5],[-400.0,211.8],[-371.8,230.0]]},{"c":0,"p":[[-311.5,88.3],[-296.2,121.4]]},{"c":1,"p":[[-320.6,-194.7],[-300.6,-292.8],[-306.4,-310.3],[-291.6,-378.5],[-287.3,-381.4],[-280.6,-373.8],[-300.6,-292.8]]},{"c":3,"p":[[-317.4,-37.6],[-295.7,-23.4]]},{"c":3,"p":[[-272.6,143.5],[-289.8,160.3],[-300.4,171.8],[-303.3,175.5],[-308.2,185.0],[-329.1,251.1],[-331.3,261.2],[-332.6,272.5]]},{"c":2,"p":[[-250.3,184.0],[-264.5,157.5],[-272.6,143.5]]},{"c":1,"p":[[-88.2,-59.2],[-53.5,-58.8],[-51.2,-56.9],[-50.1,-53.4],[-50.0,-15.8]]},{"c":1,"p":[[-25.8,4.9],[-25.4,20.5]]},{"c":1,"p":[[-26.0,-8.7],[-25.9,-15.2],[-3.0,-15.6],[-3.1,4.7],[-25.8,4.9]]},{"c":3,"p":[[-324.6,-14.1],[-317.4,-37.6]]},{"c":1,"p":[[-295.7,-23.4],[-305.8,-25.4],[-309.0,-25.5],[-312.1,-24.7],[-318.2,-21.3],[-324.6,-14.1]]},{"c":3,"p":[[-295.7,-23.4],[-285.4,-17.1]]},{"c":3,"p":[[-227.9,23.1],[-202.9,43.8],[-177.7,66.0]]},{"c":1,"p":[[-48.6,-8.3],[-26.0,-8.7]]},{"c":1,"p":[[-26.0,-8.7],[-25.8,4.9]]},{"c":1,"p":[[-202.6,2.9],[-183.5,20.9],[-131.5,7.2]]},{"c":1,"p":[[-199.1,47.3],[-187.9,32.8],[-172.1,29.4]]},{"c":1,"p":[[-186.6,-31.0],[-174.5,-24.2],[-142.3,-33.2]]},{"c":1,"p":[[-204.3,82.7],[-212.4,73.2],[-209.9,57.7]]},{"c":1,"p":[[-337.7,-85.8],[-319.2,-96.5]]},{"c":1,"p":[[-312.2,-79.8],[-325.3,-109.6]]},{"c":0,"p":[[-62.7,-25.7],[-135.3,-7.0]]},{"c":0,"p":[[-57.8,-8.4],[-57.2,30.0],[-116.6,44.1],[-130.2,-8.3]]},{"c":0,"p":[[-142.2,-48.7],[-152.7,-45.9]]},{"c":0,"p":[[-174.5,59.4],[-169.9,58.7],[-128.8,46.8],[-152.3,-42.3],[-154.1,-45.5],[-159.1,-44.1],[-167.0,-40.7],[-174.7,-35.3],[-180.4,-29.0],[-190.0,-8.5],[-192.4,-0.9]]},{"c":0,"p":[[-38.7,28.3],[-40.4,-68.1],[-124.6,-70.2],[-161.1,-60.6],[-175.5,-54.7],[-179.5,-52.0],[-188.3,-43.9],[-195.1,-35.5],[-197.7,-31.1],[-206.8,-8.2],[-210.2,-3.3],[-214.0,0.4],[-218.8,3.2],[-223.3,5.0],[-228.7,5.9],[-236.8,5.0],[-242.2,3.0],[-247.5,0.1]]},{"c":0,"p":[[-282.7,-21.8],[-287.2,-24.7]]},{"c":0,"p":[[-247.5,0.1],[-282.7,-21.8]]},{"c":0,"p":[[-316.7,9.8],[-311.2,0.2],[-310.8,-3.4],[-307.1,-7.4],[-300.3,-13.0],[-297.7,-17.5]]},{"c":0,"p":[[-288.2,-12.4],[-253.4,9.7]]},{"c":0,"p":[[-253.4,9.7],[-250.1,12.4],[-245.9,18.6],[-242.3,22.4],[-235.0,28.5]]},{"c":0,"p":[[-297.7,-17.5],[-288.2,-12.4]]},{"c":0,"p":[[-292.5,-15.7],[-287.6,-23.8]]},{"c":0,"p":[[-234.6,28.9],[-229.4,33.1]]},{"c":0,"p":[[-229.0,33.4],[-220.5,41.1]]},{"c":0,"p":[[-220.1,41.5],[-216.6,44.4]]},{"c":0,"p":[[-228.7,5.9],[-228.5,13.1]]},{"c":0,"p":[[-237.1,25.3],[-232.5,19.9],[-229.0,13.9]]},{"c":0,"p":[[-228.0,13.4],[-217.5,21.4]]},{"c":0,"p":[[-130.2,-8.3],[-140.8,-49.1],[-137.4,-50.6],[-125.6,-52.7],[-113.3,-54.0],[-100.2,-53.5]]},{"c":0,"p":[[-100.2,-54.2],[-99.1,-68.9]]},{"c":0,"p":[[-154.2,-46.1],[-157.0,-61.3]]},{"c":0,"p":[[-119.0,45.8],[-125.2,47.2]]},{"c":0,"p":[[-55.9,28.6],[-39.7,28.3]]},{"c":0,"p":[[-55.9,46.9],[-58.8,44.5],[-114.6,57.8],[-115.7,58.7],[-103.3,107.3]]},{"c":0,"p":[[-165.8,71.9],[-144.7,153.5],[-101.9,142.1],[-122.6,61.1],[-124.2,60.6],[-165.8,71.9],[-167.7,70.0]]},{"c":0,"p":[[-184.6,74.8],[-181.2,72.2],[-178.7,71.7],[-174.7,72.1]]},{"c":0,"p":[[-176.0,59.8],[-191.4,64.1]]},{"c":0,"p":[[-216.1,44.7],[-213.8,45.8],[-201.0,56.4]]},{"c":0,"p":[[-201.0,56.4],[-194.1,61.8]]},{"c":0,"p":[[-194.1,61.8],[-192.8,64.4]]},{"c":0,"p":[[-123.4,60.1],[-126.4,48.1]]},{"c":0,"p":[[-114.7,57.3],[-117.5,46.0]]},{"c":0,"p":[[-121.8,60.2],[-117.0,59.0]]},{"c":0,"p":[[-116.6,44.1],[-117.6,45.5]]},{"c":0,"p":[[-126.5,47.5],[-128.8,46.8]]},{"c":0,"p":[[67.2,-40.7],[65.0,-48.1],[45.6,-54.5],[41.8,-54.4],[35.3,-57.3],[1.7,-62.4],[-21.9,-67.5],[-40.4,-68.1]]},{"c":0,"p":[[-40.1,-55.7],[-2.9,-54.7],[-2.0,-63.2]]},{"c":0,"p":[[-100.2,-53.5],[-91.0,-50.9],[-82.3,-47.4],[-73.3,-40.9],[-66.9,-34.2],[-62.7,-25.7],[-58.8,-17.1],[-57.8,-8.4]]},{"c":2,"p":[[-58.0,-31.1],[-50.0,-15.8],[-48.6,-8.3],[-47.9,20.5],[-48.2,33.7]]},{"c":0,"p":[[-57.6,-15.5],[-40.8,-16.2]]},{"c":0,"p":[[-38.7,28.3],[-37.3,89.1],[-38.9,206.1],[-26.7,260.7]]},{"c":0,"p":[[-40.0,40.1],[-55.9,46.9],[-57.1,30.6]]},{"c":0,"p":[[-53.0,92.8],[-55.9,46.9]]},{"c":0,"p":[[-41.8,262.2],[-41.4,260.6],[-46.3,241.5],[-46.7,230.2],[-49.7,211.1],[-48.9,103.0],[-49.4,100.4]]},{"c":0,"p":[[-49.4,100.4],[-53.0,92.8]]},{"c":0,"p":[[-127.3,2.6],[-58.6,-15.5]]},{"c":0,"p":[[-97.4,-52.7],[-75.4,34.5]]},{"c":0,"p":[[-192.8,64.4],[-193.7,65.8],[-208.7,77.6],[-228.3,94.7],[-272.0,133.6],[-292.5,153.9],[-300.8,162.7],[-308.0,171.5],[-314.8,183.8],[-317.6,190.6],[-326.4,217.4],[-336.1,251.8],[-339.6,273.5]]},{"c":0,"p":[[-300.8,162.7],[-292.4,170.0]]},{"c":0,"p":[[-274.9,155.8],[-281.8,159.1],[-292.4,170.0],[-299.9,180.0],[-308.2,198.5],[-324.9,252.7],[-326.7,262.2],[-325.1,264.9],[-319.8,266.0]]},{"c":0,"p":[[-274.9,155.8],[-265.0,146.8]]},{"c":0,"p":[[-265.0,146.8],[-264.2,144.4],[-245.0,127.3],[-242.4,127.7],[-218.8,105.8],[-203.4,164.0]]},{"c":0,"p":[[-218.8,105.8],[-219.1,104.1]]},{"c":0,"p":[[-219.1,104.1],[-213.3,101.9]]},{"c":0,"p":[[-213.3,101.9],[-187.5,78.9],[-184.6,74.8]]},{"c":0,"p":[[-212.2,101.0],[-194.3,170.3]]},{"c":0,"p":[[-173.2,71.6],[-169.1,70.4]]},{"c":0,"p":[[-192.4,-0.9],[-196.3,6.2],[-203.5,13.0],[-212.3,16.9],[-216.3,20.2],[-217.0,21.8],[-216.3,24.9],[-194.8,41.8],[-174.5,59.4]]},{"c":0,"p":[[-167.9,69.6],[-174.2,59.8]]},{"c":0,"p":[[-192.4,64.9],[-184.9,74.3]]},{"c":1,"p":[[-339.6,-118.5],[-334.5,-127.8],[-320.6,-194.7]]},{"c":0,"p":[[-376.2,58.2],[-369.0,52.1],[-357.8,40.0],[-340.0,11.7],[-336.3,2.9],[-325.6,-29.6],[-325.7,-33.8],[-326.7,-35.7],[-351.2,-58.8]]},{"c":0,"p":[[-297.7,-17.5],[-305.6,-21.5],[-307.8,-21.9],[-312.1,-20.8],[-316.1,-17.8],[-318.1,-15.3],[-320.6,-9.9],[-327.4,9.7],[-330.6,16.8],[-349.5,46.8],[-355.4,53.1],[-368.8,66.1],[-399.8,92.0],[-467.3,142.3],[-475.7,145.3],[-495.4,149.4],[-573.9,149.7]]},{"c":0,"p":[[-287.2,-24.7],[-331.0,-55.2],[-342.3,-65.4],[-361.0,-88.7],[-368.8,-100.5],[-399.8,-155.5]]},{"c":0,"p":[[-337.7,-47.7],[-331.8,-54.2]]},{"c":2,"p":[[-97.5,145.8],[-59.7,135.9],[-57.6,134.9],[-55.9,133.4],[-52.2,100.3],[-53.0,97.0]]},{"c":1,"p":[[-81.9,72.6],[-114.3,81.0]]},{"c":1,"p":[[-187.3,116.2],[-210.7,122.3]]},{"c":1,"p":[[-180.5,108.3],[-161.9,103.6]]},{"c":0,"p":[[-185.1,-67.2],[-173.5,-55.5]]},{"c":0,"p":[[-174.7,72.1],[-172.7,74.8],[-172.0,77.1],[-152.2,155.2],[-195.5,166.0]]},{"c":1,"p":[[-168.6,78.3],[-174.3,79.6],[-176.3,82.6],[-183.7,84.5],[-186.0,84.6],[-188.9,83.3],[-197.6,76.7]]},{"c":0,"p":[[-287.2,-24.7],[-272.0,-31.3],[-266.4,-36.2],[-265.9,-38.6],[-267.5,-60.8],[-268.8,-66.5],[-278.1,-89.7],[-284.6,-103.7],[-315.8,-132.7],[-317.7,-133.8],[-322.2,-134.2],[-327.0,-132.9],[-329.0,-130.7],[-330.7,-123.3],[-328.6,-122.9],[-329.8,-115.2],[-330.2,-106.5],[-329.9,-95.2],[-324.9,-71.4],[-323.8,-62.5],[-316.1,-49.8],[-311.7,-44.2],[-302.6,-35.4]]},{"c":0,"p":[[-279.3,-28.1],[-325.2,-133.4]]},{"c":0,"p":[[-302.0,-79.9],[-278.1,-89.7]]},{"c":0,"p":[[-302.0,-79.9],[-324.7,-70.0]]},{"c":0,"p":[[-328.4,-87.0],[-320.7,-90.6],[-293.2,-28.9]]},{"c":0,"p":[[-268.7,-33.8],[-308.6,-126.0]]},{"c":0,"p":[[-101.6,113.5],[-95.0,140.5]]},{"c":0,"p":[[-103.3,107.3],[-101.6,113.5]]},{"c":0,"p":[[-38.4,39.4],[-40.0,40.1]]},{"c":0,"p":[[-57.1,30.6],[-57.2,30.0]]},{"c":0,"p":[[-56.9,28.6],[-55.9,28.6]]},{"c":0,"p":[[-39.7,28.3],[-38.7,28.3]]},{"c":0,"p":[[-114.6,57.8],[-114.7,57.3]]},{"c":0,"p":[[-117.5,46.0],[-117.6,45.5]]},{"c":0,"p":[[-117.6,45.5],[-119.0,45.8]]},{"c":0,"p":[[-125.2,47.2],[-126.5,47.5]]},{"c":0,"p":[[-123.3,60.7],[-123.4,60.1]]},{"c":0,"p":[[-126.4,48.1],[-126.5,47.5]]},{"c":0,"p":[[-123.3,60.7],[-121.8,60.2]]},{"c":0,"p":[[-117.0,59.0],[-115.7,58.7]]},{"c":0,"p":[[-174.5,59.4],[-176.0,59.8]]},{"c":0,"p":[[-191.4,64.1],[-192.8,64.4]]},{"c":0,"p":[[-174.7,72.1],[-173.2,71.6]]},{"c":0,"p":[[-169.1,70.4],[-167.7,70.0]]},{"c":0,"p":[[-167.7,70.0],[-167.9,69.6]]},{"c":0,"p":[[-174.2,59.8],[-174.5,59.4]]},{"c":0,"p":[[-192.8,64.4],[-192.4,64.9]]},{"c":0,"p":[[-184.9,74.3],[-184.6,74.8]]},{"c":0,"p":[[-237.9,26.2],[-237.1,25.3]]},{"c":0,"p":[[-229.0,13.9],[-228.5,13.1]]},{"c":0,"p":[[-228.5,13.1],[-228.0,13.4]]},{"c":0,"p":[[-217.5,21.4],[-217.0,21.8]]},{"c":0,"p":[[-235.0,28.5],[-234.6,28.9]]},{"c":0,"p":[[-229.4,33.1],[-229.0,33.4]]},{"c":0,"p":[[-220.5,41.1],[-220.1,41.5]]},{"c":0,"p":[[-216.6,44.4],[-216.1,44.7]]},{"c":0,"p":[[-154.1,-45.5],[-154.2,-46.1]]},{"c":0,"p":[[-157.0,-61.3],[-157.1,-61.9]]},{"c":0,"p":[[-140.8,-49.1],[-142.2,-48.7]]},{"c":0,"p":[[-152.7,-45.9],[-154.1,-45.5]]},{"c":0,"p":[[-100.2,-53.5],[-100.2,-54.2]]},{"c":0,"p":[[-99.1,-68.9],[-99.1,-69.6]]},{"c":0,"p":[[-58.6,-15.5],[-57.6,-15.5]]},{"c":0,"p":[[-40.8,-16.2],[-39.7,-16.3]]},{"c":0,"p":[[-338.5,-46.8],[-337.7,-47.7]]},{"c":0,"p":[[-331.8,-54.2],[-331.0,-55.2]]},{"c":0,"p":[[-293.0,-14.9],[-292.5,-15.7]]},{"c":0,"p":[[-287.6,-23.8],[-287.2,-24.7]]},{"c":3,"p":[[-404.7,-153.4],[-376.2,-102.7],[-367.6,-89.4],[-358.2,-76.4],[-348.0,-63.9],[-338.3,-54.2],[-327.8,-45.4],[-317.4,-37.6]]}],"bldg":[[[-149.2,-28.3],[-169.4,-23.0],[-168.4,-19.2],[-171.0,-18.6],[-167.6,-5.7],[-182.0,-1.9],[-178.2,12.7],[-141.0,3.0],[-149.2,-28.3]],[[-164.9,41.7],[-166.1,40.9],[-171.5,47.4],[-170.9,47.8],[-170.4,50.5],[-175.4,56.3],[-172.8,58.5],[-161.1,55.2],[-161.5,53.7],[-157.8,52.8],[-160.8,40.7],[-164.9,41.7]],[[-139.0,48.3],[-142.2,35.5],[-147.5,36.7],[-149.3,29.7],[-155.8,31.4],[-153.6,40.0],[-155.0,40.4],[-152.1,51.9],[-139.0,48.3]],[[-174.2,-58.4],[-174.8,-57.9],[-173.2,-56.1],[-167.9,-58.7],[-155.9,-62.9],[-157.7,-70.6],[-156.5,-73.2],[-158.9,-78.7],[-171.0,-74.7],[-184.7,-67.8],[-182.6,-65.8],[-182.1,-66.4],[-174.2,-58.4]],[[-158.0,23.4],[-137.3,18.0],[-135.2,26.0],[-155.8,31.4],[-158.0,23.4]],[[-205.0,-17.5],[-202.2,-25.3],[-202.5,-25.5],[-198.7,-33.1],[-210.4,-45.2],[-214.3,-38.5],[-211.2,-36.8],[-218.2,-20.8],[-205.0,-17.5]],[[-155.9,-62.9],[-142.2,-66.5],[-144.2,-74.5],[-149.2,-77.3],[-155.4,-75.7],[-157.7,-70.6],[-155.9,-62.9]],[[-157.8,52.8],[-162.4,34.5],[-160.1,34.0],[-160.4,33.1],[-156.6,32.2],[-154.6,40.2],[-155.8,40.5],[-153.0,51.6],[-157.8,52.8]],[[-130.1,46.1],[-139.0,48.3],[-142.2,35.5],[-147.5,36.7],[-149.3,29.7],[-135.2,26.0],[-130.1,46.1]],[[-198.7,-33.1],[-189.2,-45.2],[-181.7,-51.9],[-175.3,-56.5],[-186.2,-67.1],[-193.3,-61.5],[-202.1,-52.8],[-200.7,-51.7],[-207.6,-42.6],[-198.7,-33.1]],[[-245.3,-0.6],[-239.7,-7.8],[-236.4,-6.0],[-233.3,-4.9],[-221.8,-8.4],[-223.3,-12.0],[-220.8,-14.5],[-218.9,-18.5],[-207.5,-15.6],[-206.0,-12.3],[-210.1,-5.0],[-213.6,-1.6],[-217.7,0.7],[-217.3,1.7],[-225.2,4.5],[-225.4,4.1],[-231.6,4.5],[-237.0,3.5],[-245.3,-0.6]],[[-119.3,77.8],[-123.2,62.3],[-140.4,66.6],[-136.5,82.1],[-119.3,77.8]],[[-67.4,48.6],[-58.8,46.5],[-57.3,47.4],[-55.8,65.8],[-60.2,67.4],[-62.3,67.6],[-66.9,50.2],[-67.8,49.6],[-67.4,48.6]],[[-18.2,-31.9],[-18.1,-25.6],[-38.3,-25.3],[-38.4,-33.4],[-34.4,-33.5],[-34.5,-37.5],[-26.5,-37.6],[-26.4,-31.7],[-18.2,-31.9]],[[2.0,-48.7],[2.1,-33.7],[-21.8,-33.5],[-21.9,-47.7],[-19.8,-47.7],[-19.8,-48.4],[-11.9,-48.5],[-11.9,-47.9],[-5.4,-47.9],[-5.4,-48.6],[2.0,-48.7]],[[-235.2,31.0],[-248.1,20.0],[-252.9,25.6],[-240.0,36.6],[-235.2,31.0]],[[-214.0,24.3],[-198.3,37.0],[-195.3,36.9],[-190.4,30.8],[-185.1,30.8],[-185.1,24.0],[-192.6,23.9],[-203.3,15.0],[-207.9,17.9],[-214.0,20.6],[-214.0,24.3]],[[-11.8,53.5],[-11.9,47.2],[-18.1,47.3],[-18.0,50.0],[-20.5,50.1],[-20.6,43.4],[-35.9,43.6],[-35.8,53.8],[-11.8,53.5]],[[-36.7,28.3],[-23.6,28.1],[-23.4,42.0],[-36.4,42.2],[-36.7,28.3]],[[-137.1,82.9],[-141.3,66.8],[-151.5,69.4],[-151.3,70.1],[-165.0,73.6],[-162.0,85.1],[-161.5,85.0],[-159.9,90.9],[-148.7,88.1],[-149.5,85.1],[-147.5,84.6],[-147.3,85.5],[-137.1,82.9]],[[-185.1,105.9],[-188.3,93.4],[-183.1,92.2],[-183.5,90.8],[-171.1,87.7],[-168.4,98.4],[-173.2,99.6],[-172.4,102.8],[-185.1,105.9]],[[-187.3,108.8],[-188.9,109.2],[-188.5,111.1],[-193.3,112.2],[-193.5,111.3],[-194.8,111.6],[-195.5,108.6],[-208.2,111.6],[-210.6,101.8],[-209.3,101.5],[-209.6,100.2],[-198.3,97.4],[-199.7,91.6],[-198.4,91.3],[-198.9,89.6],[-195.0,88.6],[-194.5,90.5],[-191.9,89.9],[-187.3,108.8]],[[-194.1,60.8],[-200.2,55.6],[-209.7,63.9],[-202.5,72.0],[-194.2,64.6],[-194.1,60.8]],[[-210.0,50.3],[-216.2,55.8],[-220.1,51.9],[-214.3,46.1],[-210.0,50.3]],[[-217.0,63.9],[-212.5,59.5],[-221.1,50.9],[-225.6,55.4],[-217.0,63.9]],[[-217.5,64.3],[-225.0,71.7],[-233.6,63.0],[-226.1,55.6],[-217.5,64.3]],[[-175.2,-5.9],[-170.2,-7.4],[-172.0,-15.1],[-184.8,-19.1],[-188.0,-10.0],[-175.2,-5.9]],[[-189.0,-2.0],[-184.1,-0.1],[-182.0,-5.4],[-187.7,-7.6],[-189.4,-3.3],[-188.6,-3.1],[-189.0,-2.0]],[[-58.9,20.0],[-58.6,27.5],[-67.3,29.7],[-69.0,22.8],[-58.9,20.0]],[[-75.7,-11.9],[-85.8,-9.4],[-87.8,-17.1],[-77.6,-19.7],[-75.7,-11.9]],[[-75.7,-11.9],[-61.3,-15.5],[-63.3,-23.3],[-77.6,-19.7],[-75.7,-11.9]],[[-87.8,-21.5],[-93.7,-44.8],[-91.9,-45.2],[-92.5,-47.5],[-89.0,-48.4],[-87.4,-47.7],[-83.1,-31.0],[-75.1,-33.0],[-75.9,-36.2],[-73.1,-36.9],[-72.0,-32.8],[-69.0,-33.5],[-67.2,-26.6],[-87.8,-21.5]],[[-229.9,52.3],[-232.5,50.4],[-230.6,39.2],[-229.7,37.1],[-228.1,36.1],[-220.7,42.2],[-229.9,52.3]],[[-35.5,111.8],[-35.3,89.0],[-22.2,89.2],[-22.3,95.2],[-26.2,95.2],[-26.2,96.2],[-27.7,96.1],[-27.7,97.8],[-22.7,97.9],[-22.7,101.8],[-27.9,101.7],[-28.0,110.1],[-33.2,111.9],[-35.5,111.8]],[[11.2,-48.9],[12.9,-57.0],[6.0,-58.5],[4.3,-50.4],[11.2,-48.9]],[[-118.2,-12.1],[-129.9,-9.1],[-134.2,-25.9],[-134.0,-27.6],[-130.3,-28.5],[-129.2,-27.4],[-127.8,-22.3],[-126.7,-22.6],[-127.9,-27.4],[-127.4,-29.0],[-123.5,-30.1],[-122.5,-28.6],[-118.2,-12.1]],[[-117.7,-12.6],[-121.9,-28.6],[-121.8,-30.7],[-118.2,-31.6],[-116.9,-30.0],[-115.7,-25.2],[-114.2,-25.6],[-115.5,-30.7],[-115.0,-32.3],[-111.7,-33.2],[-110.7,-31.8],[-106.7,-16.4],[-113.0,-14.8],[-112.7,-13.9],[-117.7,-12.6]],[[-105.4,-16.0],[-109.5,-31.9],[-109.3,-33.7],[-105.8,-34.7],[-104.6,-33.6],[-103.2,-28.5],[-101.7,-28.9],[-103.0,-33.6],[-102.9,-35.2],[-99.0,-36.2],[-98.1,-35.1],[-94.0,-18.9],[-105.4,-16.0]],[[-126.1,1.0],[-128.2,-7.1],[-114.8,-10.6],[-112.6,-2.5],[-126.1,1.0]],[[-111.7,-2.5],[-113.8,-10.7],[-104.6,-13.0],[-102.5,-4.7],[-111.7,-2.5]],[[-100.4,-4.9],[-102.7,-13.5],[-93.4,-16.0],[-91.1,-7.4],[-100.4,-4.9]],[[-97.2,12.0],[-99.4,3.2],[-89.3,0.7],[-87.1,9.5],[-97.2,12.0]],[[-111.8,15.1],[-97.8,11.5],[-99.9,3.6],[-113.9,7.3],[-111.8,15.1]],[[-122.7,17.8],[-117.6,16.5],[-119.7,8.9],[-124.7,10.2],[-122.7,17.8]],[[-117.6,16.5],[-117.4,17.1],[-111.7,15.6],[-113.9,7.3],[-119.7,8.9],[-117.6,16.5]],[[-81.8,8.1],[-67.1,4.4],[-69.4,-4.5],[-84.1,-0.7],[-81.8,8.1]],[[-67.1,4.4],[-59.5,2.4],[-59.0,-7.2],[-68.8,-4.8],[-68.1,-2.0],[-68.6,-1.3],[-67.1,4.4]],[[-67.2,22.2],[-71.0,7.8],[-59.7,4.8],[-58.9,20.0],[-67.2,22.2]],[[-71.0,15.4],[-72.8,7.8],[-81.2,9.9],[-79.3,17.4],[-71.0,15.4]],[[-76.8,24.7],[-69.4,22.9],[-70.1,19.7],[-69.0,19.4],[-70.0,15.1],[-76.2,16.6],[-76.0,17.6],[-79.2,18.4],[-78.1,22.8],[-77.4,22.6],[-76.8,24.7]],[[-67.3,29.7],[-67.1,30.5],[-75.5,32.6],[-77.4,24.9],[-69.0,22.8],[-67.3,29.7]],[[-91.3,27.8],[-82.2,25.7],[-85.8,11.1],[-94.8,13.3],[-91.3,27.8]],[[-89.3,35.5],[-91.3,27.8],[-82.2,25.7],[-80.4,33.3],[-89.3,35.5]],[[-116.3,41.6],[-109.0,39.8],[-112.3,26.3],[-106.3,24.8],[-108.2,17.3],[-121.5,20.6],[-116.3,41.6]],[[-107.3,40.5],[-110.7,27.3],[-104.6,25.7],[-104.8,24.9],[-100.5,23.8],[-96.9,37.9],[-107.3,40.5]],[[-100.2,23.1],[-105.4,24.5],[-107.0,18.6],[-101.8,17.2],[-100.2,23.1]],[[-90.0,36.0],[-93.4,23.2],[-99.5,24.8],[-96.1,37.6],[-90.0,36.0]],[[-34.9,64.0],[-35.0,56.1],[-21.0,55.9],[-20.8,63.8],[-34.9,64.0]],[[-26.5,76.7],[-36.5,76.9],[-36.8,65.3],[-26.8,65.1],[-26.5,76.7]],[[-22.2,87.3],[-34.9,87.7],[-35.3,77.2],[-22.6,76.7],[-22.2,87.3]],[[-80.9,66.4],[-84.4,53.7],[-68.5,49.5],[-65.1,62.2],[-80.9,66.4]],[[-88.7,71.3],[-85.0,70.4],[-85.1,69.7],[-83.0,69.2],[-83.5,67.2],[-81.2,66.6],[-84.8,52.8],[-92.9,54.9],[-88.7,71.3]],[[-92.8,55.6],[-114.3,60.9],[-109.7,78.5],[-88.2,73.2],[-92.8,55.6]],[[-270.9,-44.2],[-270.1,-44.5],[-269.0,-56.9],[-272.0,-63.7],[-270.8,-64.2],[-275.9,-75.7],[-274.7,-76.2],[-279.8,-87.7],[-288.5,-83.9],[-270.9,-44.2]],[[-290.2,-86.5],[-280.8,-90.5],[-285.9,-102.3],[-287.3,-101.7],[-288.6,-104.7],[-289.5,-104.3],[-290.5,-106.8],[-301.2,-116.8],[-302.5,-116.3],[-302.5,-114.9],[-290.2,-86.5]],[[-301.8,-81.7],[-292.5,-85.7],[-308.0,-121.1],[-309.0,-120.6],[-310.3,-123.6],[-311.5,-123.1],[-313.1,-126.8],[-314.4,-126.2],[-315.4,-128.4],[-316.8,-127.8],[-318.1,-130.9],[-319.5,-131.6],[-322.0,-130.9],[-322.7,-129.5],[-301.8,-81.7]],[[-300.2,-79.1],[-291.5,-82.8],[-271.2,-36.7],[-271.3,-34.9],[-273.1,-34.0],[-272.7,-32.8],[-273.3,-31.5],[-276.6,-30.1],[-277.5,-30.3],[-278.2,-31.4],[-279.0,-30.9],[-300.2,-79.1]],[[-321.3,-87.4],[-316.1,-75.9],[-324.2,-72.4],[-327.1,-84.9],[-321.3,-87.4]],[[-315.0,-72.6],[-305.0,-50.8],[-306.1,-50.4],[-305.3,-48.7],[-310.9,-46.1],[-312.0,-48.4],[-313.8,-48.8],[-319.2,-60.4],[-319.8,-60.2],[-320.7,-62.3],[-319.9,-62.7],[-322.8,-69.1],[-315.0,-72.6]],[[-298.2,-35.6],[-299.6,-35.0],[-308.1,-42.7],[-302.6,-45.2],[-298.2,-35.6]],[[-283.6,-26.8],[-292.7,-31.2],[-311.7,-73.8],[-302.8,-77.8],[-280.5,-28.2],[-283.6,-26.8]],[[-338.9,-67.7],[-341.9,-67.0],[-352.0,-79.5],[-360.5,-91.9],[-345.1,-95.3],[-338.9,-67.7]],[[-345.2,-96.0],[-353.9,-94.1],[-354.1,-95.4],[-358.2,-94.5],[-358.0,-93.5],[-362.1,-92.6],[-367.0,-99.2],[-346.9,-103.6],[-345.2,-96.0]],[[-378.9,-123.6],[-359.8,-131.6],[-354.0,-129.9],[-352.2,-121.6],[-356.3,-118.0],[-370.7,-115.1],[-371.7,-120.4],[-360.4,-122.6],[-360.9,-125.2],[-365.9,-124.2],[-369.6,-122.7],[-369.9,-123.5],[-377.5,-120.3],[-378.9,-123.6]],[[-349.3,-111.3],[-364.8,-107.6],[-366.4,-114.6],[-350.9,-118.1],[-349.3,-111.3]],[[-347.3,-104.6],[-352.8,-103.3],[-353.1,-104.2],[-357.5,-103.1],[-357.8,-104.3],[-368.4,-101.8],[-369.5,-106.5],[-349.3,-111.3],[-348.0,-110.7],[-346.6,-105.5],[-347.3,-104.6]],[[37.2,80.5],[36.8,81.1],[32.6,78.6],[28.8,84.8],[42.4,93.0],[46.6,86.1],[37.2,80.5]],[[43.8,76.7],[45.3,72.1],[46.7,72.5],[47.9,68.7],[35.7,64.9],[35.3,66.1],[33.6,66.6],[31.9,71.9],[32.3,72.6],[33.0,73.3],[43.8,76.7]],[[56.5,67.6],[60.9,69.1],[61.8,66.6],[57.4,65.0],[56.5,67.6]],[[35.4,62.3],[45.6,61.9],[45.5,63.8],[58.4,64.2],[58.6,58.4],[53.9,58.2],[54.0,55.1],[35.7,54.1],[35.7,54.5],[34.4,54.5],[34.1,61.6],[35.5,61.6],[35.4,62.3]],[[54.0,51.5],[60.5,52.3],[61.8,42.6],[55.2,41.8],[54.0,51.5]],[[40.0,25.8],[39.6,24.9],[38.3,24.1],[37.0,24.2],[36.0,25.0],[35.5,26.2],[36.5,28.1],[36.3,30.1],[35.1,29.9],[34.4,35.6],[35.6,35.8],[34.8,42.1],[42.0,43.0],[42.8,36.7],[44.8,36.9],[46.1,26.6],[40.0,25.8]],[[57.4,-15.4],[58.6,-24.5],[49.4,-25.7],[50.0,-29.6],[40.2,-31.0],[40.5,-33.2],[30.8,-34.6],[30.5,-32.3],[20.9,-33.7],[19.5,-24.0],[22.4,-23.6],[21.3,-18.2],[26.2,-17.5],[24.9,-7.8],[27.7,-7.4],[26.3,2.1],[37.0,3.6],[38.5,-6.8],[35.4,-7.2],[37.1,-18.9],[33.4,-19.5],[33.6,-20.7],[29.1,-21.3],[29.3,-22.6],[48.6,-19.9],[48.1,-16.7],[55.4,-15.7],[52.3,5.9],[83.5,10.3],[85.7,-5.7],[71.6,-7.7],[72.2,-12.0],[57.2,-14.1],[57.4,-15.4]],[[58.0,116.8],[52.4,113.6],[50.5,116.9],[56.1,120.0],[58.0,116.8]],[[53.4,128.7],[53.0,129.2],[58.9,132.6],[58.4,133.5],[62.4,135.7],[62.9,134.9],[68.0,137.8],[72.6,129.7],[57.7,121.2],[57.5,121.6],[55.3,120.3],[51.2,127.4],[53.4,128.7]],[[60.9,150.1],[65.5,142.3],[55.0,136.3],[50.5,144.1],[60.9,150.1]],[[50.1,135.4],[43.7,131.7],[39.9,138.3],[46.3,142.0],[50.1,135.4]],[[49.5,154.7],[48.1,157.2],[54.8,161.0],[55.1,160.4],[56.2,161.1],[58.1,157.8],[57.0,157.2],[57.4,156.6],[54.8,155.1],[56.8,151.7],[47.3,145.9],[46.5,147.3],[44.7,146.2],[46.5,143.1],[40.5,139.6],[38.4,143.1],[43.0,145.8],[42.6,146.4],[40.3,145.1],[37.2,150.4],[47.0,156.0],[48.2,154.0],[49.5,154.7]],[[45.5,165.0],[47.5,166.1],[51.1,159.9],[37.1,151.8],[32.8,159.1],[44.9,166.0],[45.5,165.0]],[[32.9,157.1],[30.3,155.6],[28.7,158.4],[31.3,159.9],[32.9,157.1]],[[26.1,158.7],[30.5,151.3],[23.8,147.5],[20.2,153.7],[22.2,154.8],[21.5,156.0],[26.1,158.7]],[[20.3,147.5],[21.8,148.3],[24.7,143.3],[15.2,137.9],[14.5,139.0],[9.5,136.2],[5.0,143.9],[18.0,151.4],[20.3,147.5]],[[29.8,138.3],[30.3,137.4],[28.6,136.4],[28.1,137.3],[24.3,135.1],[22.2,138.6],[33.8,145.3],[38.7,136.8],[33.8,134.1],[31.0,139.0],[29.8,138.3]],[[10.1,131.9],[20.8,138.0],[23.7,133.1],[13.0,126.9],[10.1,131.9]],[[13.6,123.9],[25.3,130.6],[26.5,128.7],[31.4,131.5],[30.7,132.7],[32.6,133.9],[33.3,132.7],[38.6,135.7],[40.6,132.2],[17.7,119.1],[16.1,121.8],[15.1,121.3],[13.6,123.9]],[[18.2,116.8],[27.9,122.4],[28.2,121.9],[31.6,123.9],[31.2,124.6],[33.0,125.6],[33.4,124.9],[40.4,129.0],[45.1,121.0],[39.9,118.1],[38.0,121.4],[34.6,119.4],[35.3,118.3],[31.5,116.2],[31.8,115.8],[22.0,110.2],[18.2,116.8]],[[47.1,110.4],[50.9,112.6],[55.9,104.0],[49.7,100.5],[47.2,104.8],[49.5,106.2],[47.1,110.4]],[[29.6,98.3],[25.6,105.2],[40.5,113.7],[43.4,108.9],[42.5,108.4],[43.6,106.4],[29.6,98.3]],[[-3.6,18.0],[9.2,18.2],[9.1,28.4],[-3.7,28.3],[-3.6,18.0]],[[0.7,43.3],[12.7,43.2],[12.6,34.0],[9.2,34.1],[9.2,35.4],[0.6,35.5],[0.7,43.3]],[[-1.8,56.6],[11.4,56.4],[11.2,45.6],[-2.0,45.8],[-1.8,56.6]],[[-1.2,67.8],[11.5,67.6],[11.3,57.9],[-3.1,58.1],[-3.0,65.2],[-1.3,65.2],[-1.2,67.8]],[[0.6,80.6],[0.6,83.0],[8.9,83.0],[8.9,70.8],[-4.7,70.8],[-4.6,80.6],[0.6,80.6]],[[8.6,100.0],[8.6,97.4],[9.5,96.6],[9.5,93.6],[8.5,93.0],[8.5,89.6],[-3.9,89.7],[-3.9,93.7],[-5.8,93.7],[-5.7,101.7],[3.1,101.6],[3.1,100.0],[8.6,100.0]],[[-2.3,118.7],[3.9,108.3],[-4.2,103.5],[-6.3,107.0],[-8.0,106.0],[-12.2,112.9],[-2.3,118.7]],[[-18.3,56.9],[-12.0,56.9],[-12.0,54.7],[-18.3,54.8],[-18.3,56.9]],[[-18.3,130.2],[-11.3,130.1],[-11.4,124.3],[-18.3,124.4],[-18.3,130.2]],[[-31.8,139.1],[-27.6,139.1],[-27.6,136.6],[-20.1,136.6],[-20.2,129.3],[-24.3,129.3],[-24.3,125.5],[-31.8,125.5],[-31.8,139.1]],[[-36.0,139.1],[-27.6,139.1],[-27.6,139.8],[-26.3,139.8],[-26.3,140.6],[-24.5,140.5],[-24.5,145.5],[-29.5,145.5],[-29.5,152.0],[-36.0,152.0],[-36.0,139.1]],[[-56.7,69.7],[-54.8,76.7],[-75.5,82.0],[-77.4,75.0],[-76.5,74.8],[-77.0,72.9],[-68.1,70.6],[-67.6,72.5],[-56.7,69.7]],[[-75.2,82.8],[-57.3,78.2],[-55.3,86.0],[-73.2,90.6],[-75.2,82.8]],[[-55.2,95.1],[-54.4,86.4],[-74.7,91.5],[-72.7,99.5],[-55.2,95.1]],[[-79.5,98.9],[-83.3,84.3],[-75.3,82.2],[-73.0,91.1],[-76.3,91.9],[-75.3,95.7],[-76.4,96.6],[-76.1,98.0],[-79.5,98.9]],[[-85.8,104.4],[-78.5,102.5],[-81.1,92.4],[-88.4,94.2],[-85.8,104.4]],[[-101.5,108.1],[-89.7,105.1],[-90.0,103.8],[-86.5,102.9],[-88.4,95.7],[-103.7,99.5],[-101.5,108.1]],[[-105.0,98.9],[-92.9,95.8],[-93.2,94.8],[-90.1,94.6],[-90.5,93.1],[-87.6,92.4],[-89.1,86.7],[-91.9,87.4],[-92.1,86.6],[-107.2,90.4],[-105.0,98.9]],[[-106.8,90.2],[-86.5,84.9],[-88.6,76.9],[-108.9,82.2],[-106.8,90.2]],[[-85.4,84.6],[-79.0,82.9],[-79.1,82.4],[-76.1,81.6],[-77.7,75.4],[-80.2,76.0],[-80.4,75.1],[-86.9,76.7],[-86.6,77.8],[-87.1,77.9],[-85.4,84.6]],[[-143.3,96.3],[-118.8,90.1],[-121.0,81.8],[-145.4,88.3],[-143.3,96.3]],[[-134.9,103.9],[-119.7,100.0],[-119.9,99.0],[-114.3,97.6],[-116.3,90.1],[-137.1,95.3],[-134.9,103.9]],[[-132.7,112.5],[-113.2,107.6],[-115.0,100.8],[-124.0,103.0],[-124.3,101.7],[-130.3,103.2],[-129.5,106.0],[-134.1,107.2],[-132.7,112.5]],[[-126.9,118.4],[-110.8,114.1],[-112.5,107.5],[-128.7,111.7],[-126.9,118.4]],[[-155.3,99.4],[-143.3,96.3],[-145.4,88.3],[-157.4,91.3],[-155.3,99.4]],[[-151.2,98.6],[-149.9,104.0],[-156.3,105.5],[-157.6,100.1],[-151.2,98.6]],[[-150.0,102.9],[-151.1,98.5],[-139.9,95.7],[-139.2,98.7],[-138.3,98.5],[-135.3,110.3],[-136.2,110.5],[-135.4,113.5],[-152.4,117.3],[-153.9,111.6],[-147.4,110.0],[-149.2,102.7],[-150.0,102.9]],[[-147.0,117.2],[-137.7,114.9],[-137.5,115.6],[-136.0,115.2],[-135.1,118.5],[-137.9,119.2],[-137.0,122.7],[-149.4,125.9],[-150.9,120.0],[-146.6,118.9],[-147.0,117.2]],[[-130.5,121.4],[-125.3,120.0],[-122.6,130.3],[-107.1,126.2],[-105.2,133.5],[-122.4,138.0],[-123.9,132.3],[-127.4,133.3],[-130.5,121.4]],[[-122.2,126.7],[-108.4,123.4],[-110.1,116.5],[-123.9,119.9],[-122.2,126.7]],[[-183.6,116.7],[-170.6,113.5],[-168.8,120.8],[-181.8,124.0],[-183.6,116.7]],[[-201.5,138.2],[-180.7,132.9],[-182.1,127.2],[-185.4,128.0],[-186.3,124.7],[-197.9,127.7],[-197.5,129.2],[-203.5,130.7],[-201.5,138.2]],[[-180.7,132.9],[-179.0,139.5],[-183.3,140.6],[-183.8,138.7],[-185.5,139.2],[-186.5,135.4],[-184.7,134.9],[-185.0,133.9],[-180.7,132.9]],[[-188.1,140.2],[-188.9,137.0],[-192.9,138.0],[-192.0,141.2],[-198.8,143.0],[-197.8,147.1],[-183.1,143.4],[-184.2,139.2],[-188.1,140.2]],[[-197.2,155.1],[-178.0,150.2],[-179.1,145.8],[-179.8,146.0],[-180.6,143.1],[-193.2,146.3],[-193.1,146.9],[-194.4,147.2],[-194.3,147.7],[-198.8,148.8],[-197.2,155.1]],[[-190.2,164.1],[-192.5,154.9],[-197.0,156.0],[-194.7,165.2],[-190.2,164.1]],[[-191.7,158.0],[-191.1,157.8],[-189.5,163.9],[-185.4,162.8],[-187.7,153.7],[-192.5,154.9],[-191.7,158.0]],[[-187.0,156.6],[-186.4,156.5],[-184.8,162.8],[-180.5,161.7],[-182.9,152.5],[-187.7,153.7],[-187.0,156.6]],[[-182.4,152.8],[-180.2,161.4],[-167.1,158.0],[-169.4,149.4],[-182.4,152.8]],[[-166.2,157.8],[-153.9,154.6],[-156.1,146.3],[-168.4,149.4],[-166.2,157.8]],[[-175.1,150.1],[-159.5,146.1],[-158.5,144.4],[-158.7,143.6],[-155.9,142.9],[-157.6,136.5],[-176.2,141.8],[-175.6,144.0],[-176.7,144.3],[-175.1,150.1]],[[-229.5,118.3],[-219.1,132.7],[-214.5,129.4],[-216.2,126.9],[-214.3,125.6],[-222.9,113.6],[-229.5,118.3]],[[-250.0,136.8],[-237.2,151.1],[-223.4,138.8],[-236.2,124.5],[-250.0,136.8]],[[-223.4,138.8],[-222.4,139.9],[-217.4,135.6],[-225.1,125.1],[-227.2,126.8],[-228.0,125.6],[-227.2,124.9],[-231.3,120.1],[-236.2,124.5],[-223.4,138.8]],[[-233.0,149.4],[-227.4,144.2],[-225.8,143.9],[-223.5,153.7],[-231.5,155.6],[-233.0,149.4]],[[-219.4,152.4],[-210.4,150.2],[-212.0,143.9],[-221.0,146.2],[-219.4,152.4]],[[-206.7,161.9],[-204.6,161.4],[-206.0,156.0],[-217.4,158.9],[-215.1,168.0],[-213.7,167.7],[-213.3,169.4],[-205.3,167.4],[-206.7,161.9]],[[-221.2,171.6],[-224.1,160.4],[-221.4,159.7],[-221.0,161.1],[-218.4,160.4],[-215.9,170.2],[-221.2,171.6]],[[-227.1,173.2],[-221.6,171.7],[-224.6,160.4],[-230.1,161.8],[-227.1,173.2]],[[-231.9,173.8],[-228.3,172.9],[-231.2,162.0],[-238.8,164.0],[-235.8,175.5],[-231.7,174.4],[-231.9,173.8]],[[-236.3,175.1],[-240.3,159.5],[-245.1,160.7],[-241.5,176.4],[-236.3,175.1]],[[-244.2,171.3],[-243.7,171.2],[-246.5,160.4],[-249.4,161.1],[-249.2,161.9],[-252.8,162.8],[-251.8,166.9],[-253.0,167.2],[-251.6,172.5],[-250.7,172.3],[-250.0,175.0],[-248.5,174.6],[-247.7,177.8],[-242.8,176.6],[-244.2,171.3]],[[-256.6,162.7],[-246.4,158.0],[-248.9,152.8],[-250.8,153.7],[-252.3,150.4],[-260.6,154.2],[-256.6,162.7]],[[-218.2,-20.8],[-219.5,-22.6],[-220.8,-27.0],[-220.6,-28.2],[-219.2,-27.6],[-218.1,-30.0],[-214.8,-28.6],[-218.2,-20.8]],[[-217.7,-29.8],[-215.8,-34.0],[-212.9,-32.8],[-214.8,-28.6],[-217.7,-29.8]],[[-142.5,-67.6],[-138.3,-69.5],[-138.5,-70.3],[-137.7,-70.5],[-138.3,-73.0],[-143.6,-71.8],[-142.5,-67.6]],[[-359.4,-65.0],[-362.5,-71.4],[-372.7,-66.6],[-366.3,-53.2],[-355.2,-58.4],[-358.5,-65.4],[-359.4,-65.0]],[[-351.4,-54.9],[-352.8,-58.0],[-368.6,-50.9],[-353.3,-17.3],[-336.1,-25.0],[-336.5,-25.9],[-333.0,-27.4],[-335.8,-33.4],[-334.8,-33.8],[-338.9,-42.9],[-339.8,-42.5],[-340.2,-43.3],[-340.8,-43.1],[-342.6,-47.1],[-343.3,-46.8],[-343.7,-47.8],[-344.7,-47.4],[-345.5,-49.1],[-346.1,-48.8],[-346.9,-50.7],[-347.6,-50.4],[-348.2,-51.7],[-349.1,-51.3],[-350.9,-55.1],[-351.4,-54.9]],[[-333.0,-18.8],[-335.7,-24.7],[-353.0,-17.2],[-345.5,-0.4],[-344.2,-1.0],[-343.8,-0.1],[-340.8,1.1],[-337.8,-0.2],[-336.6,-3.1],[-337.2,-4.5],[-335.6,-5.2],[-337.2,-8.9],[-334.6,-10.0],[-336.3,-13.9],[-334.8,-14.5],[-335.7,-16.6],[-334.0,-17.3],[-334.4,-18.2],[-333.0,-18.8]],[[-251.4,39.8],[-250.7,39.0],[-246.2,43.0],[-245.4,42.0],[-244.1,43.2],[-239.5,38.0],[-253.8,25.3],[-259.3,31.4],[-256.7,33.7],[-257.4,34.5],[-251.4,39.8]],[[-243.6,44.1],[-239.1,39.3],[-235.0,43.2],[-236.4,44.8],[-235.4,45.8],[-238.4,49.0],[-243.6,44.1]],[[-253.9,40.8],[-252.6,39.3],[-257.2,35.0],[-258.0,35.9],[-259.9,34.2],[-265.1,39.7],[-263.9,40.8],[-263.5,40.4],[-259.9,43.8],[-260.2,44.2],[-252.4,51.5],[-248.5,47.3],[-253.4,42.7],[-252.7,41.9],[-253.9,40.8]],[[-267.9,61.4],[-262.5,55.3],[-273.2,45.8],[-278.6,51.9],[-267.9,61.4]],[[-254.4,73.8],[-248.8,67.7],[-260.3,57.2],[-265.9,63.2],[-254.4,73.8]],[[-263.0,70.6],[-261.2,68.7],[-273.5,57.3],[-276.2,60.1],[-273.4,62.8],[-274.8,64.3],[-274.1,64.9],[-278.9,70.0],[-275.8,72.9],[-272.8,69.6],[-262.4,79.3],[-258.3,75.0],[-263.0,70.6]],[[-267.9,86.6],[-265.6,84.2],[-275.5,75.1],[-277.7,77.5],[-267.9,86.6]],[[-264.1,82.4],[-261.8,80.0],[-271.6,70.9],[-273.9,73.3],[-264.1,82.4]],[[-278.5,78.4],[-268.4,87.6],[-274.3,93.9],[-284.4,84.7],[-278.5,78.4]],[[-283.4,81.9],[-280.4,78.6],[-281.0,78.1],[-280.3,77.2],[-290.8,67.6],[-295.1,72.3],[-284.6,82.0],[-283.9,81.3],[-283.4,81.9]],[[-290.7,87.8],[-286.9,83.7],[-290.8,80.1],[-290.1,79.3],[-292.3,77.3],[-293.1,78.1],[-294.7,76.6],[-297.2,79.2],[-298.8,77.6],[-301.4,80.4],[-299.7,81.9],[-300.4,82.6],[-296.5,86.1],[-296.0,85.5],[-295.2,86.2],[-295.8,86.9],[-282.0,99.2],[-281.3,98.5],[-280.0,99.8],[-277.7,97.4],[-279.1,96.1],[-276.7,93.6],[-278.1,92.2],[-277.2,91.2],[-279.2,89.4],[-279.9,90.2],[-284.5,85.9],[-288.3,90.0],[-290.7,87.8]],[[-297.4,86.4],[-284.1,100.3],[-296.9,113.0],[-301.7,102.7],[-302.9,103.3],[-304.6,99.8],[-303.3,99.2],[-307.2,90.7],[-297.4,86.4]],[[-170.8,46.6],[-174.0,44.0],[-170.2,39.4],[-175.0,35.6],[-178.9,40.4],[-177.4,41.6],[-183.3,48.7],[-176.8,53.9],[-170.8,46.6]],[[-183.3,48.7],[-189.0,44.1],[-185.4,39.6],[-181.1,43.1],[-178.9,40.4],[-177.4,41.6],[-183.3,48.7]],[[-222.2,86.9],[-215.9,81.1],[-223.6,72.7],[-236.7,84.6],[-228.7,93.2],[-226.1,90.8],[-230.0,86.6],[-225.9,82.8],[-222.2,86.9]],[[-234.2,80.4],[-226.1,72.5],[-227.9,70.7],[-227.3,70.1],[-230.1,67.3],[-230.6,67.9],[-234.7,63.8],[-242.8,71.7],[-236.5,79.0],[-236.0,78.5],[-234.2,80.4]],[[-243.7,72.1],[-235.2,80.5],[-239.0,84.2],[-247.7,76.1],[-243.7,72.1]],[[-252.1,81.1],[-243.4,90.0],[-239.2,85.9],[-247.8,77.0],[-252.1,81.1]],[[-244.0,89.3],[-247.7,93.0],[-255.8,84.8],[-252.1,81.1],[-244.0,89.3]],[[-253.3,96.3],[-247.6,93.8],[-256.3,84.8],[-260.5,88.9],[-253.3,96.3]],[[-253.5,96.1],[-257.4,99.8],[-264.6,92.2],[-260.8,88.6],[-253.5,96.1]],[[-257.4,99.8],[-261.3,103.5],[-267.9,96.7],[-264.0,92.9],[-257.4,99.8]],[[-261.6,103.2],[-264.9,106.5],[-271.7,99.6],[-269.0,97.0],[-267.9,98.1],[-267.2,97.5],[-261.6,103.2]],[[-273.4,115.9],[-265.0,107.7],[-271.5,101.1],[-272.9,102.4],[-273.6,101.7],[-279.0,106.9],[-278.2,107.8],[-279.9,109.4],[-273.4,115.9]],[[-273.4,115.9],[-281.1,123.6],[-288.6,116.3],[-282.3,109.9],[-280.5,111.7],[-279.5,110.7],[-273.4,115.9]],[[-281.1,123.6],[-288.8,131.0],[-292.3,123.9],[-291.6,123.2],[-293.4,121.4],[-288.4,116.5],[-281.1,123.6]],[[-232.5,96.0],[-229.3,93.1],[-236.4,85.5],[-242.3,90.8],[-239.0,94.4],[-236.3,91.9],[-232.5,96.0]],[[-242.3,90.8],[-248.5,96.5],[-246.1,99.1],[-245.4,98.5],[-243.8,100.2],[-243.4,99.9],[-240.3,103.3],[-233.6,97.9],[-237.8,93.2],[-239.0,94.4],[-242.3,90.8]],[[-248.8,111.8],[-243.9,107.4],[-247.8,103.0],[-246.9,102.2],[-251.2,97.5],[-257.1,102.7],[-248.8,111.8]],[[-250.4,110.1],[-250.6,113.5],[-258.3,120.2],[-261.6,120.0],[-264.1,117.4],[-267.7,120.3],[-265.1,123.1],[-265.4,126.4],[-273.2,133.2],[-277.1,134.0],[-281.0,130.8],[-280.1,130.1],[-281.8,128.6],[-280.4,127.5],[-281.5,126.4],[-272.2,118.4],[-272.7,117.9],[-266.1,112.3],[-266.6,111.8],[-258.1,104.3],[-257.2,105.3],[-256.6,104.7],[-254.0,107.4],[-253.3,106.8],[-250.4,110.1]],[[-300.9,154.5],[-297.4,157.5],[-304.3,165.4],[-312.8,158.1],[-305.1,149.3],[-300.1,153.6],[-300.9,154.5]],[[-144.4,153.0],[-123.5,147.6],[-126.3,137.2],[-147.1,142.6],[-144.4,153.0]],[[-126.9,137.3],[-129.7,126.6],[-133.8,127.6],[-132.8,131.2],[-147.7,135.0],[-146.2,140.7],[-143.8,140.1],[-143.4,141.5],[-126.9,137.3]],[[-117.1,145.4],[-102.8,142.1],[-105.0,133.7],[-119.2,137.4],[-117.1,145.4]],[[-96.2,133.7],[-85.6,131.0],[-86.0,129.5],[-78.3,127.6],[-76.1,136.2],[-94.4,140.7],[-96.2,133.7]],[[-86.8,119.9],[-88.9,111.4],[-100.3,114.1],[-98.2,122.6],[-86.8,119.9]],[[-84.6,119.4],[-77.5,117.6],[-79.8,108.7],[-86.9,110.4],[-84.6,119.4]],[[-71.8,133.8],[-58.8,131.0],[-60.8,123.4],[-65.4,124.6],[-65.6,124.1],[-77.4,127.2],[-75.2,135.3],[-71.7,134.4],[-71.8,133.8]],[[-69.3,124.0],[-75.2,125.5],[-77.1,118.2],[-67.9,115.6],[-67.3,118.0],[-64.4,117.2],[-65.0,114.7],[-57.9,112.9],[-57.2,115.5],[-58.5,115.9],[-57.8,119.3],[-59.0,119.6],[-58.5,121.2],[-62.9,122.4],[-62.7,123.2],[-69.1,125.0],[-69.3,124.0]],[[-96.4,130.9],[-78.3,126.3],[-79.9,120.1],[-98.1,124.7],[-96.4,130.9]],[[-74.6,107.7],[-72.4,115.9],[-56.8,111.7],[-59.3,102.5],[-63.5,103.6],[-63.2,104.6],[-74.6,107.7]],[[-229.5,185.0],[-225.6,202.2],[-231.6,203.5],[-233.4,195.5],[-236.9,196.3],[-239.0,187.1],[-229.5,185.0]],[[-226.3,192.8],[-227.6,187.7],[-221.3,186.1],[-219.9,187.0],[-215.1,185.8],[-211.5,199.9],[-217.5,201.4],[-217.2,202.6],[-224.2,204.4],[-227.1,193.0],[-226.3,192.8]],[[-209.6,189.0],[-206.1,202.4],[-196.6,199.9],[-198.1,194.3],[-199.5,194.6],[-200.2,192.2],[-198.8,191.9],[-200.4,185.8],[-205.5,187.1],[-205.3,187.9],[-209.6,189.0]],[[-198.5,189.9],[-200.3,182.9],[-199.2,180.5],[-195.2,179.5],[-192.8,180.6],[-190.2,190.4],[-190.9,190.6],[-190.3,192.9],[-189.5,192.7],[-188.4,197.0],[-196.2,199.0],[-197.9,192.5],[-197.0,192.2],[-197.6,189.7],[-198.5,189.9]],[[-190.9,183.7],[-187.3,196.8],[-180.4,194.9],[-184.0,181.7],[-185.3,182.0],[-185.6,180.8],[-188.1,180.1],[-190.0,182.0],[-189.7,183.4],[-190.9,183.7]],[[-176.7,189.5],[-175.4,194.1],[-168.5,192.2],[-173.0,175.7],[-174.8,174.8],[-178.1,175.6],[-178.9,177.0],[-181.3,177.6],[-182.6,179.6],[-179.6,190.3],[-176.7,189.5]],[[-164.4,174.6],[-164.8,173.1],[-170.5,174.5],[-167.4,186.6],[-163.3,185.6],[-162.1,190.3],[-156.6,188.9],[-160.6,173.6],[-164.4,174.6]],[[-152.9,183.9],[-152.3,186.3],[-146.0,184.7],[-147.7,178.5],[-146.9,178.3],[-147.1,177.5],[-146.6,177.4],[-149.5,169.1],[-158.8,171.5],[-155.3,184.5],[-152.9,183.9]],[[-144.6,181.9],[-137.0,180.0],[-140.4,166.6],[-148.0,168.5],[-144.6,181.9]],[[-126.7,176.4],[-130.4,161.4],[-121.8,159.3],[-118.1,174.2],[-126.7,176.4]],[[-119.1,170.0],[-111.5,168.1],[-113.1,161.8],[-120.7,163.7],[-119.1,170.0]],[[-119.0,170.5],[-111.4,168.8],[-110.4,172.7],[-109.4,172.5],[-108.4,176.1],[-110.9,176.7],[-115.8,175.0],[-116.0,174.2],[-118.1,174.2],[-119.0,170.5]],[[-100.2,164.4],[-101.7,158.6],[-100.2,158.2],[-101.5,153.2],[-113.0,156.1],[-111.6,161.4],[-110.5,161.1],[-110.3,161.8],[-111.1,162.0],[-109.7,167.3],[-108.7,167.0],[-107.0,173.6],[-105.8,173.3],[-105.4,175.0],[-100.0,173.6],[-100.4,171.9],[-99.3,171.6],[-101.1,164.6],[-100.2,164.4]],[[-106.4,184.5],[-93.8,181.4],[-95.6,174.4],[-108.2,177.5],[-106.4,184.5]],[[-109.9,196.9],[-112.1,188.1],[-120.7,190.2],[-119.5,195.2],[-124.1,196.3],[-121.0,208.3],[-111.2,205.8],[-113.3,197.8],[-109.9,196.9]],[[-132.2,197.3],[-135.6,184.1],[-127.3,181.9],[-126.5,185.0],[-123.9,184.3],[-122.5,189.6],[-125.1,190.2],[-123.8,195.1],[-132.2,197.3]],[[-54.1,150.5],[-56.5,140.4],[-64.0,142.1],[-58.8,163.7],[-53.0,162.3],[-55.7,150.9],[-54.1,150.5]],[[-68.7,160.0],[-61.0,158.1],[-65.1,142.0],[-72.8,143.9],[-68.7,160.0]],[[-72.9,159.9],[-70.3,159.2],[-68.2,167.4],[-70.8,168.0],[-72.9,159.9]],[[-70.9,159.4],[-71.6,156.6],[-70.8,156.4],[-73.7,145.0],[-81.1,146.8],[-78.2,158.3],[-77.4,158.1],[-76.8,160.8],[-70.9,159.4]],[[-79.6,161.3],[-82.7,148.9],[-89.2,150.5],[-86.1,162.9],[-79.6,161.3]],[[-84.9,172.2],[-76.9,170.1],[-78.4,164.2],[-86.4,166.3],[-84.9,172.2]],[[-79.7,176.9],[-68.2,173.8],[-69.6,168.5],[-81.1,171.6],[-79.7,176.9]],[[-66.2,175.7],[-55.7,173.1],[-57.1,167.1],[-60.8,168.0],[-61.2,166.5],[-68.1,168.2],[-66.2,175.7]],[[-60.3,176.3],[-58.2,184.9],[-68.9,187.5],[-71.1,178.9],[-60.3,176.3]],[[-81.7,187.3],[-72.6,184.9],[-74.4,178.1],[-83.5,180.5],[-81.7,187.3]],[[-79.2,190.3],[-59.0,185.4],[-56.8,194.3],[-66.4,196.6],[-67.0,194.0],[-78.5,196.8],[-79.7,191.7],[-78.9,191.5],[-79.2,190.3]],[[37.4,193.9],[42.3,185.4],[32.2,179.7],[30.8,182.1],[28.8,181.0],[25.4,187.1],[37.4,193.9]],[[20.7,193.8],[29.2,179.3],[25.5,177.2],[12.5,199.4],[16.4,201.6],[17.0,200.8],[21.2,203.2],[22.6,200.7],[26.2,202.7],[24.6,205.4],[29.0,208.0],[33.2,200.9],[20.7,193.8]],[[22.1,193.7],[32.7,199.8],[35.3,195.4],[24.7,189.3],[22.1,193.7]],[[9.8,194.8],[12.9,189.5],[8.9,187.1],[5.7,192.4],[9.8,194.8]],[[3.3,192.9],[7.3,186.3],[0.6,182.3],[-3.4,189.0],[3.3,192.9]],[[6.9,181.7],[13.8,169.9],[9.2,167.2],[8.5,168.4],[5.5,166.7],[2.8,171.4],[1.7,170.8],[0.3,173.1],[1.6,173.8],[-0.5,177.4],[6.9,181.7]],[[13.9,183.7],[19.4,186.8],[24.9,177.0],[16.9,172.6],[10.9,183.3],[13.3,184.7],[13.9,183.7]],[[-8.2,183.9],[-4.7,177.7],[-7.8,176.0],[-11.3,182.1],[-8.2,183.9]],[[0.4,167.1],[-2.7,172.5],[-5.3,171.0],[-9.6,178.4],[-12.1,177.0],[-13.1,178.7],[-19.0,175.2],[-14.5,167.4],[-15.4,166.9],[-13.7,163.9],[-12.6,164.5],[-12.1,163.7],[-13.2,163.1],[-11.7,160.5],[-10.5,161.2],[-9.1,158.7],[-0.9,163.4],[-2.1,165.6],[0.4,167.1]],[[-21.4,174.8],[-21.3,169.5],[-32.2,169.4],[-35.6,172.5],[-35.6,177.9],[-33.3,180.0],[-33.3,180.4],[-34.6,180.5],[-34.5,187.5],[-33.4,187.5],[-33.4,188.6],[-25.3,188.5],[-25.3,184.8],[-24.3,184.8],[-24.3,190.7],[-14.0,190.6],[-14.0,184.1],[-22.0,184.2],[-22.1,180.6],[-21.0,180.6],[-21.0,178.6],[-24.1,177.1],[-22.9,174.8],[-21.4,174.8]],[[-361.6,190.5],[-359.5,187.1],[-361.3,186.0],[-359.7,183.5],[-363.2,181.3],[-362.5,180.2],[-370.4,175.3],[-372.8,179.3],[-366.3,183.3],[-368.2,186.4],[-361.6,190.5]],[[-356.9,182.6],[-352.8,176.1],[-366.0,168.0],[-370.1,174.5],[-356.9,182.6]],[[-310.9,154.8],[-303.7,143.4],[-307.6,135.3],[-309.2,137.8],[-310.0,137.4],[-315.5,146.2],[-314.8,146.7],[-317.4,150.8],[-310.9,154.8]],[[-316.2,133.4],[-312.6,127.6],[-329.0,117.5],[-332.6,123.4],[-316.2,133.4]],[[-314.7,117.6],[-316.9,112.4],[-321.2,117.4],[-315.5,118.5],[-314.7,117.6]],[[-322.9,112.5],[-319.3,107.0],[-323.2,98.0],[-324.3,98.4],[-330.4,108.0],[-322.9,112.5]],[[-330.7,134.7],[-327.8,130.2],[-329.1,129.4],[-327.5,126.9],[-336.7,121.2],[-341.1,128.1],[-330.7,134.7]],[[-326.9,137.2],[-329.6,135.5],[-328.1,133.2],[-325.4,134.9],[-326.9,137.2]],[[-344.0,127.0],[-325.2,138.8],[-329.7,145.9],[-348.5,134.1],[-344.0,127.0]],[[-336.1,144.4],[-335.4,143.2],[-347.3,135.8],[-351.2,141.9],[-348.5,143.6],[-348.9,144.2],[-334.5,153.2],[-331.0,147.6],[-336.1,144.4]],[[-343.1,159.4],[-338.7,152.3],[-350.0,145.4],[-352.7,149.6],[-351.2,150.5],[-355.1,156.6],[-356.4,155.8],[-358.9,159.8],[-347.6,166.7],[-344.9,162.4],[-349.8,159.5],[-347.9,156.4],[-343.1,159.4]],[[-339.6,172.3],[-336.2,167.1],[-341.6,163.7],[-345.0,168.9],[-339.6,172.3]],[[-345.8,179.3],[-342.6,174.1],[-347.9,170.9],[-351.1,176.0],[-345.8,179.3]],[[-352.1,175.2],[-365.3,167.1],[-361.1,160.4],[-350.8,166.8],[-352.2,168.9],[-349.3,170.7],[-352.1,175.2]],[[-319.2,184.7],[-309.6,169.3],[-324.3,160.2],[-335.5,178.1],[-326.4,183.7],[-324.9,181.2],[-319.2,184.7]],[[-330.2,191.1],[-326.3,185.0],[-328.1,183.8],[-327.8,183.4],[-333.7,179.7],[-335.0,181.7],[-336.2,180.9],[-338.1,183.9],[-336.9,184.7],[-338.3,186.9],[-332.7,190.4],[-332.3,189.8],[-330.2,191.1]],[[-329.8,191.5],[-326.9,186.9],[-318.8,192.0],[-320.7,195.0],[-323.4,193.4],[-324.4,194.9],[-329.8,191.5]]],"beach":[[[-349.0,-140.6],[-344.7,-135.2],[-335.9,-133.6],[-336.9,-127.8],[-331.3,-126.7],[-330.0,-131.4],[-328.6,-133.6],[-322.3,-135.6],[-316.2,-135.1],[-312.7,-132.6],[-288.9,-110.5],[-283.3,-104.5],[-274.4,-86.3],[-271.3,-78.4],[-266.3,-61.0],[-260.1,-62.1],[-257.6,-63.7],[-242.5,-79.0],[-233.6,-86.0],[-224.3,-88.3],[-214.6,-89.8],[-206.8,-89.3],[-197.3,-84.4],[-190.6,-65.1],[-189.9,-64.4],[-183.4,-69.5],[-174.1,-74.6],[-153.8,-81.2],[-152.2,-83.4],[-145.3,-84.8],[-138.3,-82.7],[-130.2,-82.4],[-128.1,-74.3],[-38.1,-70.9],[-38.5,-87.5],[9.1,-77.5],[10.5,-76.8],[7.2,-139.5],[-46.8,-146.4],[-301.2,-161.8],[-342.7,-184.4],[-349.0,-140.6]],[[358.9,151.6],[365.2,144.0],[334.0,133.3],[291.6,99.6],[273.9,83.7],[260.6,65.4],[216.5,41.7],[194.1,30.6],[155.0,6.3],[107.0,-19.5],[72.7,-29.6],[79.1,-46.7],[47.7,-62.7],[30.5,-66.2],[10.5,-76.8],[8.0,-64.9],[9.1,-65.3],[10.3,-64.4],[36.5,-59.2],[43.8,-56.8],[44.6,-57.1],[71.6,-48.2],[66.1,-31.7],[69.3,-23.9],[76.3,-16.3],[99.5,-0.3],[98.5,9.1],[110.5,10.8],[113.9,-10.0],[146.0,3.4],[146.7,4.9],[143.9,10.2],[288.5,101.7],[353.4,155.5],[358.9,151.6]],[[-464.8,-263.7],[-463.9,-255.0],[-417.4,-195.3],[-395.6,-160.5],[-370.9,-169.5],[-360.9,-160.8],[-349.0,-140.6],[-342.7,-184.4],[-357.3,-184.6],[-418.4,-222.9],[-448.2,-249.7],[-460.1,-258.2],[-464.8,-263.7]],[[-38.5,-87.5],[-38.1,-68.9],[-21.1,-69.0],[7.6,-63.2],[10.5,-76.8],[9.1,-77.5],[-38.5,-87.5]]],"water":[[[-190.6,-65.1],[-203.0,-53.2],[-209.8,-44.6],[-210.4,-45.2],[-214.3,-38.5],[-216.9,-37.6],[-219.9,-33.0],[-220.8,-27.0],[-219.5,-22.6],[-218.2,-20.8],[-221.0,-14.7],[-225.6,-10.9],[-229.3,-9.9],[-233.3,-10.1],[-235.1,-10.7],[-239.8,-13.6],[-256.8,8.5],[-328.7,94.6],[-340.1,106.6],[-357.6,131.9],[-371.8,155.9],[-382.8,178.6],[-392.0,190.7],[-398.3,200.7],[-396.4,201.8],[-400.6,209.1],[-403.6,211.9],[-405.4,211.6],[-413.6,226.1],[-451.5,283.2],[-493.5,347.9],[-511.8,370.4],[-530.2,399.9],[-548.5,432.5],[-561.1,472.1],[-569.9,503.8],[-582.3,538.2],[-585.7,597.9],[-578.8,664.2],[-580.5,674.7],[-643.7,788.4],[-655.4,811.7],[-665.3,833.1],[-670.7,853.6],[-680.4,870.1],[-722.1,902.6],[-730.9,913.1],[-736.7,923.4],[-747.0,947.4],[-776.7,1029.0],[-781.1,1043.2],[-784.2,1060.0],[-795.5,1082.3],[-801.0,1102.9],[-804.5,1101.5],[-808.7,1102.4],[-829.3,1147.2],[-841.2,1184.5],[-842.6,1175.4],[-843.1,1166.7],[-842.1,1155.7],[-840.1,1144.8],[-827.9,1119.3],[-809.2,1089.9],[-801.9,1076.0],[-804.8,1069.8],[-804.8,1064.5],[-803.2,1062.2],[-801.8,1061.3],[-799.6,1060.3],[-795.3,1060.4],[-793.2,1059.8],[-791.9,1058.3],[-789.8,1034.2],[-786.4,1027.7],[-781.2,1021.5],[-776.4,1011.4],[-772.0,998.9],[-775.2,995.9],[-777.6,991.9],[-778.2,988.3],[-778.1,984.9],[-766.2,969.1],[-760.3,946.4],[-754.2,926.8],[-746.4,911.0],[-736.7,895.3],[-727.8,885.9],[-714.5,877.0],[-693.6,861.8],[-684.0,860.8],[-679.3,855.4],[-680.2,848.1],[-686.0,842.2],[-684.4,834.3],[-620.6,723.5],[-620.8,715.9],[-595.5,667.6],[-594.6,651.2],[-595.4,634.3],[-598.7,593.5],[-594.8,544.0],[-595.1,533.9],[-594.2,527.6],[-585.1,499.2],[-576.7,466.6],[-563.0,424.7],[-548.7,389.3],[-539.7,369.6],[-509.0,330.5],[-470.1,269.5],[-427.1,191.5],[-385.5,108.1],[-340.2,56.3],[-318.8,30.0],[-306.6,10.0],[-288.8,-11.5],[-281.8,-23.0],[-266.7,-34.2],[-264.9,-36.3],[-264.7,-41.6],[-266.3,-61.0],[-260.1,-62.1],[-257.6,-63.7],[-242.5,-79.0],[-233.6,-86.0],[-224.3,-88.3],[-214.6,-89.8],[-206.8,-89.3],[-197.3,-84.4],[-190.6,-65.1]]],"coast":[[[-583.1,-494.8],[-580.1,-478.6],[-563.0,-452.7],[-552.3,-417.2],[-547.6,-388.3],[-530.7,-374.8],[-505.9,-334.5],[-470.5,-283.8],[-421.0,-232.8],[-405.6,-212.7],[-363.9,-177.3],[-348.4,-175.3],[-300.6,-152.4],[-259.3,-145.4],[-217.8,-156.8],[-47.5,-146.4],[7.2,-139.5],[85.5,-62.0],[111.7,-49.5],[136.4,-40.1],[204.3,8.0],[256.8,53.0],[298.6,92.4],[320.1,105.8],[354.1,122.2],[371.1,134.7]]],"pier":[[[-323.3,-195.4],[-317.4,-194.1],[-331.3,-126.7],[-336.9,-127.8],[-335.9,-133.6],[-340.8,-134.5],[-337.1,-154.9],[-332.2,-153.9],[-326.2,-180.0],[-323.3,-195.4]]],"park":[[[-38.1,-68.9],[-37.2,-38.6],[-25.4,-38.9],[-24.5,-33.0],[-15.8,-33.0],[-15.4,-26.7],[-10.6,-26.7],[-9.8,-30.2],[16.8,-31.2],[18.7,-48.7],[44.1,-42.6],[73.3,-31.3],[79.0,-46.7],[47.7,-62.7],[30.5,-66.2],[10.5,-76.8],[7.6,-63.2],[-21.3,-69.0],[-38.1,-68.9]]]};
+var PATHS = {"loop":[[-177.7,66.0],[-182.5,61.8],[-199.1,47.3],[-202.9,43.8],[-212.8,35.6],[-227.9,23.1],[-222.5,17.7],[-220.0,15.1],[-217.2,13.2],[-214.0,11.4],[-210.6,9.5],[-207.4,7.2],[-205.0,5.2],[-202.6,2.9],[-200.3,0.1],[-198.6,-2.7],[-197.0,-6.5],[-193.2,-17.6],[-191.4,-22.3],[-189.1,-26.9],[-186.6,-31.0],[-184.0,-34.7],[-180.7,-38.5],[-176.5,-42.1],[-172.2,-45.2],[-166.7,-48.3],[-161.0,-50.9],[-155.0,-52.9],[-148.0,-54.7],[-136.7,-57.3],[-125.5,-59.7],[-121.8,-60.3],[-117.4,-60.6],[-109.9,-60.8],[-102.1,-60.3],[-99.3,-60.1],[-88.2,-59.2],[-53.5,-58.8],[-51.2,-56.9],[-50.1,-53.4],[-50.0,-23.5],[-50.0,-15.8],[-49.4,-12.8],[-48.6,-8.3],[-47.9,20.5],[-48.1,28.4],[-48.2,33.7],[-56.7,35.9],[-77.8,41.3],[-116.3,50.8],[-120.7,51.8],[-125.1,52.7],[-171.1,64.5],[-177.7,66.0]],"sStock":66.0,"sEspEnd":243.3,"sCorner":281.0,"sMontTop":371.9,"loopLen":505.4,"spur":[[-272.6,143.5],[-262.8,134.3],[-242.9,116.9],[-217.5,94.3],[-209.3,87.1],[-204.3,82.7],[-197.6,76.7],[-192.1,71.9],[-188.6,69.5],[-177.7,66.0]],"montN":[[-48.2,33.7],[-47.7,43.4],[-45.6,89.6],[-45.6,94.4],[-43.9,119.5],[-44.5,164.7]],"sanJose":[[-120.7,51.8],[-121.6,46.4],[-130.6,10.6],[-131.5,7.2],[-135.3,-7.0],[-142.3,-33.2],[-145.6,-45.4],[-146.1,-47.7],[-148.0,-54.7]],"xwalks":[[6.4,[-182.5,61.8]],[73.7,[-222.5,17.7]],[175.6,[-155.0,-52.9]],[232.2,[-99.3,-60.1]],[322.3,[-50.0,-15.8]],[366.6,[-48.1,28.4]],[380.7,[-56.7,35.9]],[442.2,[-116.3,50.8]],[451.2,[-125.1,52.7]],[498.7,[-171.1,64.5]]],"diag":[[-88.2,-59.2],[-72.7,-47.8],[-64.0,-39.7],[-58.0,-31.1],[-50.0,-15.8]]};
+/* ---------- Geometry: the real Village loop, from OpenStreetMap ---------- */
+function Poly(pts) {
+  this.p = pts; this.cum = [0];
+  for (var i = 1; i < pts.length; i++) {
+    var dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1];
+    this.cum.push(this.cum[i - 1] + Math.hypot(dx, dy));
+  }
+  this.len = this.cum[this.cum.length - 1];
+}
+// point, tangent and right-hand normal at distance s
+Poly.prototype.at = function (s) {
+  var c = this.cum, p = this.p;
+  if (s <= 0) s = 0; if (s >= this.len) s = this.len - 1e-6;
+  var lo = 0, hi = c.length - 1;
+  while (hi - lo > 1) { var m = (lo + hi) >> 1; if (c[m] <= s) lo = m; else hi = m; }
+  var f = (s - c[lo]) / ((c[hi] - c[lo]) || 1);
+  var x = p[lo][0] + (p[hi][0] - p[lo][0]) * f, y = p[lo][1] + (p[hi][1] - p[lo][1]) * f;
+  var tx = p[hi][0] - p[lo][0], ty = p[hi][1] - p[lo][1], n = Math.hypot(tx, ty) || 1;
+  tx /= n; ty /= n;
+  return { x: x, y: y, tx: tx, ty: ty, nx: ty, ny: -tx };
+};
+Poly.prototype.nearestS = function (x, y, s0, s1) {
+  s0 = s0 || 0; s1 = s1 == null ? this.len : s1;
+  var best = 1e9, bs = s0;
+  for (var s = s0; s <= s1; s += 0.25) { var q = this.at(s), d = Math.hypot(q.x - x, q.y - y); if (d < best) { best = d; bs = s; } }
+  return bs;
+};
+
+function buildWorld(PATHS) {
+  var loop = new Poly(PATHS.loop), spur = new Poly(PATHS.spur), montN = new Poly(PATHS.montN);
+  var amPath = new Poly(PATHS.montN.slice().reverse());   // Monterey Ave coming south from Park Ave
+  var sj = new Poly(PATHS.sanJose);                        // San Jose Ave, one-way south
+  var dg = new Poly(PATHS.diag);                           // the angled leg of Monterey Ave on the west side of the triangle
+  var L = loop.len, espS0 = PATHS.sStock, espEnd = PATHS.sEspEnd, corner = PATHS.sCorner, exitS = PATHS.sMontTop;
+  var sjTop = loop.nearestS(sj.p[0][0], sj.p[0][1], exitS, L);
+  var sjBot = loop.nearestS(sj.p[sj.p.length - 1][0], sj.p[sj.p.length - 1][1], espS0, espEnd);
+  var sMontJoin = loop.nearestS(-50.0, -15.8, corner, exitS);
+  var spaces = [], i, k;
+  function add(lane, s, side, type, extra) { var o = { lane: lane, s: s, side: side, type: type }; for (var key in extra || {}) o[key] = extra[key]; spaces.push(o); }
+  // Esplanade: seaward angled stalls along the curve, the beach straightaway and the aisle to the corner
+  var a = espS0 + 9, b = corner - 6;
+  for (i = 0; i < 62; i++) add('R', a + (b - a) * i / 61, 1, 'angled');
+  // Esplanade: inland parallel stalls, kept clear of the San Jose Ave corner
+  [[espS0 + 40, 6], [espEnd - 52, 7]].forEach(function (r) {
+    for (k = 0; k < r[1]; k++) { var s = r[0] + k * 6.3; if (Math.abs(s - sjBot) < 9) s += 18; add('R', s, -1, 'parallel'); }
+  });
+  // the triangle at the Monterey Ave end (positions from aerial imagery): south row, east row, west row
+  var tri = [];
+  for (k = 0; k < 6; k++) tri.push({ cx: -73.0 + k * 3.1, cy: -54.3, hx: 0, hy: 1 });
+  for (k = 0; k < 5; k++) tri.push({ cx: -44.6, cy: -22.5 - k * 3.15, hx: 1, hy: 0 });
+  for (k = 0; k < 7; k++) { var f = k / 6; tri.push({ cx: -54.0 - 13.0 * f, cy: -34.5 - 15.0 * f, hx: 0.995, hy: 0.1 }); }
+  // the south and east rows face the beach aisle; the west row faces the angled leg
+  tri.forEach(function (t, ix) {
+    if (ix < 11) add('R', loop.nearestS(t.cx, t.cy, espEnd - 5, sMontJoin + 2), 0, 'tri', { cx: t.cx, cy: t.cy, hx: t.hx, hy: t.hy, L: 4.8, W: 2.55 });
+    else add('DG', dg.nearestS(t.cx, t.cy), 0, 'tri', { cx: t.cx, cy: t.cy, hx: t.hx, hy: t.hy, L: 4.8, W: 2.55 });
+  });
+  // the angled leg's outer (west) curb: 4 angled spaces (aerial imagery)
+  for (k = 0; k < 4; k++) add('DG', 18 + k * 3.4, -1, 'angled');
+  // Monterey Ave, triangle to Capitola Ave: 7 angled on the west side, 5 on the east (aerial imagery)
+  for (k = 0; k < 7; k++) add('R', loop.nearestS(-48.5, -2.5 + k * 3.2, sMontJoin, exitS), -1, 'angled');
+  for (k = 0; k < 5; k++) add('R', loop.nearestS(-48.5, 0.5 + k * 3.2, sMontJoin, exitS), 1, 'angled');
+  // San Jose Ave, one-way south: angled on the west (driver's right), parallel on the east (aerial imagery)
+  for (k = 0; k < 7; k++) add('SJ', 14 + k * 4.0, 1, 'angled');
+  for (k = 0; k < 3; k++) add('SJ', 55 + k * 4.0, 1, 'angled');
+  for (k = 0; k < 11; k++) add('SJ', 14 + k * 7.0, -1, 'parallel');
+  spaces.sort(function (p, q) { return p.lane === q.lane ? p.s - q.s : (p.lane < q.lane ? -1 : 1); });
+  var rMax = 0; spaces.forEach(function (sp) { if (sp.lane === 'R') rMax = Math.max(rMax, sp.s); });
+  var laneOrder = { R: 0, DG: 1, SJ: 2 };
+  spaces.sort(function (p, q) { return laneOrder[p.lane] - laneOrder[q.lane] || p.s - q.s; });
+  var xwalks = PATHS.xwalks.map(function (x) {
+    var s = x[0], w = 1;
+    if (s > 300 && s < 360) w = 0.8;          // Monterey Ave
+    if (s >= 360 && s < 400) w = 1.3;         // the Monterey/Capitola corner, busy with people
+    if (s > 200 && s < 260) w = 1.3;          // mid-beach crossing
+    return { lane: 'R', s: s, w: w };
+  });
+  xwalks.push({ lane: 'SJ', s: sj.nearestS(-121.6, 46.4), w: 1 });
+  return {
+    loop: loop, spur: spur, montN: montN, amPath: amPath, sj: sj, dg: dg, dgLen: dg.len,
+    loopLen: L, espS0: espS0, espEnd: espEnd, corner: corner, exitS: exitS, sMontJoin: sMontJoin,
+    sjTop: sjTop, sjBot: sjBot, sjLen: sj.len, searchEnd: rMax + 1,
+    loadS: corner - 2, appLen: spur.len, amLen: amPath.len, ghostLen: 140, spaces: spaces, xwalks: xwalks,
+    stops: [{ s: L - 3, id: 'J' }, { s: exitS - 3, id: 'M' }]
+  };
+}
+if (typeof module !== 'undefined') module.exports = { buildWorld: buildWorld, Poly: Poly };
+
+/* ---------- Village loop parking and traffic simulation (1-D lanes) ---------- */
+var P = {
+  // drivers looking for a space on the loop
+  lotPrice: 1.00, walkMin: 7, limitH: 3,
+  stayMed: 1.75, staySig: 0.5,     // hours wanted
+  votMed: 20, votSig: 0.7,         // $/hr value of a visitor's time
+  gearMean: 3,                     // $ hassle of hauling chairs, coolers and kids a quarter mile
+  leaveShare: 0.2,                 // of drivers who give up circling, share who leave Capitola
+  patienceMin: 3, patienceMax: 8,  // most laps a driver will tolerate
+  hoverSec: 30, hoverMax: 40,      // stop and wait for someone clearly about to pull out
+  // where traffic comes from and goes
+  viaMonterey: 0.35,               // arrivals coming down Monterey Ave from Park Ave (the rest come down Capitola Ave)
+  sjShare: 0.65,                   // circling drivers who cut down San Jose Ave instead of going around by Stockton
+  sjShareNew: 0.5,                 // drivers arriving down Monterey who take San Jose Ave to the beach
+  zipper: 5,                       // seconds before traffic lets a merging car in
+  dgSeek: 0.45, dgOther: 0.6,      // share taking the angled leg of the triangle: drivers still looking, everyone else
+  takeFirst: 0.9,                  // on a first pass, chance a driver takes an open space near or past where they're going
+  takeEarly: 0.08,                 // ... and one well short of it
+  // everyone else on the loop
+  bgK: 1.2, bgDropShare: 0.3, lotDropShare: 0.35, fullLoopShare: 0.5,
+  dropMed: 75, dropSig: 0.55, squeezeAfter: 20,
+  // pedestrians and intersections
+  pedK: 1.5, pedCross: 7, pedYield: 12,
+  stopDwell: 1.5, hwJ: 3, hwM: 8, crossJ: 0.4, crossM: 0.4,   // seconds per vehicle at each all-way stop; cross traffic per seeker
+  // driving
+  maneuver: 7, vLoop: 5.5, vEsp: 2.6, vApp: 6.5, gap: 7.0, ringCap: 0.92
+};
+
+function makeRng(seed) {
+  var a = seed >>> 0;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function randn(rng) { var u = 0; while (u === 0) u = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng()); }
+function expo(rng, ratePerHr) { return ratePerHr > 0 ? -Math.log(1 - rng()) / ratePerHr * 3600 : 1e12; }
+function makeDriver(rng) {
+  var T = P.stayMed * Math.exp(P.staySig * randn(rng));
+  var v = P.votMed * Math.exp(P.votSig * randn(rng));
+  var g = -P.gearMean * Math.log(1 - rng());
+  return { T: T, v: v, walk: v * (2 * P.walkMin / 60) + g,
+    patience: P.patienceMin + Math.floor(rng() * (P.patienceMax - P.patienceMin + 1)) };
+}
+function advantage(d, price) {
+  if (d.T > P.limitH) return -1;            // needs more than 3 hours: the lots allow 12
+  return (P.lotPrice - price) * d.T + d.walk;
+}
+var _pop = null;
+function tryShare(price) {
+  if (!_pop) { var r = makeRng(7); _pop = []; for (var i = 0; i < 6000; i++) _pop.push(makeDriver(r)); }
+  var n = 0; for (var j = 0; j < _pop.length; j++) if (advantage(_pop[j], price) > 0) n++;
+  return n / _pop.length;
+}
+function lowerBound(a, x) { var lo = 0, hi = a.length; while (lo < hi) { var m = (lo + hi) >> 1; if (a[m] < x) lo = m + 1; else hi = m; } return lo; }
+
+function Sim(world, opts) {
+  opts = opts || {};
+  var self = this;
+  this.w = world; this.rng = makeRng(opts.seed || 1); this.visual = !!opts.visual;
+  this.t = 0; this.lambda = opts.lambda || 135; this.price = opts.price != null ? opts.price : 2; this.mode = opts.mode || 'flat';
+  this.cars = []; this.ghosts = [];
+  var span = world.exitS - world.espS0;
+  this.spaces = world.spaces.map(function (sp, i) {
+    // where the space sits along the beach loop, 0 = Stockton end of the Esplanade, 1 = the Monterey stop
+    var pos = sp.lane === 'R' ? (sp.s - world.espS0) / span
+      : sp.lane === 'DG' ? (world.espEnd - world.espS0 + sp.s) / span
+      : (world.sjBot - world.espS0) / span + (0.5 - sp.s / world.sjLen) * 0.25;
+    return { lane: sp.lane, s: sp.s, i: i, car: null, resv: null, pos: pos };
+  });
+  this.spBy = { R: [], SJ: [], DG: [] };
+  this.spaces.forEach(function (sp) { self.spBy[sp.lane].push(sp); });
+  this.spS = {};
+  for (var lk in this.spBy) this.spS[lk] = this.spBy[lk].map(function (x) { return x.s; });
+  this.xw = world.xwalks.map(function (x) { return { lane: x.lane, s: x.s, w: x.w, until: 0, next: expo(self.rng, P.pedK * self.lambda * x.w), start: 0 }; });
+  this.inter = {
+    J: { queue: [], nextFree: 0, nextPh: expo(this.rng, P.crossJ * this.lambda), cross: 'crossJ', hw: 'hwJ' },
+    M: { queue: [], nextFree: 0, nextPh: expo(this.rng, P.crossM * this.lambda), cross: 'crossM', hw: 'hwM' }
+  };
+  this.nextSeek = expo(this.rng, this.lambda); this.nextBg = expo(this.rng, P.bgK * this.lambda);
+  this.nextAdjust = 600; this.id = 0;
+  this.min = []; this._newBucket();
+  this.totals = { lotFirst: 0, diverted: 0, left: 0, parked: 0 };
+  this.occNow = 0; this.circNow = 0; this.waitingIn = 0; this.ringN = 0;
+  // start mid-afternoon: cars already parked at random spaces, partway through their stays
+  if (opts.prefill) {
+    var fill = Math.min(0.95, this.lambda * tryShare(this.price) * 1.7 / this.spaces.length);
+    for (var si = 0; si < this.spaces.length; si++) {
+      if (this.rng() >= fill) continue;
+      var sp0 = this.spaces[si], d0 = makeDriver(this.rng);
+      d0.T = Math.min(d0.T, P.limitH);
+      var c0 = { id: ++this.id, kind: 'seek', d: d0, lane: sp0.lane, s: sp0.s, st: 'parked', laps: 0, tArr: 0, odo: 0, odoMark: 0,
+        exit: null, route: null, searched: true, dropped: false, leaving: false, sp: sp0, paid: this.price, tPark: 0, tDep: this.rng() * d0.T * 3600 };
+      sp0.car = c0; this.cars.push(c0);
+    }
+  }
+}
+Sim.prototype._newBucket = function () {
+  this.cur = { t: Math.floor(this.t / 60), occ: 0, circ: 0, n: 0, arr: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0,
+    cruiseM: 0, price: this.price, departs: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0 };
+  this.min.push(this.cur);
+  if (this.min.length > 300) this.min.shift();
+};
+Sim.prototype.setLambda = function (l) {
+  this.lambda = l;
+  this.nextSeek = Math.min(this.nextSeek, this.t + expo(this.rng, l));
+  this.nextBg = Math.min(this.nextBg, this.t + expo(this.rng, P.bgK * l));
+};
+Sim.prototype._spawn = function (kind, d, tArr) {
+  var rng = this.rng, viaM = rng() < P.viaMonterey;
+  var c = { id: ++this.id, kind: kind, d: d, lane: viaM ? 'AM' : 'AJ', s: 0, st: kind === 'seek' ? 'loop' : 'drive', laps: 0, tArr: tArr, odo: 0, odoMark: 0,
+    exit: null, route: null, searched: false, dropped: false, leaving: false };
+  if (kind === 'seek') { c.adv = advantage(d, this.price); c.target = rng(); }
+  else if (kind === 'drop') { c.exit = rng() < 0.5 ? 'J' : 'M'; if (viaM) c.route = 'SJ'; }
+  else if (kind === 'thru') {
+    if (viaM) { if (rng() < 0.5) { c.exit = 'J'; c.route = 'J'; } else { c.exit = 'M'; c.route = 'SJ'; } }
+    else c.exit = rng() < P.fullLoopShare ? 'J' : 'M';
+  }
+  this.cars.push(c);
+};
+
+Sim.prototype.step = function (dt) {
+  var w = this.w, rng = this.rng, t = this.t = this.t + dt, i, j, k, c;
+  if (Math.floor(t / 60) !== this.cur.t) this._newBucket();
+  var B = this.cur, L = w.loopLen, gap = P.gap, self = this;
+
+  // 1. arrivals
+  while (this.nextSeek <= t) {
+    var d = makeDriver(rng); B.arr++;
+    if (advantage(d, this.price) <= 0) {
+      B.toLot++; this.totals.lotFirst++; B.lotRev += P.lotPrice * d.T;
+      if (rng() < P.lotDropShare) this._spawn('drop', null, this.nextSeek);
+    } else this._spawn('seek', d, this.nextSeek);
+    this.nextSeek += expo(rng, this.lambda);
+  }
+  while (this.nextBg <= t) {
+    this._spawn(rng() < P.bgDropShare ? 'drop' : 'thru', null, this.nextBg);
+    this.nextBg += expo(rng, P.bgK * this.lambda);
+  }
+
+  // 2. people crossing
+  for (k = 0; k < this.xw.length; k++) {
+    var x = this.xw[k];
+    while (x.next <= t) {
+      if (x.until < x.next) x.start = x.next;
+      x.until = Math.max(x.until, x.next + P.pedCross);
+      x.next += expo(rng, P.pedK * this.lambda * x.w);
+    }
+  }
+
+  // sort cars into lanes
+  var lanes = { R: [], SJ: [], DG: [], AJ: [], AM: [] };
+  for (i = 0; i < this.cars.length; i++) { c = this.cars[i]; if (c.st !== 'parked' && c.st !== 'gone') lanes[c.lane].push(c); }
+  for (var ln in lanes) lanes[ln].sort(function (p, q) { return p.s - q.s; });
+  var R = lanes.R;
+  this.ringN = R.length;
+  var ringRoom = function (from, to) {
+    for (var m = 0; m < R.length; m++) { var q = R[m].s; if (q >= from && q < to) return false; }
+    return true;
+  };
+
+  // 3. all-way stops: one vehicle at a time, cross traffic included; nobody enters without room beyond
+  for (var id in this.inter) {
+    var I = this.inter[id];
+    while (I.nextPh <= t) { I.queue.push({ ph: true }); I.nextPh += expo(rng, P[I.cross] * this.lambda); }
+    while (I.queue.length && I.queue[0].st === 'gone') I.queue.shift();
+    if (t >= I.nextFree && I.queue.length) {
+      // first come, first served, but a car with nowhere to go doesn't hold up the other directions
+      for (var qi = 0; qi < I.queue.length && qi < 6; qi++) {
+        var f = I.queue[qi];
+        if (f.ph) { I.queue.splice(qi, 1); I.nextFree = t + P[I.hw]; break; }
+        if (f.st === 'gone') continue;
+        if (t - f.tStop >= P.stopDwell && this._roomPast(f, id, ringRoom, R.length)) {
+          I.queue.splice(qi, 1); f.granted = id; I.nextFree = t + P[I.hw]; break;
+        }
+      }
+    }
+  }
+
+  // 4. approach lanes: Capitola Ave down to Stockton (J), Monterey Ave down to Capitola (M)
+  this.waitingIn = 0;
+  [['AJ', w.appLen, 'J', 0], ['AM', w.amLen, 'M', w.exitS + 0.5]].forEach(function (a) {
+    var lane = lanes[a[0]], len = a[1], sid = a[2], mergeS = a[3];
+    for (var m = lane.length - 1; m >= 0; m--) {
+      var cc = lane[m], lim = m === lane.length - 1 ? len - 1 : lane[m + 1].s - gap;
+      var ns = Math.max(cc.s, Math.min(cc.s + P.vApp * dt, lim));
+      if (ns - cc.s < 0.05 * dt) self.waitingIn++;
+      cc.odo += ns - cc.s; cc.s = ns;
+      if (m === lane.length - 1 && cc.s >= len - 1.6) {
+        if (cc.queued !== sid) { cc.queued = sid; cc.tStop = t; self.inter[sid].queue.push(cc); }
+        if (cc.granted === sid) {
+          cc.lane = 'R'; cc.s = mergeS; cc.granted = cc.queued = null;
+          if (sid === 'M') cc.tB = t;
+          R.push(cc); R.sort(function (p, q) { return p.s - q.s; });
+        }
+      }
+    }
+  });
+
+  // 5. San Jose Ave (one-way south): park, then stop and merge onto the Esplanade
+  var SJ = lanes.SJ, sjStop = w.sjLen - 0.6;
+  for (var m2 = SJ.length - 1; m2 >= 0; m2--) {
+    c = SJ[m2];
+    if (c.lane !== 'SJ' || c.st === 'pin' || c.st === 'pout') continue;
+    var lead = m2 + 1 < SJ.length ? SJ[m2 + 1].s : Infinity;
+    var lim3 = Math.min(lead - gap, sjStop);
+    lim3 = this._crosswalkLimit(c, 'SJ', lim3, P.vEsp * dt, t);
+    if (c.hoverSp) lim3 = this._hoverLimit(c, lim3, dt);
+    var ns3 = Math.max(c.s, Math.min(c.s + P.vEsp * dt, lim3));
+    this._afterMove(c, ns3, t);
+    if (c.st === 'loop') ns3 = this._scan(c, 'SJ', c.s, ns3, t);
+    c.odo += ns3 - c.s; c.s = ns3;
+    if ((c.st === 'loop' || c.st === 'drive') && c.s >= sjStop - 0.6) {
+      if (c.tStopSJ == null) c.tStopSJ = t;
+      var waited = t - c.tStopSJ, sb = w.sjBot;
+      var room = ringRoom(sb - 3, sb + gap) && (waited >= P.zipper || ringRoom(sb - 14, sb - 3)) && R.length < P.ringCap * L / gap;
+      if (waited >= P.stopDwell && room) {
+        c.lane = 'R'; c.s = sb; c.tStopSJ = null;
+        if (c.tB != null) { B.bSum += t - c.tB; B.bN++; c.tB = null; }
+        c.tEsp = t;
+        R.push(c); R.sort(function (p, q) { return p.s - q.s; });
+      }
+    }
+  }
+
+  // 5b. the angled leg on the west side of the triangle: park, then merge back where it meets the beach aisle
+  var DG = lanes.DG, dgEnd = w.dgLen - 0.6, sm = w.sMontJoin;
+  for (var m3 = DG.length - 1; m3 >= 0; m3--) {
+    c = DG[m3];
+    if (c.lane !== 'DG' || c.st === 'pin' || c.st === 'pout') continue;
+    var lead4 = m3 + 1 < DG.length ? DG[m3 + 1].s : Infinity;
+    var lim4 = Math.min(lead4 - gap, dgEnd);
+    if (c.hoverSp) lim4 = this._hoverLimit(c, lim4, dt);
+    var ns4 = Math.max(c.s, Math.min(c.s + P.vEsp * dt, lim4));
+    if (c.st === 'loop' && !c.leaving) ns4 = this._scan(c, 'DG', c.s, ns4, t);
+    c.odo += ns4 - c.s; c.s = ns4;
+    if ((c.st === 'loop' || c.st === 'drive') && c.s >= dgEnd - 0.6) {
+      if (c.tStopDG == null) c.tStopDG = t;
+      if (ringRoom(sm - 3, sm + gap) && (t - c.tStopDG >= P.zipper || ringRoom(sm - 14, sm - 3))) {
+        c.lane = 'R'; c.s = sm + 0.1; c.tStopDG = null;
+        R.push(c); R.sort(function (p, q) { return p.s - q.s; });
+      }
+    }
+  }
+
+  // 6. the loop
+  var n = R.length, olds = new Array(n);
+  for (i = 0; i < n; i++) olds[i] = R[i].s;
+  var stops = w.stops;
+  for (i = 0; i < n; i++) {
+    c = R[i];
+    if (c.lane !== 'R' || c.st === 'pin' || c.st === 'pout' || c.st === 'load' || c.st === 'gone') continue;
+    var leadS = Infinity, leadLoad = false;
+    for (j = 1; j < n; j++) {
+      var o = R[(i + j) % n];
+      if (o.lane !== 'R' || o.st === 'gone') continue;
+      if (o.st === 'load' && t - o.loadStart >= P.squeezeAfter) continue;  // once there's room, traffic edges around
+      leadS = olds[(i + j) % n] + (i + j >= n ? L : 0); leadLoad = o.st === 'load'; break;
+    }
+    var inEsp = c.s >= w.espS0 - 5 && c.s <= w.searchEnd + 5;
+    var v = inEsp ? P.vEsp : P.vLoop;
+    var lim2 = leadS - gap, reach = c.s + v * dt + 1;
+    lim2 = this._crosswalkLimit(c, 'R', lim2, v * dt, t);
+    for (k = 0; k < stops.length; k++) {
+      var ss = stops[k].s, sid2 = stops[k].id;
+      if (ss > c.s - 0.8 && ss <= reach + gap && c.granted !== sid2) {
+        var atLine = c.s >= ss - 0.8 || (leadS > ss && leadS - gap - c.s < 0.6);
+        if (atLine && c.queued !== sid2) { c.queued = sid2; c.tStop = t; this.inter[sid2].queue.push(c); }
+        if (ss <= reach) lim2 = Math.min(lim2, ss - 0.5);
+      }
+    }
+    if (c.hoverSp) lim2 = this._hoverLimit(c, lim2, dt);
+    var ns2 = Math.max(c.s, Math.min(c.s + v * dt, lim2));
+    if (ns2 - c.s < 0.02) { if (leadLoad) c.squeeze = (c.squeeze || 0) + dt; } else c.squeeze = 0;
+    this._afterMove(c, ns2, t);
+    if (c.st === 'loop' && !c.leaving) ns2 = this._scan(c, 'R', c.s, ns2, t);
+    // onto the Esplanade from Stockton
+    if (c.s < w.espS0 && ns2 >= w.espS0) { if (c.tB != null) { B.bSum += t - c.tB; B.bN++; c.tB = null; } c.tEsp = t; }
+    // at the end of the Esplanade: the angled leg, or the aisle around the beach side of the triangle
+    if (c.s < w.espEnd && ns2 >= w.espEnd && c.st !== 'load' && c.st !== 'pin') {
+      var seeking = c.kind === 'seek' && c.st === 'loop' && !c.leaving;
+      var dropping = c.kind === 'drop' && !c.dropped;
+      if (!dropping && rng() < (seeking ? P.dgSeek : P.dgOther)) {
+        var dgFree = true;
+        for (k = 0; k < DG.length; k++) if (DG[k].lane === 'DG' && DG[k].s < gap) { dgFree = false; break; }
+        if (dgFree) {
+          c.odo += ns2 - c.s; c.lane = 'DG'; c.s = ns2 - w.espEnd; c.granted = c.queued = null;
+          DG.unshift(c);
+          continue;
+        }
+      }
+    }
+    // drop-offs at the corner by the triangle
+    if (c.kind === 'drop' && !c.dropped && c.st === 'drive' && c.s < w.loadS && ns2 >= w.loadS) {
+      ns2 = w.loadS; c.st = 'load'; c.loadStart = t; c.timer = Math.min(240, P.dropMed * Math.exp(P.dropSig * randn(rng))); B.drops++;
+    }
+    // through the Monterey stop
+    if (c.s < w.exitS && ns2 >= w.exitS) {
+      if (c.tEsp != null) { B.aSum += t - c.tEsp; B.aN++; c.tEsp = null; }
+      if (c.kind === 'seek' && c.st === 'loop') c.searched = true;
+      if (c.exit === 'M') {
+        c.st = 'gone';
+        if (this.visual) this.ghosts.push({ kind: c.kind === 'out' ? 'out' : 'thru', path: 'montN', s: ns2 - w.exitS });
+        continue;
+      }
+      c.tB = t;
+    }
+    // the San Jose Ave corner on Capitola Ave: decide where to go next
+    if (c.s < w.sjTop && ns2 >= w.sjTop) {
+      if (c.kind === 'seek' && c.st === 'loop' && !c.leaving) {
+        if (c.searched) {
+          c.laps++; B.cruiseM += c.odo + (ns2 - c.s) - c.odoMark; c.odoMark = c.odo + (ns2 - c.s); c.hovered = false;
+          var searchedH = (t - c.tArr) / 3600;
+          if (c.d.v * searchedH > c.adv || c.laps >= c.d.patience) { c.leaving = true; c.exit = 'J'; c.route = 'J'; }
+          else c.route = rng() < P.sjShare ? 'SJ' : 'J';
+        } else c.route = rng() < P.sjShareNew ? 'SJ' : 'J';
+      }
+      if (c.route === 'SJ') {
+        var sjFree = true;
+        for (k = 0; k < SJ.length; k++) if (SJ[k].lane === 'SJ' && SJ[k].s < gap) { sjFree = false; break; }
+        if (sjFree) {
+          c.odo += ns2 - c.s; c.lane = 'SJ'; c.s = ns2 - w.sjTop; c.granted = c.queued = null; c.route = null;
+          SJ.unshift(c);
+          continue;
+        }
+      }
+    }
+    // back at the Stockton corner
+    if (ns2 >= L) {
+      c.granted = c.queued = null;
+      if (c.exit === 'J' || c.leaving) {
+        c.st = 'gone';
+        if (c.leaving) {
+          var gone = rng() < P.leaveShare;
+          if (gone) { B.left++; this.totals.left++; } else { B.toLot++; this.totals.diverted++; B.lotRev += P.lotPrice * c.d.T; }
+          if (this.visual) this.ghosts.push({ kind: gone ? 'left' : 'lot', path: 'spurOut', s: 0 });
+        } else if (this.visual) this.ghosts.push({ kind: 'thru', path: 'spurOut', s: 0 });
+        continue;
+      }
+      ns2 -= L;
+    }
+    if (c.granted && stopPassed(stops, c, ns2)) c.granted = c.queued = null;
+    c.odo += ns2 - c.s; c.s = ns2;
+  }
+
+  // 7. maneuvers, loading, parked cars
+  var occ = 0, circ = 0;
+  for (i = 0; i < this.cars.length; i++) {
+    c = this.cars[i];
+    if (c.st === 'pin') {
+      c.timer -= dt;
+      if (c.timer <= 0) { c.st = 'parked'; c.tPark = t; c.tDep = t + c.d.T * 3600; c.paid = this.price; c.tEsp = c.tB = null; B.parked++; this.totals.parked++; B.searchSum += (t - c.tArr); }
+    } else if (c.st === 'parked') {
+      B.rev += c.paid * dt / 3600;
+      if (t >= c.tDep && canPullOut(lanes[c.lane], c.s, c.sp.resv, t >= c.tDep + 30)) { c.st = 'pout'; c.timer = P.maneuver; }
+    } else if (c.st === 'pout') {
+      c.timer -= dt;
+      if (c.timer <= 0) { c.sp.car = null; c.sp = null; c.st = 'drive'; c.kind = 'out'; c.exit = 'M'; c.route = null; B.departs++; }
+    } else if (c.st === 'load') {
+      c.timer -= dt;
+      if (c.timer <= 0) { c.st = 'drive'; c.dropped = true; }
+    }
+    if (c.kind === 'seek' && c.st === 'loop' && (c.laps >= 1 || c.searched) && !c.leaving) circ++;   // missed at least once
+    if (c.st === 'gone' && c.hoverSp) { c.hoverSp.resv = null; c.hoverSp = null; }
+  }
+  for (i = 0; i < this.spaces.length; i++) if (this.spaces[i].car) occ++;
+  var keep = [];
+  for (i = 0; i < this.cars.length; i++) if (this.cars[i].st !== 'gone') keep.push(this.cars[i]);
+  this.cars = keep;
+  B.occ += occ / this.spaces.length * dt; B.circ += circ * dt; B.n += dt; B.price = this.price;
+  B.waitIn += this.waitingIn * dt; B.mQ += this.inter.M.queue.length * dt;
+  this.occNow = occ; this.circNow = circ;
+
+  // 8. demand-responsive pricing: nudge the rate every 10 minutes toward ~85% full
+  if (this.mode === 'responsive' && t >= this.nextAdjust) {
+    this.nextAdjust = t + 600;
+    var oo = this.avg('occ', 5), cc2 = this.avg('circ', 10);
+    var prev = this.min.slice(-16, -11), po = 0, pn = 0;
+    for (k = 0; k < prev.length; k++) { po += prev[k].occ; pn += prev[k].n; }
+    var trend = pn ? oo - po / pn : 0, p = this.price;
+    if (cc2 > 2) p += 0.5;
+    else if (cc2 > 0.3) p += 0.25;
+    else if (oo > 0.90 && trend >= -0.01) p += 0.25;
+    else if (oo < 0.75 && trend <= 0.01) p -= 0.25;
+    this.price = Math.max(1, Math.min(10, Math.round(p * 4) / 4));
+  }
+  if (this.visual) {
+    for (i = 0; i < this.ghosts.length; i++) this.ghosts[i].s += P.vApp * dt;
+    var maxS = w.ghostLen;
+    this.ghosts = this.ghosts.filter(function (g) { return g.s < maxS; });
+  }
+};
+// would this car have somewhere to go once it's through the intersection?
+Sim.prototype._roomPast = function (f, id, ringRoom, ringN) {
+  var w = this.w, gap = P.gap, L = w.loopLen;
+  if (id === 'M') {
+    if (f.lane === 'R' && f.exit === 'M') return true;                   // leaving north on Monterey
+    if (f.lane === 'AM' && ringN >= P.ringCap * L / gap) return false;   // the loop is packed: wait on Monterey
+    return ringRoom(w.exitS - 1, w.exitS + gap);
+  }
+  if (f.lane === 'R' && (f.exit === 'J' || f.leaving)) return true;      // leaving up Capitola Ave
+  if (f.lane === 'AJ') return ringN < P.ringCap * L / gap && ringRoom(0, 2 * gap) && ringRoom(L - 1, L + 1);
+  return ringRoom(0, gap);
+};
+Sim.prototype._crosswalkLimit = function (c, lane, lim, step, t) {
+  for (var k = 0; k < this.xw.length; k++) {
+    var x = this.xw[k];
+    if (x.lane !== lane) continue;
+    if (x.s > c.s + 0.01 && x.s <= c.s + step + 1 && x.until > t) {
+      if (c.xwS !== x.s) { c.xwS = x.s; c.xwT = 0; }
+      if (c.xwT < P.pedYield) lim = Math.min(lim, x.s - 0.6);
+    }
+  }
+  return lim;
+};
+Sim.prototype._afterMove = function (c, ns, t) {
+  if (ns - c.s < 0.02 && c.xwS != null && Math.abs(c.s - (c.xwS - 0.6)) < 1) c.xwT += t - (c._lastT || t);
+  c._lastT = t;
+  if (c.xwS != null && ns > c.xwS) c.xwS = null;
+};
+Sim.prototype._hoverLimit = function (c, lim, dt) {
+  var hs = c.hoverSp;
+  if (!hs.car) return Math.min(lim, hs.s);
+  c.hoverT = (c.hoverT || 0) + dt;
+  if (c.hoverT > P.hoverMax) { hs.resv = null; c.hoverSp = null; return lim; }
+  return Math.min(lim, Math.max(c.s, hs.s - 6));
+};
+// look for an open space passed this step, or stop to wait for someone about to leave
+Sim.prototype._scan = function (c, lane, a, b, t) {
+  var arr = this.spBy[lane], sArr = this.spS[lane], hoverCand = null;
+  for (var j = lowerBound(sArr, a - 0.001); j < arr.length && arr[j].s <= b; j++) {
+    var sp = arr[j];
+    if (!sp.car && (!sp.resv || sp.resv === c)) {
+      if (c.laps === 0 && sp.resv !== c && this.rng() > (sp.pos < (c.target || 0) - 0.15 ? P.takeEarly : P.takeFirst)) continue;   // holding out for one closer
+      if (c.hoverSp && c.hoverSp !== sp) c.hoverSp.resv = null;
+      sp.car = c; sp.resv = null; c.sp = sp; c.hoverSp = null; c.st = 'pin'; c.timer = P.maneuver;
+      return sp.s;
+    }
+    if (!hoverCand && !c.hoverSp && !c.hovered && sp.car && sp.car.st === 'parked' && !sp.resv && sp.car.tDep - t < P.hoverSec) hoverCand = sp;
+  }
+  if (hoverCand) { hoverCand.resv = c; c.hoverSp = hoverCand; c.hoverT = 0; c.hovered = true; return Math.min(b, Math.max(a, hoverCand.s - 6)); }
+  return b;
+};
+function stopPassed(stops, c, ns) {
+  for (var k = 0; k < stops.length; k++) if (stops[k].id === c.granted) return ns > stops[k].s + 0.5 || ns < c.s;
+  return true;
+}
+function canPullOut(lane, s, ignore, courtesy) {
+  for (var i = 0; i < lane.length; i++) {
+    var o = lane[i]; if (o === ignore || o.st === 'gone' || o.st === 'parked') continue;
+    var q = o.s;
+    if (q > s - 2.5 && q < s + 6.5) return false;
+    if (!courtesy && q >= s - 9 && q <= s - 2.5) return false;
+  }
+  return true;
+}
+Sim.prototype.avg = function (field, m) {
+  var arr = this.min.slice(-m - 1, -1); if (!arr.length) arr = this.min.slice(-1);
+  var s = 0, n = 0;
+  for (var i = 0; i < arr.length; i++) { s += arr[i][field]; n += arr[i].n; }
+  return n ? s / n : 0;
+};
+Sim.prototype.windowStats = function (m) {
+  var arr = this.min.slice(-m - 1, -1); if (!arr.length) arr = this.min.slice(-1);
+  var o = { occ: 0, circ: 0, n: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0, cruiseM: 0, departs: 0, arr: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0 };
+  for (var i = 0; i < arr.length; i++) for (var k in o) o[k] += arr[i][k];
+  var hrs = arr.length / 60, segA = o.aN ? o.aSum / o.aN / 60 : 0, segB = o.bN ? o.bSum / o.bN / 60 : 0;
+  return {
+    occ: o.n ? o.occ / o.n : 0, circ: o.n ? o.circ / o.n : 0,
+    search: o.parked ? o.searchSum / o.parked / 60 : 0,
+    espToStop: segA, back: segB, trip: segA + segB, tripN: o.aN,
+    toLot: o.toLot / hrs, left: o.left / hrs, rev: o.rev / hrs, lotRev: o.lotRev / hrs,
+    cruiseMi: o.cruiseM / 1609.34 / hrs, turnover: o.departs / hrs / this.spaces.length,
+    arr: o.arr / hrs, parked: o.parked / hrs, drops: o.drops / hrs,
+    waitIn: o.n ? o.waitIn / o.n : 0, mQ: o.n ? o.mQ / o.n : 0
+  };
+};
+Sim.prototype.warm = function (minutes) { for (var i = 0; i < minutes * 60; i++) this.step(1); };
+function runHeadless(world, price, lambda, seed, warmMin, measureMin) {
+  var sim = new Sim(world, { seed: seed, price: price, lambda: lambda, prefill: true });
+  for (var i = 0; i < (warmMin + measureMin) * 60; i++) sim.step(1);
+  return sim.windowStats(measureMin);
+}
+if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, runHeadless: runHeadless, tryShare: tryShare, advantage: advantage };
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var world = buildWorld(PATHS);
+  var LOOP = world.loop, SPUR = world.spur, MONTN = world.montN, AMP = world.amPath, SJP = world.sj, DGP = world.dg;
+  var NSP = world.spaces.length;
+  function lanePoly(lane) { return lane === 'SJ' ? SJP : lane === 'DG' ? DGP : LOOP; }
+
+  /* ---------- stall geometry: centers and headings ---------- */
+  world.spaces.forEach(function (sp) {
+    var q = lanePoly(sp.lane).at(sp.s);
+    if (sp.type === 'tri') {
+      // the triangle lot: positions read from aerial imagery
+    } else if (sp.type === 'angled') {
+      var c = Math.cos(Math.PI / 3), s = Math.sin(Math.PI / 3), sd = sp.side;
+      var hx = q.tx * c + q.nx * s * sd, hy = q.ty * c + q.ny * s * sd;
+      var off = sp.lane === 'R' && sp.s > world.sMontJoin ? 3.0 : 3.4;
+      var bx = q.x + q.nx * off * sd, by = q.y + q.ny * off * sd;
+      sp.cx = bx + hx * 2.5; sp.cy = by + hy * 2.5; sp.hx = hx; sp.hy = hy; sp.L = 5.0; sp.W = 2.25;
+    } else {
+      var po = sp.lane === 'SJ' ? 3.6 : 4.4;
+      sp.cx = q.x + q.nx * po * sp.side; sp.cy = q.y + q.ny * po * sp.side; sp.hx = q.tx; sp.hy = q.ty; sp.L = 5.9; sp.W = 2.3;
+    }
+    sp.lx = q.x; sp.ly = q.y; sp.tx = q.tx; sp.ty = q.ty;
+  });
+  var sMontJoin = world.sMontJoin;
+
+  /* ---------- state ---------- */
+  var DAYS = { winter: { lam: 20, label: 'Tuesday' }, spring: { lam: 60, label: 'Sunday' }, summer: { lam: 135, label: 'Saturday' } };
+  var ui = {
+    mode: 'today', tryPrice: 5, day: 'summer', lam: 135,
+    speeds: [{ k: 'Normal', v: 20 }, { k: 'Fast', v: 60 }, { k: 'Slow', v: 6 }], speedIx: 0,
+    paused: false
+  };
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) ui.paused = true;
+  var sim;
+  var START_MIN = 11 * 60 + 30;   // clock starts at 11:30 AM; the warm-up brings it to 1:00 PM
+  var WARM = 90;
+
+  function currentPrice() { return ui.mode === 'today' ? 2 : ui.mode === 'try' ? ui.tryPrice : (sim ? sim.price : 2); }
+  function newSim() {
+    sim = new Sim(world, { seed: (Math.random() * 1e9) >>> 0, price: ui.mode === 'resp' ? 2 : currentPrice(), lambda: ui.lam, visual: true, prefill: true });
+    sim.warm(WARM);
+    if (ui.mode === 'resp') { sim.mode = 'responsive'; sim.nextAdjust = sim.t + 600; }
+  }
+
+  /* ---------- theme tokens for canvas ---------- */
+  var T = {};
+  function readTokens() {
+    var cs = getComputedStyle(document.documentElement);
+    ['paper', 'card', 'ink', 'ink2', 'ink3', 'rule', 'rule2', 'accent', 'amber', 'parked', 'lotc', 'out', 'good', 'open', 'band',
+     'hazard', 'ped', 'pedRing', 'zebra', 'land', 'sand', 'sea', 'creek', 'park', 'asph', 'bldg', 'bldgEdge', 'stall', 'label', 'halo', 'pay', 'signBg', 'signText']
+      .forEach(function (k) { T[k] = cs.getPropertyValue('--' + k).trim(); });
+    T.fMono = cs.getPropertyValue('--f-mono').trim(); T.fDisp = cs.getPropertyValue('--f-display').trim(); T.fBody = cs.getPropertyValue('--f-body').trim();
+  }
+
+  /* ---------- map canvas ---------- */
+  var VIEW = { x0: -284, x1: -22, y0: -118, y1: 90 };
+  var mapC = document.getElementById('map'), mctx = mapC.getContext('2d');
+  var stat = document.createElement('canvas'), sctx = stat.getContext('2d');
+  var K = 1, DPR = 1, MW = 0, MH = 0;
+  function X(x) { return (x - VIEW.x0) * K; }
+  function Y(y) { return (VIEW.y1 - y) * K; }
+  function sizeMap() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    MW = mapC.clientWidth || 600;
+    MH = Math.round(MW * (VIEW.y1 - VIEW.y0) / (VIEW.x1 - VIEW.x0));
+    mapC.style.height = MH + 'px';
+    mapC.width = Math.round(MW * DPR); mapC.height = Math.round(MH * DPR);
+    stat.width = mapC.width; stat.height = mapC.height;
+    K = MW / (VIEW.x1 - VIEW.x0);
+    drawStatic();
+  }
+  function poly(ctx, pts, close) {
+    ctx.beginPath();
+    for (var i = 0; i < pts.length; i++) { var x = X(pts[i][0]), y = Y(pts[i][1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+    if (close) ctx.closePath();
+  }
+  function offsetPath(Pl, s0, s1, off, stepM) {
+    var out = [];
+    for (var s = s0; s <= s1 + 1e-6; s += stepM) { var q = Pl.at(Math.min(s, s1)); out.push([q.x + q.nx * off, q.y + q.ny * off]); }
+    return out;
+  }
+  function label(ctx, text, x, y, opts) {
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(X(x), Y(y)); if (opts.rot) ctx.rotate(opts.rot);
+    ctx.font = (opts.weight || 600) + ' ' + Math.max(9, (opts.size || 11)) + 'px ' + (opts.font || T.fMono);
+    ctx.textAlign = opts.align || 'center'; ctx.textBaseline = 'middle';
+    if (opts.spacing && 'letterSpacing' in ctx) ctx.letterSpacing = opts.spacing + 'px';
+    ctx.lineWidth = 3; ctx.strokeStyle = T.halo; ctx.lineJoin = 'round';
+    ctx.strokeText(text, 0, 0);
+    ctx.fillStyle = opts.color || T.label; ctx.fillText(text, 0, 0);
+    ctx.restore();
+  }
+  function laneOffset(s) {
+    // two-way streets carry the loop in the right-hand lane; the one-way Esplanade, aisle and Monterey run down the middle
+    var a = world.espS0, b = world.exitS;
+    if (s < a - 10) return 1.7;
+    if (s < a) return 1.7 * (a - s) / 10;
+    if (s <= b) return 0;
+    if (s < b + 10) return 1.7 * (s - b) / 10;
+    return 1.7;
+  }
+  function rectPath(c, cx, cy, hx, hy, L, W) {
+    var nx = hy, ny = -hx, l = L / 2, w = W / 2;
+    c.beginPath();
+    c.moveTo(X(cx + hx * l + nx * w), Y(cy + hy * l + ny * w));
+    c.lineTo(X(cx + hx * l - nx * w), Y(cy + hy * l - ny * w));
+    c.lineTo(X(cx - hx * l - nx * w), Y(cy - hy * l - ny * w));
+    c.lineTo(X(cx - hx * l + nx * w), Y(cy - hy * l + ny * w));
+    c.closePath();
+  }
+  function drawStatic() {
+    readTokens();
+    var c = sctx, i, q;
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    c.fillStyle = T.land; c.fillRect(0, 0, MW, MH);
+    GEO.coast.forEach(function (cl) {
+      var xs = cl.map(function (p) { return p[0]; }), ys = cl.map(function (p) { return p[1]; });
+      var pts = cl.slice(); var mnx = Math.min.apply(null, xs), mxx = Math.max.apply(null, xs), mny = Math.min.apply(null, ys);
+      pts.push([mxx + 400, mny - 600]); pts.push([mnx - 400, mny - 600]);
+      c.fillStyle = T.sea; poly(c, pts, true); c.fill();
+    });
+    c.fillStyle = T.sand; GEO.beach.forEach(function (p) { poly(c, p, true); c.fill(); });
+    c.fillStyle = T.park; GEO.park.forEach(function (p) { poly(c, p, true); c.fill(); });
+    c.fillStyle = T.creek; GEO.water.forEach(function (p) { poly(c, p, true); c.fill(); });
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    var widths = { 0: 1.6, 1: 4.5, 2: 8, 3: 9.5 };
+    [0, 1, 2, 3].forEach(function (cls) {
+      GEO.roads.forEach(function (r) {
+        if (r.c !== cls) return;
+        c.strokeStyle = cls === 0 ? T.rule : T.asph; c.lineWidth = widths[cls] * K;
+        poly(c, r.p, false); c.stroke();
+      });
+    });
+    // the Esplanade, the aisle along the beach, and the triangle lot are wide: a travel lane plus parking
+    c.strokeStyle = T.asph;
+    c.lineWidth = 15.5 * K; poly(c, offsetPath(LOOP, world.espS0 - 2, world.espEnd, 1.9, 2), false); c.stroke();
+    c.lineWidth = 15 * K; poly(c, offsetPath(LOOP, world.espEnd - 2, world.corner + 1, 1.2, 1), false); c.stroke();
+    c.lineWidth = 12 * K; poly(c, offsetPath(LOOP, world.corner - 1, sMontJoin, 1.0, 1), false); c.stroke();
+    c.lineWidth = 15 * K; poly(c, offsetPath(LOOP, sMontJoin - 1, world.exitS - 2, 0, 1), false); c.stroke();
+    c.lineWidth = 14 * K; poly(c, offsetPath(SJP, 6, SJP.len - 4, 0.8, 1), false); c.stroke();
+    c.lineWidth = 12 * K; poly(c, offsetPath(DGP, 2, DGP.len - 2, -0.8, 1), false); c.stroke();
+    c.fillStyle = T.asph;
+    poly(c, [[-88.2, -59.2], [-72.7, -47.8], [-64, -39.7], [-58, -31.1], [-50, -15.8], [-50, -23.5], [-50.1, -53.4], [-51.2, -56.9], [-53.5, -58.8]], true); c.fill();
+    // buildings and the wharf
+    c.fillStyle = T.bldg; c.strokeStyle = T.bldgEdge; c.lineWidth = Math.max(0.6, 0.25 * K);
+    GEO.bldg.forEach(function (p) { poly(c, p, true); c.fill(); c.stroke(); });
+    c.strokeStyle = T.bldgEdge; c.lineWidth = 3 * K;
+    GEO.pier.forEach(function (p) { poly(c, p, false); c.stroke(); });
+    // palm planters in the triangle
+    c.fillStyle = T.park;
+    [[-53, -30.9], [-50.6, -41.5], [-55, -48.6], [-55.4, -54.4]].forEach(function (p) { c.beginPath(); c.arc(X(p[0]), Y(p[1]), 1.4 * K, 0, Math.PI * 2); c.fill(); });
+    // stall outlines
+    c.strokeStyle = T.stall; c.lineWidth = Math.max(0.8, 0.14 * K);
+    world.spaces.forEach(function (sp) { rectPath(c, sp.cx, sp.cy, sp.hx, sp.hy, sp.L, sp.W); c.stroke(); });
+    // crosswalks (zebra bars across the road)
+    c.fillStyle = T.zebra;
+    world.xwalks.forEach(function (xw) {
+      var q2 = lanePoly(xw.lane).at(xw.s), half = xw.lane === 'SJ' ? 4.5 : (xw.s > world.espS0 && xw.s < world.exitS) ? 4.6 : 5;
+      for (var o = -half + 0.5; o <= half - 0.4; o += 1.45) {
+        var cx = q2.x + q2.nx * o, cy = q2.y + q2.ny * o;
+        rectPath(c, cx, cy, q2.tx, q2.ty, 2.6, 0.75); c.fill();
+      }
+    });
+    // stop bars at the two all-way stops (and on Capitola Ave coming in)
+    c.strokeStyle = T.zebra; c.lineWidth = Math.max(1.2, 0.5 * K); c.lineCap = 'butt';
+    world.stops.forEach(function (st) {
+      var q3 = LOOP.at(st.s + 0.4), off = laneOffset(st.s);
+      c.beginPath(); c.moveTo(X(q3.x + q3.nx * (off + 1.9)), Y(q3.y + q3.ny * (off + 1.9))); c.lineTo(X(q3.x + q3.nx * (off - 1.9)), Y(q3.y + q3.ny * (off - 1.9))); c.stroke();
+    });
+    q = SPUR.at(world.appLen - 0.6);
+    c.beginPath(); c.moveTo(X(q.x + q.nx * 3.6), Y(q.y + q.ny * 3.6)); c.lineTo(X(q.x - q.nx * 0.2), Y(q.y - q.ny * 0.2)); c.stroke();
+    q = AMP.at(world.amLen - 0.6);
+    c.beginPath(); c.moveTo(X(q.x + q.nx * 3.6), Y(q.y + q.ny * 3.6)); c.lineTo(X(q.x - q.nx * 0.2), Y(q.y - q.ny * 0.2)); c.stroke();
+    q = SJP.at(SJP.len - 0.8);
+    c.beginPath(); c.moveTo(X(q.x + q.nx * 3.5), Y(q.y + q.ny * 3.5)); c.lineTo(X(q.x - q.nx * 3.5), Y(q.y - q.ny * 3.5)); c.stroke();
+    c.lineCap = 'round';
+    // the drop-off corner: yellow curb
+    c.strokeStyle = T.hazard; c.lineWidth = Math.max(1.5, 0.6 * K);
+    poly(c, offsetPath(LOOP, world.corner - 9, world.corner + 6, 5.6, 1), false); c.stroke();
+    // one-way arrows along the loop
+    c.fillStyle = 'rgba(255,255,255,.28)';
+    for (var s = 30; s < world.loopLen - 10; s += 34) {
+      var nearX = false;
+      world.xwalks.forEach(function (xw) { if (Math.abs(xw.s - s) < 5) nearX = true; });
+      if (nearX) continue;
+      var q4 = LOOP.at(s), off2 = laneOffset(s), ax = q4.x + q4.nx * off2, ay = q4.y + q4.ny * off2;
+      c.save(); c.translate(X(ax), Y(ay)); c.rotate(-Math.atan2(q4.ty, q4.tx));
+      c.beginPath(); c.moveTo(2.2 * K, 0); c.lineTo(-1.4 * K, 1.3 * K); c.lineTo(-0.6 * K, 0); c.lineTo(-1.4 * K, -1.3 * K); c.closePath(); c.fill();
+      c.restore();
+    }
+    c.fillStyle = 'rgba(255,255,255,.28)';
+    [[SJP, 22], [SJP, 52], [SJP, 82], [DGP, 12], [DGP, 44]].forEach(function (a6) {
+      var q6 = a6[0].at(a6[1]);
+      c.save(); c.translate(X(q6.x), Y(q6.y)); c.rotate(-Math.atan2(q6.ty, q6.tx));
+      c.beginPath(); c.moveTo(2.2 * K, 0); c.lineTo(-1.4 * K, 1.3 * K); c.lineTo(-0.6 * K, 0); c.lineTo(-1.4 * K, -1.3 * K); c.closePath(); c.fill();
+      c.restore();
+    });
+    // blue pay stations on the seaward sidewalk
+    c.fillStyle = T.pay;
+    [world.espS0 + 30, world.espS0 + 78, world.espS0 + 124, world.espS0 + 165, world.espEnd + 25].forEach(function (s2) {
+      var q5 = LOOP.at(s2); var x = q5.x + q5.nx * 9.6, y = q5.y + q5.ny * 9.6;
+      c.fillRect(X(x) - 0.9 * K, Y(y) - 0.9 * K, 1.8 * K, 1.8 * K);
+    });
+    // labels
+    var big = Math.round(Math.max(10, Math.min(13, 3.8 * K)));
+    var e1 = LOOP.at(world.espEnd - 60);
+    label(c, 'ESPLANADE →', e1.x + e1.nx * 16, e1.y + e1.ny * 16, { rot: -Math.atan2(e1.ty, e1.tx), size: big + 1, spacing: 3, weight: 700 });
+    var qc = LOOP.at(world.corner);
+    label(c, 'drop-offs', qc.x + 7, qc.y - 9, { size: big - 2, color: T.ink2, weight: 600 });
+    label(c, 'Capitola Beach', -150, -92, { size: big + 1, font: T.fBody, weight: 600 });
+    label(c, 'Soquel Creek', -258, 44, { size: big - 1, font: T.fBody, rot: -0.85, weight: 500 });
+    label(c, 'Monterey Ave', -32, 14, { size: big - 1, rot: -1.5 });
+    label(c, 'Capitola Ave', -110, 63, { size: big - 1, rot: 0.24 });
+    label(c, 'Stockton', -218, 52, { size: big - 1, rot: -0.7 });
+    label(c, 'San Jose Ave ↓', -150, 22, { size: big - 2, rot: -1.33 });
+    label(c, 'Village shops', -92, 14, { size: big - 1, font: T.fBody, weight: 500, color: T.ink3 });
+    label(c, 'STOP', -40, 31, { size: big - 2, color: T.accent, weight: 700 });
+    label(c, 'Monterey Bay ↓', -60, -111, { size: big, font: T.fBody, weight: 500, color: T.ink3 });
+  }
+  function drawCar(c, x, y, hx, hy, color, alpha, halo, hazard) {
+    var px = X(x), py = Y(y), ang = -Math.atan2(hy, hx);
+    if (halo) {
+      c.globalAlpha = 0.22 * alpha; c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, 4.2 * K, 0, Math.PI * 2); c.fill();
+    }
+    c.globalAlpha = alpha;
+    c.save(); c.translate(px, py); c.rotate(ang);
+    var L = 4.4 * K, W = 1.95 * K, r = Math.min(1.6, 0.5 * K);
+    c.fillStyle = color;
+    roundRect(c, -L / 2, -W / 2, L, W, r); c.fill();
+    if (hazard) { c.strokeStyle = T.hazard; c.lineWidth = Math.max(1.5, 0.45 * K); roundRect(c, -L / 2, -W / 2, L, W, r); c.stroke(); }
+    c.fillStyle = 'rgba(0,0,0,.28)';
+    c.fillRect(L * 0.08, -W / 2 + W * 0.18, L * 0.18, W * 0.64);
+    c.restore();
+    c.globalAlpha = 1;
+  }
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h); c.lineTo(x + r, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - r); c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y); c.closePath();
+  }
+  function ease(f) { return f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2; }
+  function drawDynamic(now) {
+    var c = mctx, i, car, q;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.drawImage(stat, 0, 0);
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    // open spaces in green
+    c.fillStyle = T.open;
+    for (i = 0; i < sim.spaces.length; i++) {
+      if (sim.spaces[i].car) continue;
+      var g0 = world.spaces[i];
+      rectPath(c, g0.cx, g0.cy, g0.hx, g0.hy, g0.L - 0.5, g0.W - 0.35); c.fill();
+    }
+    // people crossing
+    for (i = 0; i < sim.xw.length; i++) {
+      var xw = sim.xw[i];
+      if (xw.until <= sim.t) continue;
+      var qx = lanePoly(xw.lane).at(xw.s), half = 5, ph = ((sim.t - xw.start) / P.pedCross) % 1;
+      for (var k = 0; k < 3; k++) {
+        var f0 = (ph + k * 0.37) % 1, off = -half + f0 * 2 * half * (k % 2 ? -1 : 1) + (k % 2 ? 2 * half : 0);
+        var px = X(qx.x + qx.nx * off + qx.tx * (k - 1) * 0.7), py = Y(qx.y + qx.ny * off + qx.ty * (k - 1) * 0.7);
+        c.beginPath(); c.arc(px, py, Math.max(1.8, 0.65 * K), 0, Math.PI * 2);
+        c.fillStyle = T.ped; c.fill(); c.lineWidth = 1; c.strokeStyle = T.pedRing; c.stroke();
+      }
+    }
+    // cars on their way out of the Village
+    for (i = 0; i < sim.ghosts.length; i++) {
+      var g = sim.ghosts[i], col = g.kind === 'lot' ? T.lotc : g.kind === 'left' ? T.accent : T.out;
+      var a = Math.max(0, 1 - g.s / 140) * (g.kind === 'left' ? 0.6 : 1);
+      if (g.path === 'spurOut') {
+        var ss = SPUR.len - g.s; if (ss < 0) continue;
+        q = SPUR.at(ss); drawCar(c, q.x - q.nx * 1.7, q.y - q.ny * 1.7, -q.tx, -q.ty, col, a, false);
+      } else {
+        if (g.s > MONTN.len) continue;
+        q = MONTN.at(g.s); drawCar(c, q.x + q.nx * 1.7, q.y + q.ny * 1.7, q.tx, q.ty, col, a, false);
+      }
+    }
+    var blink = Math.floor(now / 380) % 2 === 0;
+    for (i = 0; i < sim.cars.length; i++) {
+      car = sim.cars[i];
+      var searching = car.kind === 'seek' && car.st === 'loop' && !car.leaving;
+      var missed = searching && (car.laps >= 1 || car.searched);
+      var col2 = searching ? (missed ? T.accent : T.amber) : car.leaving ? T.lotc : T.out;
+      if (car.lane === 'AJ' || car.lane === 'AM') {
+        if (car.s < 0) continue;
+        var AP = car.lane === 'AJ' ? SPUR : AMP;
+        q = AP.at(car.s); drawCar(c, q.x + q.nx * 1.7, q.y + q.ny * 1.7, q.tx, q.ty, car.kind === 'seek' ? T.amber : T.out, 1, false);
+      } else if (car.st === 'loop' || car.st === 'drive' || car.st === 'load') {
+        var lo = car.lane === 'R' ? laneOffset(car.s) : 0;
+        q = lanePoly(car.lane).at(car.s);
+        drawCar(c, q.x + q.nx * lo, q.y + q.ny * lo, q.tx, q.ty, col2, 1, missed, car.st === 'load' && blink);
+      } else if (car.sp) {
+        var sp = world.spaces[car.sp.i];
+        var f = car.st === 'parked' ? 1 : car.st === 'pin' ? 1 - Math.max(0, car.timer) / P.maneuver : Math.max(0, car.timer) / P.maneuver;
+        f = ease(Math.min(1, Math.max(0, f)));
+        var x = sp.lx + (sp.cx - sp.lx) * f, y = sp.ly + (sp.cy - sp.ly) * f;
+        var hx = sp.tx + (sp.hx - sp.tx) * f, hy = sp.ty + (sp.hy - sp.ty) * f, hn = Math.hypot(hx, hy) || 1;
+        drawCar(c, x, y, hx / hn, hy / hn, T.parked, car.st === 'pout' ? 0.85 : 1, false);
+      }
+    }
+    // sign for the lots, where Capitola Ave leaves the map
+    var compact = MW < 520;
+    var sx = X(-282) + (compact ? -2 : 0), sy = Y(88), fs = compact ? 10 : Math.round(Math.max(10, Math.min(12.5, 3.3 * K)));
+    var w = sim.windowStats(60);
+    var lines = compact
+      ? [['600', '↑ Lots · $1.00/hr', T.signText], ['600', Math.round(w.toLot) + '/hr sent here', T.lotc]]
+      : [['600', '↑ Beach & Village lots', T.signText], ['400', '$1.00/hr · ¼ mile walk', T.signText], ['600', Math.round(w.toLot) + ' drivers/hr sent here', T.lotc]];
+    var bw = 0;
+    lines.forEach(function (ln) { c.font = ln[0] + ' ' + fs + 'px ' + T.fMono; bw = Math.max(bw, c.measureText(ln[1]).width); });
+    bw += compact ? 10 : 16;
+    var bh = fs * lines.length * 1.35 + (compact ? 6 : 10), pad = compact ? 5 : 8;
+    c.fillStyle = T.signBg; roundRect(c, sx, sy, bw, bh, 4); c.fill();
+    c.textBaseline = 'top'; c.textAlign = 'left';
+    lines.forEach(function (ln, j) { c.font = ln[0] + ' ' + fs + 'px ' + T.fMono; c.fillStyle = ln[2]; c.fillText(ln[1], sx + pad, sy + (compact ? 3 : 6) + fs * 1.35 * j); });
+  }
+
+  /* ---------- trend chart: last 2 hours ---------- */
+  var trend = document.getElementById('trend'), tctx = trend.getContext('2d');
+  function drawTrend() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2), W = trend.clientWidth, H = trend.clientHeight;
+    if (trend.width !== Math.round(W * dpr)) { trend.width = Math.round(W * dpr); trend.height = Math.round(H * dpr); }
+    var c = tctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+    var data = sim.min.slice(-121, -1); if (!data.length) return;
+    var padL = 34, padR = 48, top = 8, mainH = H * 0.6, stripTop = top + mainH + 18, stripH = H - stripTop - 16;
+    var n = 120, xw = (W - padL - padR) / (n - 1);
+    var x0 = padL + (n - data.length) * xw;
+    function xi(i) { return x0 + i * xw; }
+    function yo(o) { return top + mainH * (1 - o); }
+    c.fillStyle = T.band; c.fillRect(padL, yo(0.9), W - padL - padR, yo(0.8) - yo(0.9));
+    c.strokeStyle = T.rule2; c.lineWidth = 1;
+    [0, 0.5, 1].forEach(function (g) { c.beginPath(); c.moveTo(padL, yo(g) + 0.5); c.lineTo(W - padR, yo(g) + 0.5); c.stroke(); });
+    c.setLineDash([3, 3]); c.strokeStyle = T.good; c.beginPath(); c.moveTo(padL, yo(0.85) + 0.5); c.lineTo(W - padR, yo(0.85) + 0.5); c.stroke(); c.setLineDash([]);
+    c.font = '10px ' + T.fMono; c.fillStyle = T.ink3; c.textAlign = 'right'; c.textBaseline = 'middle';
+    c.fillText('100%', padL - 4, yo(1)); c.fillText('50%', padL - 4, yo(0.5)); c.fillText('0', padL - 4, yo(0));
+    var cmax = 4; data.forEach(function (b) { if (b.n) cmax = Math.max(cmax, b.circ / b.n); }); cmax = Math.ceil(cmax / 2) * 2;
+    c.fillStyle = T.accent; c.globalAlpha = 0.28; c.beginPath(); c.moveTo(xi(0), yo(0));
+    data.forEach(function (b, i) { c.lineTo(xi(i), yo((b.n ? b.circ / b.n : 0) / cmax)); });
+    c.lineTo(xi(data.length - 1), yo(0)); c.closePath(); c.fill(); c.globalAlpha = 1;
+    c.textAlign = 'left'; c.fillStyle = T.accent; c.fillText(cmax + ' cars', W - padR + 3, yo(1)); c.fillText('0', W - padR + 3, yo(0));
+    c.strokeStyle = T.parked; c.lineWidth = 2; c.beginPath();
+    data.forEach(function (b, i) { var o = b.n ? b.occ / b.n : 0; if (i) c.lineTo(xi(i), yo(o)); else c.moveTo(xi(i), yo(o)); });
+    c.stroke();
+    var pmax = 8; data.forEach(function (b) { pmax = Math.max(pmax, b.price); });
+    function yp(p) { return stripTop + stripH * (1 - p / pmax); }
+    c.strokeStyle = T.rule2; c.beginPath(); c.moveTo(padL, stripTop + stripH + 0.5); c.lineTo(W - padR, stripTop + stripH + 0.5); c.stroke();
+    c.strokeStyle = T.ink; c.lineWidth = 1.5; c.beginPath();
+    data.forEach(function (b, i) { var y = yp(b.price); if (i) { c.lineTo(xi(i), yp(data[i - 1].price)); c.lineTo(xi(i), y); } else c.moveTo(xi(i), y); });
+    c.stroke();
+    c.fillStyle = T.ink3; c.textAlign = 'right';
+    c.fillText('$' + pmax, padL - 4, stripTop + 2); c.fillText('$0', padL - 4, stripTop + stripH);
+    c.textAlign = 'left'; c.fillStyle = T.ink;
+    c.fillText('$' + data[data.length - 1].price.toFixed(2), Math.min(W - padR + 3, xi(data.length - 1) + 4), yp(data[data.length - 1].price) - 6);
+    c.fillStyle = T.ink3; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    data.forEach(function (b, i) { var m = START_MIN + b.t; if (m % 30 === 0) c.fillText(clockStr(m, true), xi(i), H - 1); });
+  }
+  function clockStr(m, short) {
+    m = ((m % 1440) + 1440) % 1440; var h = Math.floor(m / 60), mm = Math.floor(m % 60), ap = h >= 12 ? 'PM' : 'AM', hh = h % 12 || 12;
+    return hh + ':' + (mm < 10 ? '0' : '') + mm + (short ? '' : ' ' + ap);
+  }
+
+  /* ---------- panel text ---------- */
+  var $ = function (id) { return document.getElementById(id); };
+  function money(v) { return '$' + v.toFixed(2); }
+  // cars stopped in a line behind the Monterey Ave stop sign
+  function queueBehindM() {
+    var R = sim.cars.filter(function (c) { return c.lane === 'R' && (c.st === 'loop' || c.st === 'drive' || c.st === 'load') && c.s <= world.exitS; })
+      .sort(function (a, b) { return b.s - a.s; });
+    var q = 0, last = world.exitS;
+    for (var i = 0; i < R.length; i++) { if (last - R[i].s < 9.5) { q++; last = R[i].s; } else break; }
+    return q;
+  }
+  function updatePanel() {
+    var p = sim.price, w = sim.windowStats(60), open = NSP - sim.occNow;
+    var share = tryShare(p), txt;
+    if (ui.mode === 'resp') {
+      txt = 'Demand-responsive: every 10 minutes the rate rises while drivers circle or the curb is over 90% full, and falls below 75%. Now ' + money(p) + '.';
+    } else {
+      var d = p - P.lotPrice;
+      var rel = d > 0.001 ? money(d) + ' an hour more than the lots' : d < -0.001 ? money(-d) + ' an hour less than the lots' : 'the same as the lots';
+      txt = 'At ' + money(p) + ', ' + Math.round(share * 100) + '% of arriving drivers try the loop first. The rest head for the $1.00 lots.';
+    }
+    $('status').innerHTML = txt + '<span class="live">' + open + ' of ' + NSP + ' spaces open · ' + sim.circNow + ' circling · ' + queueBehindM() + ' backed up behind the Monterey stop · ' + sim.waitingIn + ' waiting to get in</span>';
+    var occ = sim.occNow / NSP;
+    $('occFill').style.width = (occ * 100).toFixed(1) + '%';
+    $('occFill').classList.toggle('full', occ >= 0.97);
+    $('occText').textContent = Math.round(occ * 100) + '% · ' + open + ' open';
+    $('tTrip').innerHTML = w.tripN ? w.trip.toFixed(1) + '<small>min</small>' : '–';
+    $('tTrip').classList.toggle('hot', w.tripN > 0 && w.trip > 9); $('tTrip').classList.toggle('ok', w.tripN > 0 && w.trip <= 6);
+    $('tCirc').innerHTML = sim.circNow + '<small>cars</small>'; $('tCirc').classList.toggle('hot', sim.circNow > 0);
+    $('tSearch').innerHTML = w.search.toFixed(1) + '<small>min</small>'; $('tSearch').classList.toggle('hot', w.search > 5);
+    $('tCruise').innerHTML = w.cruiseMi.toFixed(1) + '<small>mi/hr</small>'; $('tCruise').classList.toggle('hot', w.cruiseMi > 1);
+    $('tLeft').innerHTML = w.left.toFixed(1) + '<small>/hr</small>'; $('tLeft').classList.toggle('hot', w.left > 0.5);
+    $('tRev').innerHTML = '$' + Math.round(w.rev) + '<small>/hr</small>';
+    var m = START_MIN + sim.t / 60;
+    $('clock').innerHTML = ui.day && DAYS[ui.day] ? DAYS[ui.day].label + ' <b>' + clockStr(m) + '</b>' : 'Simulated time <b>' + clockStr(m) + '</b>';
+    if (ui.mode === 'resp') { $('price').value = p; $('priceOut').textContent = money(p) + '/hr'; }
+    drawTrend();
+    markSweep();
+  }
+
+  /* ---------- the rate sweep ---------- */
+  var sweep = null, sweepJob = 0;
+  var PRICES = []; for (var pp = 1; pp <= 8.001; pp += 0.5) PRICES.push(pp);
+  // the default summer Saturday, computed ahead with the same runs so the charts open complete
+  var PRESET = { lam: 135, rows: [{"trip":16.3,"occ":0.983,"circ":12.3,"left":9.8,"rev":127.5,"cruiseMi":18.6,"search":18.3,"p":1},{"trip":15.9,"occ":0.984,"circ":11.6,"left":7.8,"rev":191.5,"cruiseMi":18.9,"search":16.3,"p":1.5},{"trip":15.9,"occ":0.978,"circ":7.6,"left":5,"rev":253.8,"cruiseMi":15.8,"search":14.6,"p":2},{"trip":14.8,"occ":0.987,"circ":6.7,"left":5.5,"rev":320.2,"cruiseMi":16.7,"search":13,"p":2.5},{"trip":14.4,"occ":0.987,"circ":6.8,"left":3.8,"rev":384.3,"cruiseMi":16.8,"search":12.2,"p":3},{"trip":9.2,"occ":0.981,"circ":3,"left":3,"rev":445.2,"cruiseMi":13.5,"search":7,"p":3.5},{"trip":5,"occ":0.972,"circ":0.9,"left":1,"rev":504.4,"cruiseMi":7.1,"search":3.4,"p":4},{"trip":4.3,"occ":0.904,"circ":0,"left":0,"rev":527.5,"cruiseMi":1.1,"search":2.2,"p":4.5},{"trip":4.2,"occ":0.842,"circ":0,"left":0,"rev":546.3,"cruiseMi":0.4,"search":1.9,"p":5},{"trip":4.6,"occ":0.771,"circ":0,"left":0,"rev":549.8,"cruiseMi":0,"search":1.9,"p":5.5},{"trip":4.2,"occ":0.606,"circ":0,"left":0,"rev":471.4,"cruiseMi":0,"search":1.7,"p":6},{"trip":4.2,"occ":0.532,"circ":0,"left":0,"rev":448.5,"cruiseMi":0,"search":1.6,"p":6.5},{"trip":4.3,"occ":0.443,"circ":0,"left":0,"rev":402.4,"cruiseMi":0,"search":1.5,"p":7},{"trip":4.3,"occ":0.452,"circ":0,"left":0,"rev":439.8,"cruiseMi":0,"search":1.5,"p":7.5},{"trip":4.2,"occ":0.391,"circ":0,"left":0,"rev":405.4,"cruiseMi":0,"search":1.5,"p":8}] };
+  function runSweep() {
+    var job = ++sweepJob, lam = ui.lam, res = [], k = 0;
+    if (lam === PRESET.lam) { sweep = PRESET; drawSweep(); return; }
+    function next() {
+      if (job !== sweepJob) return;
+      $('sweepText').innerHTML = '<span class="computing">Running the model at fifteen rates from $1 to $8 for ' + lam + ' drivers an hour… ' + k + ' of 15</span>';
+      var p = PRICES[k];
+      var a = runHeadless(world, p, lam, 11, 60, 120), b = runHeadless(world, p, lam, 23, 60, 120);
+      var r = { p: p };
+      ['occ', 'circ', 'rev', 'cruiseMi', 'left', 'toLot', 'search', 'trip'].forEach(function (f) { r[f] = (a[f] + b[f]) / 2; });
+      res.push(r); k++;
+      if (k < PRICES.length) setTimeout(next, 0);
+      else { sweep = { lam: lam, rows: res }; drawSweep(); }
+    }
+    setTimeout(next, 30);
+  }
+  function interp(rows, p, f) {
+    if (p <= rows[0].p) return rows[0][f];
+    for (var i = 1; i < rows.length; i++) if (p <= rows[i].p) { var a = rows[i - 1], b = rows[i], t = (p - a.p) / (b.p - a.p); return a[f] + (b[f] - a[f]) * t; }
+    return rows[rows.length - 1][f];
+  }
+  function bestRow(rows) {
+    for (var i = 0; i < rows.length; i++) if (rows[i].occ <= 0.9 && rows[i].circ < 0.3) return rows[i];
+    return null;
+  }
+  function drawSweep() {
+    if (!sweep) return;
+    var rows = sweep.rows, at2 = rows[2], best = bestRow(rows), lam = sweep.lam, t;
+    if (at2.occ <= 0.9 && at2.circ < 0.3) {
+      t = 'At <b>' + lam + ' drivers an hour</b>, $2.00 already works: the loop meters average <b>' + Math.round(at2.occ * 100) + '% full</b>, nobody circles, and a trip around the loop takes about ' + Math.round(at2.trip) + ' minutes.';
+      if (at2.occ < 0.75) t += ' A lower rate would fill it closer to 85%, which is the case for charging less off-season.';
+    } else {
+      t = 'At <b>' + lam + ' drivers an hour</b>, $2.00 keeps the loop meters <b>' + Math.round(at2.occ * 100) + '% full</b>. Traffic backs up from the Monterey Ave stop, a trip around the loop takes about <b>' + Math.round(at2.trip) + ' minutes</b>, about ' + Math.round(at2.circ) + ' cars are circling at any moment, and ' + Math.round(at2.left) + ' drivers an hour give up on Capitola.';
+      if (best) t += ' At about <b>' + money(best.p) + '</b> the meters run ' + Math.round(best.occ * 100) + '% full, the circling stops, a trip around takes about <b>' + Math.round(best.trip) + ' minutes</b>, and the meters take in <b>$' + Math.round(best.rev) + ' an hour instead of $' + Math.round(at2.rev) + '</b>.';
+      else t += ' Even $8.00 doesn\'t clear the curb at this level of demand.';
+    }
+    $('sweepText').innerHTML = t;
+    markSweep(true);
+  }
+  var lastMark = 0;
+  function markSweep(force) {
+    if (!sweep) return;
+    var now = performance.now(); if (!force && now - lastMark < 600) return; lastMark = now;
+    var rows = sweep.rows, best = bestRow(rows), p = sim ? sim.price : 2;
+    var specs = [
+      { id: 'sw0', f: 'occ', max: 1, fmt: function (v) { return Math.round(v * 100) + '%'; }, band: true, color: T.parked },
+      { id: 'sw1', f: 'trip', max: null, fmt: function (v) { return Math.round(v) + 'm'; }, color: T.amber },
+      { id: 'sw2', f: 'circ', max: null, fmt: function (v) { return v.toFixed(v < 10 ? 1 : 0); }, color: T.accent },
+      { id: 'sw3', f: 'rev', max: null, fmt: function (v) { return '$' + Math.round(v); }, color: T.ink }
+    ];
+    specs.forEach(function (sp) {
+      var cv = $(sp.id), dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth, H = cv.clientHeight;
+      if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+      var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+      var padL = 40, padR = 10, top = 10, bot = 22, ph = H - top - bot, pw = W - padL - padR;
+      var max = sp.max; if (!max) { max = 0; rows.forEach(function (r) { max = Math.max(max, r[sp.f]); }); max = niceMax(max); }
+      function xp(v) { return padL + pw * (v - 1) / 7; }
+      function yv(v) { return top + ph * (1 - v / max); }
+      if (sp.band) { c.fillStyle = T.band; c.fillRect(padL, yv(0.9), pw, yv(0.8) - yv(0.9)); }
+      c.strokeStyle = T.rule2; c.lineWidth = 1; c.font = '10px ' + T.fMono; c.fillStyle = T.ink3; c.textAlign = 'right'; c.textBaseline = 'middle';
+      [0, 0.5, 1].forEach(function (g) { var y = yv(max * g); c.beginPath(); c.moveTo(padL, y + 0.5); c.lineTo(W - padR, y + 0.5); c.stroke(); c.fillText(sp.fmt(max * g), padL - 5, y); });
+      c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+      for (var d = 1; d <= 8; d++) c.fillText('$' + d, xp(d), H - 5);
+      c.setLineDash([3, 3]); c.strokeStyle = T.ink3; c.beginPath(); c.moveTo(xp(2) + 0.5, top); c.lineTo(xp(2) + 0.5, top + ph); c.stroke(); c.setLineDash([]);
+      c.fillStyle = T.ink3; c.textAlign = 'left'; c.fillText('today', xp(2) + 4, top + 10);
+      c.strokeStyle = sp.color; c.lineWidth = 2.2; c.beginPath();
+      rows.forEach(function (r, i) { var x = xp(r.p), y = yv(r[sp.f]); if (i) c.lineTo(x, y); else c.moveTo(x, y); }); c.stroke();
+      c.fillStyle = sp.color; rows.forEach(function (r) { c.beginPath(); c.arc(xp(r.p), yv(r[sp.f]), 2, 0, Math.PI * 2); c.fill(); });
+      if (best) { c.strokeStyle = T.good; c.lineWidth = 2; c.beginPath(); c.arc(xp(best.p), yv(best[sp.f]), 6, 0, Math.PI * 2); c.stroke(); }
+      var v = interp(rows, Math.min(8, p), sp.f);
+      c.fillStyle = T.ink; c.beginPath(); c.arc(xp(Math.min(8, p)), yv(v), 4.5, 0, Math.PI * 2); c.fill();
+    });
+  }
+  function niceMax(v) { if (v <= 0) return 1; var e = Math.pow(10, Math.floor(Math.log10(v))), m = v / e; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * e; }
+
+  /* ---------- controls ---------- */
+  function setPressed(ids, on) { ids.forEach(function (id) { $(id).setAttribute('aria-pressed', String(id === on)); }); }
+  // changing the rate or demand restarts the afternoon at the new setting, already settled
+  var restartTimer = null;
+  function restart(delay) {
+    clearTimeout(restartTimer);
+    restartTimer = setTimeout(function () { newSim(); updatePanel(); drawDynamic(performance.now()); markSweep(true); }, delay || 0);
+  }
+  function setMode(m) {
+    ui.mode = m;
+    setPressed(['pToday', 'pTry', 'pResp'], m === 'today' ? 'pToday' : m === 'try' ? 'pTry' : 'pResp');
+    $('price').disabled = m === 'resp';
+    if (m !== 'resp') { $('price').value = currentPrice(); $('priceOut').textContent = money(currentPrice()) + '/hr'; }
+    restart(0);
+  }
+  $('pToday').addEventListener('click', function () { setMode('today'); });
+  $('pTry').addEventListener('click', function () { setMode('try'); });
+  $('pResp').addEventListener('click', function () { setMode('resp'); });
+  $('price').addEventListener('input', function () {
+    var v = parseFloat(this.value);
+    ui.tryPrice = v;
+    if (ui.mode !== 'try') { ui.mode = 'try'; setPressed(['pToday', 'pTry', 'pResp'], 'pTry'); sim.mode = 'flat'; }
+    if (Math.abs(v - 2) < 0.001) { ui.mode = 'today'; setPressed(['pToday', 'pTry', 'pResp'], 'pToday'); }
+    $('priceOut').textContent = money(v) + '/hr';
+    restart(350);
+  });
+  var lamTimer = null;
+  function setLam(v, fromSlider) {
+    ui.lam = v; $('lamOut').textContent = v + ' / hr'; if (!fromSlider) $('lam').value = v;
+    restart(fromSlider ? 350 : 0);
+    var match = null; Object.keys(DAYS).forEach(function (k) { if (DAYS[k].lam === v) match = k; });
+    ui.day = match;
+    setPressed(['dWinter', 'dSpring', 'dSummer'], match === 'winter' ? 'dWinter' : match === 'spring' ? 'dSpring' : match === 'summer' ? 'dSummer' : '');
+    clearTimeout(lamTimer); lamTimer = setTimeout(runSweep, 450);
+  }
+  $('dWinter').addEventListener('click', function () { setLam(DAYS.winter.lam); });
+  $('dSpring').addEventListener('click', function () { setLam(DAYS.spring.lam); });
+  $('dSummer').addEventListener('click', function () { setLam(DAYS.summer.lam); });
+  $('lam').addEventListener('input', function () { setLam(parseInt(this.value, 10), true); });
+  $('pause').addEventListener('click', function () { ui.paused = !ui.paused; this.textContent = ui.paused ? 'Play' : 'Pause'; });
+  $('speed').addEventListener('click', function () { ui.speedIx = (ui.speedIx + 1) % ui.speeds.length; this.textContent = 'Speed: ' + ui.speeds[ui.speedIx].k; });
+  $('reset').addEventListener('click', function () { newSim(); updatePanel(); drawDynamic(performance.now()); });
+
+  /* ---------- loop ---------- */
+  var last = performance.now(), lastUI = 0;
+  function frame(now) {
+    var dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (!ui.paused) {
+      var simDt = dt * ui.speeds[ui.speedIx].v;
+      while (simDt > 0) { var h = Math.min(1, simDt); sim.step(h); simDt -= h; }
+    }
+    drawDynamic(now);
+    if (now - lastUI > 250) { lastUI = now; updatePanel(); }
+    requestAnimationFrame(frame);
+  }
+  function onTheme() { readTokens(); drawStatic(); drawDynamic(performance.now()); drawTrend(); markSweep(true); }
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', onTheme); else if (mq.addListener) mq.addListener(onTheme);
+  }
+  new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  var rz = null;
+  window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { sizeMap(); drawDynamic(performance.now()); drawTrend(); markSweep(true); }, 120); });
+
+  // start: a summer Saturday at today's $2.00, already early-afternoon busy
+  $('occH').textContent = 'Occupancy, all ' + NSP + ' loop meters';
+  newSim();
+  readTokens();
+  sizeMap();
+  $('pause').textContent = ui.paused ? 'Play' : 'Pause';
+  updatePanel();
+  drawDynamic(performance.now());
+  runSweep();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { drawStatic(); drawDynamic(performance.now()); });
+  requestAnimationFrame(function (t) { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

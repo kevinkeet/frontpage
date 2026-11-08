@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A Summer Rate for the Beach Loop · Capitola</title>
+<meta name="description" content="A summer peak rate on Capitola Village's beach-loop meters would end the circling and cut a trip around the loop from about 16 minutes to about 4.">
+<link rel="icon" href="/capitola/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* One page: the ask, the numbers, one chart, why it's fair, how we know. Same palette as the model page. */
+:root {
+  --paper: #F1F4F3; --card: #FFFFFF; --ink: #13232B; --ink2: #4A5D66; --ink3: #77898F; --rule: #D2DCDE; --rule2: #E5EBEC;
+  --accent: #D4452E; --blue: #2E6FB8; --muted: #A9B4B8; --band: rgba(46,158,87,.16); --btnOn: #13232B; --btnOnText: #FFFFFF;
+  --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0D191E; --card: #142229; --ink: #E2EBED; --ink2: #A0B3BA; --ink3: #6F848C; --rule: #2A3C44; --rule2: #1E2E35;
+    --accent: #F0664E; --blue: #6FA6E8; --muted: #5C6E75; --band: rgba(76,199,119,.16); --btnOn: #E2EBED; --btnOnText: #0D191E;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 800px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--blue); text-underline-offset: 2px; }
+.eyebrow { margin: 0; font-family: var(--f-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink2); }
+.eyebrow a { color: inherit; }
+.eyebrow .sep { margin: 0 .5em; opacity: .6; }
+.sections { display: flex; gap: 6px; margin: 10px 0 0; }
+.sections a { padding: 5px 14px; border: 1px solid var(--rule); border-radius: 999px; text-decoration: none; color: var(--ink2); font-size: 14px; font-weight: 600; background: var(--card); }
+.sections a[aria-current="page"] { background: var(--btnOn); color: var(--btnOnText); border-color: var(--btnOn); }
+h1 { margin: 18px 0 4px; font-family: var(--f-display); font-weight: 700; font-size: clamp(38px, 6vw, 56px); line-height: .98; text-wrap: balance; }
+.stamp { margin: 0 0 14px; font-size: 13px; color: var(--ink3); }
+.lead { font-size: 19px; line-height: 1.5; margin: 0 0 14px; max-width: 64ch; }
+.cta { display: inline-block; margin: 2px 0 6px; padding: 8px 14px; border-radius: 8px; background: var(--btnOn); color: var(--btnOnText); text-decoration: none; font-weight: 600; font-size: 15px; }
+h2 { margin: 30px 0 8px; font-family: var(--f-display); font-weight: 700; font-size: 28px; line-height: 1.05; text-wrap: balance; border-top: 2px solid var(--ink); padding-top: 12px; }
+ul { margin: 0; padding-left: 20px; }
+li { margin: 6px 0; }
+p { margin: 0 0 10px; max-width: 70ch; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); margin: 10px 0 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 460px; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule2); }
+th { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); font-weight: 500; }
+td:nth-child(2) { color: var(--ink2); }
+td:nth-child(3) { font-weight: 700; }
+tr:last-child td { border-bottom: 0; }
+.small { font-size: 13.5px; color: var(--ink2); }
+figure { margin: 10px 0 6px; padding: 12px; background: var(--card); border: 1px solid var(--rule); border-radius: 8px; }
+figure svg { display: block; width: 100%; height: auto; }
+figcaption { font-size: 12.5px; color: var(--ink3); margin-top: 6px; }
+.c-title { font: 600 16px var(--f-body); fill: var(--ink); }
+.c-sub, .c-tick, .c-note { font: 12px var(--f-body); fill: var(--ink2); }
+.c-panel { font: 600 12px var(--f-body); fill: var(--ink); }
+.c-grid { stroke: var(--rule2); }
+.c-line { fill: none; stroke: var(--muted); stroke-width: 2.5; }
+.c-dot { fill: var(--muted); }
+.c-today { fill: var(--ink2); }
+.c-today-line { stroke: var(--ink3); stroke-dasharray: 3 3; }
+.c-prop { fill: var(--blue); }
+.c-prop-line { stroke: var(--blue); stroke-opacity: .5; }
+.c-prop-text { font: 600 12px var(--f-body); fill: var(--blue); }
+.c-val { font: 12px var(--f-body); fill: var(--ink); }
+.c-band { fill: var(--band); }
+.sources { font-size: 13px; color: var(--ink2); }
+.sources li { margin: 3px 0; }
+footer { margin-top: 26px; font-size: 12.5px; color: var(--ink3); }
+@media print {
+  @page { margin: 0.5in; }
+  body { background: #fff; color: #000; font-size: 10.5pt; }
+  .wrap { max-width: none; padding: 0; }
+  .sections, .cta, footer { display: none; }
+  h1 { font-size: 26pt; margin-top: 4pt; }
+  h2 { font-size: 15pt; margin-top: 12pt; padding-top: 6pt; }
+  .lead { font-size: 11.5pt; }
+  figure, .tablewrap { break-inside: avoid; border-color: #ccc; }
+  a { color: #000; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow"><a href="/">kevinkeet.com</a><span class="sep" aria-hidden="true">/</span>Capitola Village, Santa Cruz County</p>
+  <nav class="sections" aria-label="Capitola"><a href="/capitola/">Flooding</a><a href="/capitola/parking/" aria-current="page">Parking</a></nav>
+
+  <h1>A summer rate for the beach loop</h1>
+  <p class="stamp">November 2026</p>
+  <p class="lead">On busy summer days, Capitola's $2.00 beach-loop meters fill up, and drivers circling for a space back traffic up from the Monterey Avenue stop sign. A summer peak rate of about $5 an hour on those meters would end the circling and cut a trip around the loop from about 16 minutes to about 4.</p>
+  <a class="cta" href="/capitola/parking/">Try the interactive model &rarr;</a>
+
+  <h2>What to ask the City for</h2>
+  <ul>
+    <li><b>A summer peak rate on the beach-loop meters only</b>: the Esplanade, the triangle at Monterey Avenue, Monterey Avenue and San Jose Avenue, on summer weekends and holidays, set so about one space in seven stays open.</li>
+    <li><b>Adjust it by the numbers</b>: count occupancy each season and move the rate in 25 to 50 cent steps, down as well as up.</li>
+    <li><b>Keep the cheap option cheap</b>: the Beach &amp; Village lots stay at $1.00 an hour and the summer shuttle stays free, with the added revenue spent on running the shuttle more.</li>
+  </ul>
+
+  <h2>A busy summer Saturday, today and with a $5 rate</h2>
+  <p>At $5 the meters run about 84% full, so arriving drivers find a space on their first pass instead of circling.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Per hour unless noted</th><th>$2.00 today</th><th>$5.00 summer rate</th></tr></thead>
+      <tbody>
+        <tr><td>Trip around the loop</td><td>about 16 minutes</td><td>about 4 minutes</td></tr>
+        <tr><td>Loop meters full</td><td>98%</td><td>84%</td></tr>
+        <tr><td>Cars circling at any moment</td><td>about 8</td><td>none</td></tr>
+        <tr><td>Drivers who give up on Capitola</td><td>about 5</td><td>none</td></tr>
+        <tr><td>Extra driving from circling</td><td>about 16 miles</td><td>under 1 mile</td></tr>
+        <tr><td>Meter revenue</td><td>about $250</td><td>about $550</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">Model estimates for 135 drivers an hour looking to park on the loop. On a spring weekend, $2.00 already works, so the rate should change with the season.</p>
+
+  <h2>Where the rate should be</h2>
+  <figure>
+    /*CHART*/
+    <figcaption>Cruising the Esplanade model · average of 2 runs per rate, 135 drivers an hour · November 2026</figcaption>
+  </figure>
+  <p>Up to about $3 the meters stay full and the loop crawls. By $4.50 the circling is gone, and higher rates mostly leave spaces empty.</p>
+
+  <h2>Why it's fair</h2>
+  <ul>
+    <li><b>The money stays at the coast.</b> Under the 2023 meter ordinance, parking revenue from the Coastal Zone may only fund coastal access, public safety and services there.</li>
+    <li><b>The beach stays cheap to reach.</b> The Beach &amp; Village lots, a quarter mile up Capitola Avenue, stay at $1.00 an hour for up to 12 hours. In the city's 2008 review those lots held 232 of 491 metered spaces but earned only 7 to 13 percent of meter revenue.</li>
+    <li><b>Neighbors already charge more.</b> Santa Cruz charges $3.00 an hour to park on its wharf this summer. Capitola's Village rate rose from $1.50 to $2.00 in 2024, its first increase since 2009.</li>
+    <li><b>The city has asked for this.</b> In 2023 its parking committee asked staff to find a way to tell drivers when the Esplanade is full. A rate that follows demand does that automatically.</li>
+  </ul>
+
+  <h2>How we know, and what we don't</h2>
+  <p>These numbers come from <a href="/capitola/parking/">an interactive model of the loop</a> where anyone can change the rate and demand and watch the result. Its streets, one-way directions, crosswalks and stop signs come from OpenStreetMap, its rates from city records, and its 130 spaces from aerial imagery. Drivers respond to price about as much as they did in San Francisco's citywide pricing program (elasticity about −0.4). Traffic is tuned so a summer loop at $2.00 takes 10 to 15 minutes and backs up from the Monterey Avenue stop, as it does in practice.</p>
+  <p>The city has no published counts of Esplanade occupancy or traffic, so demand and congestion are estimates. That is why the first summer should be a measured trial: count occupancy, time the loop, and adjust.</p>
+  <ul class="sources">
+    <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-5507d6bc9fa1493c82b82c896b8403e8/ITEM-Attachment-012-e25011a82146494eb943de6d14a2ee92.pdf">Modification to Parking Meter Rates</a>, June 8, 2023</li>
+    <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-7548a7c461d54c31a9683665ac4cfb79/ITEM-Attachment-001-fd05b61ca9cf45e8a80f44dcbbb18747.pdf">Temporary Village Parking Committee recommendations</a>, March 23, 2023</li>
+    <li>City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/884">Parking Committee report</a>, December 1, 2008</li>
+    <li>City of Santa Cruz, <a href="https://www.santacruzca.gov/Government/City-Departments/Parks-Recreation/Santa-Cruz-Wharf/Wharf-Parking-Information">Wharf Parking Information</a></li>
+    <li>Pierce and Shoup, <a href="https://doi.org/10.1080/01944363.2013.787307">Getting the Prices Right</a>, Journal of the American Planning Association, 2013</li>
+  </ul>
+  <footer>Model idea and layout after Paul Supawanich's <a href="https://civicmotion.org/resources/cruising-the-block">Cruising the Block</a> (CC BY-NC 4.0). Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>.</footer>
+</div>
+</body>
+</html>

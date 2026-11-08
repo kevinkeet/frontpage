@@ -68,6 +68,10 @@ a{color:var(--link);text-underline-offset:2px}
 .eyebrow .sep{margin:0 .4em;opacity:.6}
 h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.625rem,1.3rem + 1.4vw,2.125rem);line-height:1.1;letter-spacing:-.01em;margin:2px 0 0}
 .stamp{font-size:var(--fs-small);color:var(--ink-2);margin:4px 0 0}
+.sections{display:flex;gap:6px;margin:8px 0 6px}
+.sections a{padding:4px 13px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--ink-2);font-size:var(--fs-small);font-weight:600;background:var(--surface)}
+.sections a:hover{color:var(--ink)}
+.sections a[aria-current="page"]{background:var(--ink);color:var(--page);border-color:var(--ink)}
 
 /* ---- alerts and staleness */
 .alerts{display:grid;gap:8px;margin:12px 0 0}
@@ -209,6 +213,7 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
 <div class="page" id="page">
   <header>
     <p class="eyebrow"><a href="/">kevinkeet.com</a><span class="sep" aria-hidden="true">/</span>Capitola Village, Santa Cruz County</p>
+    <nav class="sections" aria-label="Capitola"><a href="/capitola/" aria-current="page">Flooding</a><a href="/capitola/parking/">Parking</a></nav>
     <h1>Capitola flood risk</h1>
     <p class="stamp"><span id="stamp">Loading…</span> A personal model, not an official forecast; for warnings, follow the <a href="https://www.weather.gov/mtr/">National Weather Service</a>.</p>
   </header>

@@ -1,0 +1,147 @@
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow"><a href="/">kevinkeet.com</a><span class="sep" aria-hidden="true">/</span>Capitola Village, Santa Cruz County</p>
+    <nav class="sections" aria-label="Capitola"><a href="/capitola/">Flooding</a><a href="/capitola/parking/" aria-current="page">Parking</a></nav>
+    <h1>Cruising the Esplanade</h1>
+    <p class="lede">A live model of Capitola Village's beach loop on a busy day. Change the meter rate and watch what happens to circling, the backup at the Monterey Avenue stop, and meter revenue. <a href="/capitola/parking/summer-rate/">Read the one-page case &rarr;</a></p>
+    <dl class="facts">
+      <div><dt>Meters on the loop</dt><dd>~130 spaces</dd></div>
+      <div><dt>Rate today</dt><dd>$2.00/hr · 3 hr max</dd></div>
+      <div><dt>Beach &amp; Village lots</dt><dd>$1.00/hr · 12 hr</dd></div>
+      <div><dt>The Village loop</dt><dd>0.31 mile</dd></div>
+    </dl>
+  </header>
+
+  <section class="sim" aria-label="Simulation">
+    <div class="card mapcard">
+      <div class="maphead">
+        <span class="clock" id="clock">Saturday <b>1:00 PM</b></span>
+        <span class="clock">One-way: Esplanade → either side of the triangle → Monterey Ave stop → Capitola Ave → back down San Jose Ave or Stockton Ave</span>
+      </div>
+      <div class="mapwrap"><canvas id="map" role="img" aria-label="Animated map of Capitola Village. Cars drive the one-way Esplanade along the beach, around the triangle, up Monterey Avenue to the stop sign at Capitola Avenue, and back down San Jose Avenue or Stockton Avenue. Green spaces are open."></canvas></div>
+      <ul class="legend" aria-label="Legend">
+        <li><span class="chip" style="background:var(--open)"></span>Open space</li>
+        <li><span class="chip" style="background:var(--parked)"></span>Parked</li>
+        <li><span class="chip" style="background:var(--amber)"></span>Looking, first pass</li>
+        <li><span class="chip" style="background:var(--accent)"></span>Missed a space, circling</li>
+        <li><span class="chip" style="background:var(--out)"></span>Other traffic, drop-offs, leaving</li>
+        <li><span class="chip" style="background:var(--lotc)"></span>Off to the lots</li>
+        <li><span class="dot"></span>People crossing</li>
+        <li><span class="chip" style="background:var(--hazard);width:10px"></span>Dropping off</li>
+      </ul>
+      <p class="mapnote">Streets, crosswalks and stop signs from OpenStreetMap; the 130 spaces counted from aerial imagery.</p>
+    </div>
+
+    <aside class="panel">
+      <div class="card controls">
+        <p class="status" id="status" aria-live="polite">Loading the model…</p>
+        <div>
+          <p class="grouplabel" id="rateLabel">Meter rate on the loop</p>
+          <div class="seg" role="group" aria-labelledby="rateLabel">
+            <button id="pToday" aria-pressed="true">Today: $2.00</button>
+            <button id="pTry" aria-pressed="false">Try a rate</button>
+            <button id="pResp" aria-pressed="false">Demand-responsive</button>
+          </div>
+        </div>
+        <label class="slider" for="price"><span>Meter rate</span><output id="priceOut">$2.00/hr</output>
+          <input type="range" id="price" min="1" max="8" step="0.25" value="2"></label>
+        <p class="hint">All 130 loop meters. The lots stay at $1.00. Changing a setting restarts the afternoon at that setting.</p>
+        <hr class="divider">
+        <div>
+          <p class="grouplabel" id="dayLabel">Demand</p>
+          <div class="seg" role="group" aria-labelledby="dayLabel">
+            <button id="dWinter" aria-pressed="false">Winter weekday</button>
+            <button id="dSpring" aria-pressed="false">Spring weekend</button>
+            <button id="dSummer" aria-pressed="true">Summer Saturday</button>
+          </div>
+        </div>
+        <label class="slider" for="lam"><span>Drivers looking to park on the loop</span><output id="lamOut">135 / hr</output>
+          <input type="range" id="lam" min="5" max="200" step="5" value="135"></label>
+        
+        <hr class="divider">
+        <div class="row">
+          <button id="pause">Pause</button>
+          <button id="speed">Speed: Normal</button>
+          <button id="reset">Reset</button>
+        </div>
+      </div>
+
+      <div class="card occ">
+        <h2 class="cardh" id="occH">Occupancy, all 130 loop meters</h2>
+        <p class="sub">Shaded band = 80–90% target, about one space in seven open</p>
+        <div class="bar"><div class="band"></div><div class="fill" id="occFill"></div><span id="occText">–</span></div>
+        <div class="tiles">
+          <div class="tile"><div class="k">Trip around the loop</div><div class="v" id="tTrip">–</div></div>
+          <div class="tile"><div class="k">Circling now</div><div class="v" id="tCirc">–</div></div>
+          <div class="tile"><div class="k">Arrival to parked</div><div class="v" id="tSearch">–</div></div>
+          <div class="tile"><div class="k">Extra driving</div><div class="v" id="tCruise">–</div></div>
+          <div class="tile"><div class="k">Gave up, left town</div><div class="v" id="tLeft">–</div></div>
+          <div class="tile"><div class="k">Meter revenue</div><div class="v" id="tRev">–</div></div>
+        </div>
+        <canvas id="trend" aria-label="Chart of occupancy, cars circling and the rate over the last two simulated hours"></canvas>
+        <p class="chartnote">Last 2 hours: occupancy (line), cars circling (shaded), rate (steps). Figures average the last hour.</p>
+      </div>
+    </aside>
+  </section>
+
+  <section class="block" aria-labelledby="sweepH">
+    <h2 id="sweepH">Where the rate should be</h2>
+    <p class="sweeptext" id="sweepText"><span class="computing">Running the model at fifteen rates from $1 to $8…</span></p>
+    <div class="minis">
+      <figure class="card"><figcaption>Loop meter occupancy</figcaption><canvas id="sw0" aria-label="Occupancy by rate"></canvas></figure>
+      <figure class="card"><figcaption>Trip around the loop, minutes</figcaption><canvas id="sw1" aria-label="Minutes for a trip around the loop by rate"></canvas></figure>
+      <figure class="card"><figcaption>Cars circling at any moment</figcaption><canvas id="sw2" aria-label="Cars circling by rate"></canvas></figure>
+      <figure class="card"><figcaption>Meter revenue, $ per hour</figcaption><canvas id="sw3" aria-label="Meter revenue by rate"></canvas></figure>
+    </div>
+    <p class="note">Each point is the model run at that rate, at the demand set above. Dashed line: today. Ringed dot: the lowest rate with no circling and at most 90% full. Filled dot: the slider.</p>
+  </section>
+
+  <details class="method block">
+    <summary><span>How the model works, assumptions and sources</span></summary>
+    <div class="methodbody">
+    <div class="prose">
+      <p>Each arriving driver has a stay in mind, a value on their time, and some amount of gear and kids to haul. They compare the full cost of a loop meter with the full cost of the lots (a cheaper meter plus a quarter-mile walk each way) and try the loop if it comes out ahead. Anyone who wants more than three hours goes straight to the lots. Drivers come in down Capitola Avenue to the Stockton corner, or down Monterey Avenue to the stop at Capitola. Drivers who find the curb full circle and look again, usually cutting down San Jose Avenue, and stop to wait when they see someone about to pull out. After each lap they decide whether a space is still worth the time; those who give up head for the lots or leave town. A new rate applies to drivers who arrive after you change it.</p>
+      <p>They share the loop with everyone else: through traffic, deliveries and people headed elsewhere in the Village, and drivers stopping at the corner by the triangle to unload people and gear, including some who then park in the lots. People cross at the marked crosswalks. Every car takes its turn at the two all-way stops, and the one at Monterey and Capitola, which every car leaving the Esplanade has to clear, is the slowest. When the loop is packed, cars wait to get in.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Input</th><th>Value</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Metered spaces</td><td>130</td><td><span class="tag">Counted</span>From aerial imagery: Esplanade 75 (62 angled, 13 parallel), the triangle lot 18, the angled leg of Monterey Ave on the triangle's west side 4, Monterey Ave 12, San Jose Ave 21. All in the same Village meter zone. The city's 2008 count was 184 metered spaces in the whole Village.</td></tr>
+          <tr><td>Meter rate</td><td>$2.00/hr, 3 hr max</td><td><span class="tag src">City</span>Village meter rate since January 2024, covering the Esplanade, Monterey, San Jose and Capitola Avenues.</td></tr>
+          <tr><td>Beach &amp; Village lots</td><td>$1.00/hr, 12 hr max</td><td><span class="tag src">City</span>Raised from $0.50 in the same 2023 ordinance.</td></tr>
+          <tr><td>Walk from the lots</td><td>~¼ mile, 7 min each way</td><td><span class="tag src">Map</span>OpenStreetMap distance from the lots behind City Hall to the Esplanade.</td></tr>
+          <tr><td>The loop</td><td>0.31 mile</td><td><span class="tag src">Map</span>Esplanade, then either the one-way aisle around the beach side of the triangle or Monterey Ave's angled leg on its west side, Monterey Ave, Capitola Ave, Stockton Ave, with one-way San Jose Ave as a shortcut back to the beach. Eleven marked crosswalks and two all-way stops, all from OpenStreetMap.</td></tr>
+          <tr><td>Stay drivers want</td><td>median 1¾ hr</td><td><span class="tag">Assumed</span>About 1 in 8 want more than 3 hours and use the lots.</td></tr>
+          <tr><td>Value of a visitor's time</td><td>median $20/hr</td><td><span class="tag">Assumed</span>Wide spread. Set with the gear cost so drivers' price response matches SFpark's −0.4.</td></tr>
+          <tr><td>Hauling gear and kids</td><td>avg $3 per visit</td><td><span class="tag">Assumed</span>The extra hassle of carrying chairs, coolers and children a quarter mile.</td></tr>
+          <tr><td>Patience</td><td>3 to 8 laps</td><td><span class="tag">Assumed</span>Or until the time lost is worth more to them than the space. With a summer loop taking 15 minutes, most drivers who miss give up after one more lap; a third of those who keep going make two or three. Drivers stop up to 40 s for someone they see pulling out.</td></tr>
+          <tr><td>Where drivers come from</td><td>35% down Monterey</td><td><span class="tag">Assumed</span>The rest come down Capitola Ave. Circling drivers cut down San Jose Ave two times in three. At the triangle, nearly half the drivers still looking take the angled leg, as do 60% of everyone else; drop-offs go around to the corner.</td></tr>
+          <tr><td>Where they're headed</td><td>anywhere on the loop</td><td><span class="tag">Assumed</span>Each driver has a destination somewhere along the beach and the shops. On a first pass they pass up most open spaces well short of it, and take any space on later laps.</td></tr>
+          <tr><td>Drivers who give up</td><td>1 in 5 leave town</td><td><span class="tag">Assumed</span>The rest go to the lots.</td></tr>
+          <tr><td>Demand</td><td>20 / 60 / 135 per hr</td><td><span class="tag">Assumed</span>Drivers looking to park on the loop on a winter weekday, spring weekend and summer Saturday. The city doesn't publish counts, so try your own with the slider.</td></tr>
+          <tr><td>Other traffic</td><td>1.2 vehicles per driver above</td><td><span class="tag">Tuned</span>About 160 an hour on a summer Saturday. Three in ten stop at the corner for about 75 seconds to drop off; so do a third of the drivers headed for the lots.</td></tr>
+          <tr><td>People crossing</td><td>up to 200 groups/hr</td><td><span class="tag">Tuned</span>Per busy crosswalk on a summer Saturday, each holding it about 7 seconds. A waiting driver gets a gap within 12 seconds.</td></tr>
+          <tr><td>Monterey/Capitola stop</td><td>~8 s per vehicle</td><td><span class="tag">Tuned</span>Every car leaving the Esplanade, cars coming down Monterey, and some cross traffic take turns, with crowds crossing. The Stockton/Capitola stop takes about 3 s per vehicle. Cars crawl at about 6 mph along the beach.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a summer Saturday at $2.00 traffic backs up from the Monterey Ave stop and a trip around the loop takes about 14 minutes, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; the Stockton Avenue bridge as a separate way in; and the residential permit areas nearby. The demand-responsive setting starts from today's $2.00 and changes the rate every 10 simulated minutes so you can watch it work, and it overshoots a little. A real program would set rates by season and time of day from a few weeks of counts.</p></div>
+  
+    <h3 class="srch">Sources</h3>
+    <ol>
+      <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-5507d6bc9fa1493c82b82c896b8403e8/ITEM-Attachment-012-e25011a82146494eb943de6d14a2ee92.pdf">Modification to Parking Meter Rates</a>, City Council agenda report, June 8, 2023.</li>
+      <li>City of Capitola, <a href="https://mccmeetingspublic.blob.core.usgovcloudapi.net/capitolaca-meet-7548a7c461d54c31a9683665ac4cfb79/ITEM-Attachment-001-fd05b61ca9cf45e8a80f44dcbbb18747.pdf">Temporary Village Parking Committee Summary and Recommendations</a>, March 23, 2023.</li>
+      <li>City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/884">Parking Committee Summary and Recommendations</a>, December 1, 2008.</li>
+      <li>City of Capitola, <a href="https://www.cityofcapitola.gov/DocumentCenter/View/1926">Capitola Village public parking and shuttle map</a>.</li>
+      <li>City of Santa Cruz, <a href="https://www.santacruzca.gov/Government/City-Departments/Parks-Recreation/Santa-Cruz-Wharf/Wharf-Parking-Information">Wharf Parking Information</a> (summer rate $3/hour, 2026).</li>
+      <li>Pierce, G. and Shoup, D. (2013). <a href="https://doi.org/10.1080/01944363.2013.787307">Getting the Prices Right: An Evaluation of Pricing Parking by Demand in San Francisco</a>. Journal of the American Planning Association 79(1): 67–81.</li>
+      <li>Weinberger, R., Millard-Ball, A. and Hampshire, R. (2020). <a href="https://millardball.its.ucla.edu/wp-content/uploads/sites/22/2022/06/Weinberger_Millard-Ball_Hampshire_2020_Parking_search_caused_congestion_fuss_preprint.pdf">Parking search caused congestion: Where's all the fuss?</a> Transportation Research Part C 120.</li>
+      <li>Shoup, D. (2005). The High Cost of Free Parking. APA Planners Press.</li>
+    </ol>
+    </div>
+  </details>
+
+  <footer><p>Map data, crosswalks and stop signs © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL). Space count from Esri World Imagery. The idea and layout follow Paul Supawanich's <a href="https://civicmotion.org/resources/cruising-the-block">Cruising the Block</a> (CivicMotion Consulting, CC BY-NC 4.0); this Capitola version is a separate model built for non-commercial use.</p></footer>
+</div>
