@@ -18,7 +18,7 @@
     <div class="card mapcard">
       <div class="maphead">
         <span class="clock" id="clock">Saturday <b>1:00 PM</b></span>
-        <span class="clock">One-way: Esplanade → either side of the triangle → Monterey Ave stop → Capitola Ave → back down San Jose Ave or Stockton Ave</span>
+        <span class="clock">One-way: Esplanade → either side of the triangle → Monterey Ave stop → Capitola Ave → back down San Jose Ave or Stockton Ave. Cars come in over the Stockton bridge, down Capitola Ave and down Monterey Ave.</span>
       </div>
       <div class="mapwrap"><canvas id="map" role="img" aria-label="Animated map of Capitola Village. Cars drive the one-way Esplanade along the beach, around the triangle, up Monterey Avenue to the stop sign at Capitola Avenue, and back down San Jose Avenue or Stockton Avenue. Green spaces are open."></canvas></div>
       <ul class="legend" aria-label="Legend">
@@ -45,7 +45,7 @@
           <div class="seg" role="group" aria-labelledby="rateLabel">
             <button id="pToday" aria-pressed="true">Today: $2.00</button>
             <button id="pTry" aria-pressed="false">Try a rate</button>
-            <button id="pMatch" aria-pressed="false">Matched to the crowd</button>
+            <button id="pMatch" aria-pressed="false">Recommended</button>
           </div>
         </div>
         <label class="slider" for="price"><span>Meter rate</span><output id="priceOut">$2.00/hr</output>
@@ -62,6 +62,7 @@
         </div>
         <label class="slider" for="vis"><span>Visitors to Capitola that day</span><output id="visOut">9,000 a day</output>
           <input type="range" id="vis" min="500" max="12000" step="500" value="9000"></label>
+        <p class="hint rec" id="recHint"></p>
         <p class="hint">A busy summer Saturday is about 9,000. At that crowd the model matches the city's 2008 counts (<a href="#study">below</a>).</p>
         
         <hr class="divider">
@@ -101,7 +102,14 @@
       <figure class="card"><figcaption>Share of the loop at a standstill</figcaption><canvas id="sw2" aria-label="Share of the loop at a standstill by rate"></canvas></figure>
       <figure class="card"><figcaption>Meter revenue, $ per hour</figcaption><canvas id="sw3" aria-label="Meter revenue by rate"></canvas></figure>
     </div>
-    <p class="note">Each point is a whole day at that rate with the visitors set above, measured from 1 to 3 PM. Dashed line: today. Ringed dot: the lowest rate that keeps the loop moving. Filled dot: the slider.</p>
+    <p class="note">Each point is a whole day at that rate with the visitors set above, measured from 1 to 3 PM. Dashed line: today. Ringed dot: the recommended rate (next section). Filled dot: the slider.</p>
+  </section>
+
+  <section class="block" id="recs" aria-labelledby="recsH">
+    <h2 id="recsH">The recommended rate for each crowd</h2>
+    <p class="sweeptext">For every crowd from 500 to 12,000 visitors, the model ran six whole days at each rate from $1 to $12 in 50-cent steps, about 3,300 days in all. The recommended rate is the lowest one that keeps the loop moving from 1 to 3 PM: fewer than one car circling on average and less than a tenth of the loop at a standstill, at that rate and at 50 cents more, so one lucky run can't set it. The rates are then smoothed so a bigger crowd never gets a lower rate, rounded to 50 cents, and never set below today's $2.00. Choose <b>Recommended</b> above to watch any crowd at its rate.</p>
+    <!--RECS-->
+    <p class="note">Hover a point for its numbers. Each point is the average of six runs; between runs of the same day the trip time varies by a minute or two. Above about 10,000 visitors, through traffic and drop-offs alone back up the loop, so no meter rate keeps it moving. The model's crowd sizes are estimates (no one counts daily visitors), so a real program would set the rate from a few weeks of occupancy counts and use this schedule as a starting point.</p>
   </section>
 
   <section class="block" id="study" aria-labelledby="studyH">
@@ -118,12 +126,12 @@
           <tr><td>How long visitors stay</td><td><b>3.4 hours</b>visitors surveyed; cars in the lot, 3.3 hours</td><td><b>3.4 hours</b>on average: beach 4.8, shopping 1.1, a meal 1.6</td><td><span class="tag study">From the study</span>The average matches the survey; the split by type is assumed.</td></tr>
           <tr><td>Visitors who come by car</td><td><b>82%</b>of 248 surveyed</td><td><b>82%</b></td><td><span class="tag study">From the study</span>Used as is.</td></tr>
           <tr><td>People per car</td><td><b>2.8</b>the study's figure for beach visitors</td><td><b>2.8</b></td><td><span class="tag study">From the study</span>Used as is.</td></tr>
-          <tr><td>Traffic along the Esplanade</td><td><b>3,055</b>vehicles a day, county count, July 2007 (3,607 in May 1998)</td><td><b>~2,600</b>from 8 AM to 8 PM</td><td><span class="tag">Check</span>On the tuned traffic: through trips, drop-offs and circling together.</td></tr>
+          <tr><td>Traffic along the Esplanade</td><td><b>3,055</b>vehicles a day, county count, July 2007 (3,607 in May 1998)</td><td><b>~2,400</b>from 8 AM to 8 PM</td><td><span class="tag">Check</span>On the tuned traffic: through trips, drop-offs and circling together.</td></tr>
           <tr><td>Cars parked at the peak</td><td><b>1,212</b>calculated demand, residents and workers included, for 1,036 spaces</td><td><b>~1,050</b>visitors' cars at 2 PM</td><td><span class="tag">Estimated</span>No one counts daily visitors. 9,000 is sized from this.</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="note">No one has counted circling or timed a lap, so those parts of the model are tuned to what locals report on a busy summer Saturday: a 10 to 15 minute crawl around the loop at midday. The city's 2008 <a href="https://web.archive.org/web/20220320182130/https://www.cityofcapitola.org/sites/default/files/fileattachments/public_works/page/2492/rbf_report_2008_v3.pdf">one-way traffic study</a> listed "eliminate grid-lock on the Esplanade" among its goals. The parking study's first recommendation was parking fees that rise when demand is high.</p>
+    <p class="note">No one has counted circling or timed a lap, so those parts of the model are tuned to what locals report on a busy summer Saturday: a 10 to 15 minute crawl around the loop at midday. (The model gives about 16 minutes at 9,000 visitors, a little more since cars started arriving over the Stockton bridge too.) The city's 2008 <a href="https://web.archive.org/web/20220320182130/https://www.cityofcapitola.org/sites/default/files/fileattachments/public_works/page/2492/rbf_report_2008_v3.pdf">one-way traffic study</a> listed "eliminate grid-lock on the Esplanade" among its goals. The parking study's first recommendation was parking fees that rise when demand is high.</p>
   </section>
 
   <details class="method block">
@@ -149,7 +157,7 @@
           <tr><td>Value of a visitor's time</td><td>median $20/hr</td><td><span class="tag">Assumed</span>Wide spread. With the gear costs, drivers overall respond to price about like SFpark's average, −0.4 between $2 and $4: beachgoers who know the lots switch readily; shoppers, diners and visitors who don't know the lots, less.</td></tr>
           <tr><td>Hauling gear and kids</td><td>avg $10, beach day</td><td><span class="tag">Assumed</span>The hassle of carrying umbrellas, coolers, chairs and children a quarter mile and back. About $1 for shopping or a meal, $3 for other trips.</td></tr>
           <tr><td>Patience</td><td>3 to 8 laps</td><td><span class="tag">Assumed</span>Or until the time lost is worth more to them than the space. With a summer loop taking 15 minutes, most drivers who miss give up after one more lap; a third of those who keep going make two or three. Drivers stop up to 40 s for someone they see pulling out.</td></tr>
-          <tr><td>Where drivers come from</td><td>35% down Monterey</td><td><span class="tag">Assumed</span>The rest come down Capitola Ave. Circling drivers cut down San Jose Ave two times in three. At the triangle, nearly half the drivers still looking take the angled leg, as do 60% of everyone else; drop-offs go around to the corner.</td></tr>
+          <tr><td>Where drivers come from</td><td>39% over the Stockton bridge, 35% down Monterey, 26% down Capitola Ave</td><td><span class="tag">Assumed</span>Of the cars not coming down Monterey Ave from Park Ave, a local estimate puts 60% over the Stockton Avenue bridge, joining the Esplanade where it starts, and 40% down Capitola Ave to the Stockton stop. When the loop is packed, new cars get in by turns in the order they arrived, and traffic coming down Stockton takes turns with cars off the bridge. Circling drivers cut down San Jose Ave two times in three. At the triangle, nearly half the drivers still looking take the angled leg, as do 60% of everyone else; drop-offs go around to the corner.</td></tr>
           <tr><td>Where they're headed</td><td>anywhere on the loop</td><td><span class="tag">Assumed</span>Each driver is headed for a spot somewhere on the loop, spread the way the spaces are, and takes the side of the triangle or San Jose Avenue it's on. On a first pass most hold out for a space within a few car lengths of it, or anything past it. The busier the loop, the more drivers take the first open space they see: one in twelve when it's quiet, all of them above 98% full. Later laps, any space.</td></tr>
           <tr><td>Drivers who give up</td><td>1 in 5 leave town</td><td><span class="tag">Assumed</span>The rest go to the lots, or farther out once the lots are full.</td></tr>
           <tr><td>Visitors</td><td>1,500 / 4,500 / 9,000 a day</td><td><span class="tag">Estimated</span>Winter weekday, spring weekend, busy summer Saturday. No one publishes daily counts. The summer figure is sized from the city's 2008 parking study, which calculated peak Village parking demand of about 1,212 cars for 1,036 spaces; 9,000 visitors puts about 1,050 visitors' cars in the Village at once at 2 PM. 82% arrive by car and 2.8 to a car (both from the 2008 study); 45% of those look for a loop space first (<span class="tag">Assumed</span>).</td></tr>
@@ -159,7 +167,7 @@
         </tbody>
       </table>
     </div>
-    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a busy summer Saturday at $2.00 the whole loop backs up by midday, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; the Stockton Avenue bridge as a separate way in; and the residential permit areas nearby. "Matched to the crowd" picks the lowest all-day rate that keeps the loop moving for the visitors set. A real program would set rates by season and time of day from a few weeks of counts.</p></div>
+    <div class="prose" style="margin-top:14px"><p>The "tuned" settings are set so that on a busy summer Saturday at $2.00 the whole loop backs up by midday, which matches what locals report. <b>What it leaves out:</b> people shortening their visits when the rate rises; the meters on Capitola Avenue itself; the yellow loading zone on the angled leg of Monterey Avenue; drivers leaving the Village over the Stockton Avenue bridge (all leave by Monterey or Capitola Avenue); and the residential permit areas nearby. "Recommended" runs the day at the recommended rate for the visitors set (see <a href="#recs">the schedule</a>). A real program would set rates by season and time of day from a few weeks of counts.</p></div>
   
     <h3 class="srch">Sources</h3>
     <ol>

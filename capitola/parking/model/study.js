@@ -12,10 +12,15 @@ function one(seed) {
   const seen = new Map();   // car id -> { first, last, tPark, tDep } while parked on the loop, 11 to 5
   let occS = 0, occN = 0, occMax = 0, lotS = 0, lotMax = 0, lotFullAt = null, dgWait = [], sjWait = [];
   let dgMax = 0, sjMax = 0, pm = null, dgQ = 0, sjQ = 0, fullH = 0, espN = 0, firstFull = null, lastFull = null;
-  const prevS = new Map(), CUT = 200;
+  const prevS = new Map(), CUT = 200, prevL = new Map(), inWait = { AJ: [], AM: [], AS: [] }, inQ = { AJ: 0, AM: 0, AS: 0 };
   for (let t = 1; t <= H(20); t++) {
     sim.step(1);
     if (sim._lotFull()) { fullH += 1 / 3600; if (firstFull == null) firstFull = 8 + t / 3600; lastFull = 8 + t / 3600; }
+    for (const c of sim.cars) {   // time from arriving to getting onto the loop, by way in (1-3 PM)
+      const pl = prevL.get(c.id);
+      if (pl && pl !== c.lane && inWait[pl] && t >= H(13) && t <= H(15)) inWait[pl].push(t - c.tArr);
+      if (inWait[c.lane]) prevL.set(c.id, c.lane); else prevL.delete(c.id);
+    }
     for (const c of sim.cars) { if (c.lane === 'R') { const q = prevS.get(c.id); if (q != null && q < CUT && c.s >= CUT) espN++; prevS.set(c.id, c.s); } else prevS.delete(c.id); }
     if (t > H(17)) continue;
     if (lotFullAt == null && sim._lotFull()) lotFullAt = 8 + t / 3600;
@@ -30,6 +35,7 @@ function one(seed) {
     for (const c of sim.cars) {
       if (c.lane === 'DG' && c.tStopDG != null) { dgMax = Math.max(dgMax, t - c.tStopDG); dgQ++; }
       if (c.lane === 'SJ' && c.tStopSJ != null) { sjMax = Math.max(sjMax, t - c.tStopSJ); sjQ++; }
+      if (t >= H(13) && t <= H(15) && inQ[c.lane] != null) inQ[c.lane]++;
     }
   }
   const recs = [...seen.values()];
@@ -39,7 +45,8 @@ function one(seed) {
     occ: occS / occN, occMax, lot: lotS / occN, lotMax, lotFullAt, fullH, espN, firstFull: firstFull || 0, lastFull: lastFull || 0,
     perSpace: recs.length / sim.spaces.length, stayWin: inWin, stayFull: full.reduce((a, b) => a + b, 0) / full.length,
     dgQ: dgQ / occN, sjQ: sjQ / occN, shopDine: pm.shopDine, beachIn: pm.beachIn, beachHeld: pm.beachHeld, shopHeld: pm.shopHeld, trip: pm.trip, standstill: pm.standstill, circ: pm.circ, far: pm.far, left: pm.left, toLot: pm.toLot, dgMax, sjMax,
-    skips: sim.skips || 0
+    skips: sim.skips || 0,
+    ...Object.fromEntries(Object.keys(inWait).flatMap(k => { const a = inWait[k]; return [['w' + k, a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0], ['x' + k, a.length ? Math.max(...a) : 0], ['n' + k, a.length / 2], ['q' + k, inQ[k] / 721]]; }))
   };
 }
 const rs = seeds.map(one), avg = k => rs.reduce((a, r) => a + (r[k] || 0), 0) / rs.length;
@@ -53,3 +60,4 @@ console.log(`  average stay seen 11-5: ${avg('stayWin').toFixed(2)} h; whole sta
 console.log(`  1-3 PM: trip ${avg('trip').toFixed(1)} min, ${pct(avg('standstill'))} stopped, ${avg('circ').toFixed(1)} circling, ${avg('toLot').toFixed(0)}/hr to lots or farther (${avg('far').toFixed(0)}/hr farther), ${avg('left').toFixed(1)}/hr leave`);
 console.log(`  1-3 PM: shoppers & diners parked ${avg('shopDine').toFixed(0)}/hr, beachgoers ${avg('beachIn').toFixed(0)}/hr; spaces held by beachgoers ${pct(avg('beachHeld'))}, by shoppers & diners ${pct(avg('shopHeld'))}`);
 console.log(`  merges: longest wait angled leg ${avg('dgMax').toFixed(0)} s, San Jose ${avg('sjMax').toFixed(0)} s; cars waiting on average ${avg('dgQ').toFixed(2)} / ${avg('sjQ').toFixed(2)}`);
+console.log(`  getting in, 1-3 PM (cars/hr, average and longest wait, average line):` + [['AS', 'Stockton bridge'], ['AJ', 'Capitola Ave'], ['AM', 'Monterey Ave']].map(([k, n]) => `\n    ${n.padEnd(16)} ${avg('n' + k).toFixed(0).padStart(4)}/hr  ${avg('w' + k).toFixed(0).padStart(4)} s avg  ${avg('x' + k).toFixed(0).padStart(5)} s max  ${avg('q' + k).toFixed(1).padStart(5)} cars`).join(''));

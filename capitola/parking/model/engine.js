@@ -25,7 +25,8 @@ var P = {
   patienceMin: 3, patienceMax: 8,  // most laps a driver will tolerate
   hoverSec: 30, hoverMax: 40,      // stop and wait for someone clearly about to pull out
   // where traffic comes from and goes
-  viaMonterey: 0.35,               // arrivals coming down Monterey Ave from Park Ave (the rest come down Capitola Ave)
+  viaMonterey: 0.35,               // arrivals coming down Monterey Ave from Park Ave
+  viaStockton: 0.6,                // of the rest, the share coming over the Stockton Ave bridge (a local's estimate); the others come down Capitola Ave
   sjShare: 0.65,                   // circling drivers who cut down San Jose Ave instead of going around by Stockton
   sjShareNew: 0.5,                 // drivers arriving down Monterey who take San Jose Ave to the beach
   zipper: 5,                       // seconds before traffic lets a merging car in
@@ -116,7 +117,7 @@ function Sim(world, opts) {
   this.nextLot = expo(this.rng, this._lotRate());
   // the lots: cars parked there, by when they leave (sorted)
   this.lot = { out: [] };
-  this.merge = { SJ: { s: world.sjBot, wait: null, rPassed: 1 }, DG: { s: world.sMontJoin, wait: null, rPassed: 1 } };
+  this.merge = { SJ: { s: world.sjBot, wait: null, rPassed: 1 }, DG: { s: world.sMontJoin, wait: null, rPassed: 1 }, ST: { s: world.espS0, wait: null, rPassed: 1, res: null } };
   this.nextAdjust = 600; this.id = 0;
   this.min = []; this._newBucket();
   this.totals = { lotFirst: 0, diverted: 0, left: 0, parked: 0, far: 0 };
@@ -182,15 +183,18 @@ Sim.prototype.setLambda = function (l) {
   this.nextBg = Math.min(this.nextBg, this.t + expo(this.rng, P.bgK * l));
 };
 Sim.prototype._spawn = function (kind, d, tArr) {
-  var rng = this.rng, viaM = rng() < P.viaMonterey;
+  // the way in: down Monterey Ave, over the Stockton Ave bridge, or down Capitola Ave
+  var rng = this.rng, viaM = rng() < P.viaMonterey, lane = viaM ? 'AM' : rng() < P.viaStockton ? 'AS' : 'AJ';
   // a long line into the Village turns people away: drivers head for the lots, others go elsewhere
-  var q = (viaM ? this.qAM : this.qAJ) || 0;
+  var q = (lane === 'AM' ? this.qAM : lane === 'AS' ? this.qAS : this.qAJ) || 0;
   if (kind === 'seek' && d.v * (q * P.balkSec / 3600) > P.balkFrac * advantage(d, this.price, this._lotFull())) {
     this.cur.toLot++; this.totals.lotFirst++; this.cur.balked++; this._divert(d);
     return;
   }
   if (kind !== 'seek' && rng() < Math.min(0.8, q / P.balkCars)) return;
-  var c = { id: ++this.id, kind: kind, d: d, lane: viaM ? 'AM' : 'AJ', s: 0, st: kind === 'seek' ? 'loop' : 'drive', laps: 0, tArr: tArr, odo: 0, odoMark: 0,
+  var back = 0;   // join the back of the line (off the map if it's long)
+  for (var i = 0; i < this.cars.length; i++) if (this.cars[i].lane === lane && this.cars[i].st !== 'gone') back = Math.min(back, this.cars[i].s - P.gap);
+  var c = { id: ++this.id, kind: kind, d: d, lane: lane, s: back, st: kind === 'seek' ? 'loop' : 'drive', laps: 0, tArr: tArr, odo: 0, odoMark: 0,
     exit: null, route: null, searched: false, dropped: false, leaving: false };
   if (kind === 'seek') { c.adv = advantage(d, this.price, this._lotFull()); c.tsp = this.spaces[Math.floor(rng() * this.spaces.length)]; c.target = c.tsp.pos; c.grab = rng() < this._takeEarly(); }   // destinations spread like the spaces
   else if (kind === 'drop') { c.exit = rng() < 0.5 ? 'J' : 'M'; if (viaM) c.route = 'SJ'; }
@@ -234,15 +238,23 @@ Sim.prototype.step = function (dt) {
   }
 
   // sort cars into lanes
-  var lanes = { R: [], SJ: [], DG: [], AJ: [], AM: [] };
+  var lanes = { R: [], SJ: [], DG: [], AJ: [], AM: [], AS: [] };
   for (i = 0; i < this.cars.length; i++) { c = this.cars[i]; if (c.st !== 'parked' && c.st !== 'gone') lanes[c.lane].push(c); }
   for (var ln in lanes) lanes[ln].sort(function (p, q) { return p.s - q.s; });
   var R = lanes.R;
-  this.ringN = R.length; this.qAJ = lanes.AJ.length; this.qAM = lanes.AM.length;
+  this.ringN = R.length; this.qAJ = lanes.AJ.length; this.qAM = lanes.AM.length; this.qAS = lanes.AS.length;
   var ringRoom = function (from, to) {
     for (var m = 0; m < R.length; m++) { var q = R[m].s; if (q >= from && q < to) return false; }
     return true;
   };
+
+  // new cars get into a packed loop in the order they arrived, whichever way they came in
+  var heads = [], hd;
+  hd = lanes.AJ[lanes.AJ.length - 1]; if (hd && hd.queued === 'J') heads.push(['AJ', hd.tArr]);
+  hd = lanes.AM[lanes.AM.length - 1]; if (hd && hd.queued === 'M') heads.push(['AM', hd.tArr]);
+  hd = lanes.AS[lanes.AS.length - 1]; if (hd && hd.tStopST != null) heads.push(['AS', hd.tArr]);
+  heads.sort(function (p, q) { return p[1] - q[1]; });
+  this.entryRank = {}; for (var h0 = 0; h0 < heads.length; h0++) this.entryRank[heads[h0][0]] = h0;
 
   // 3. all-way stops: one vehicle at a time, cross traffic included; nobody enters without room beyond
   for (var id in this.inter) {
@@ -284,7 +296,7 @@ Sim.prototype.step = function (dt) {
 
   // 5. San Jose Ave (one-way south): park, then stop and merge onto the Esplanade.
   // Merges zipper: once a car on the main lane has gone by, the next one holds back for the waiting car.
-  var MG = this.merge; MG.SJ.wait = MG.DG.wait = null;
+  var MG = this.merge; MG.SJ.wait = MG.DG.wait = MG.ST.wait = null;
   var SJ = lanes.SJ, sjStop = w.sjLen - 0.6;
   for (var m2 = SJ.length - 1; m2 >= 0; m2--) {
     c = SJ[m2];
@@ -299,7 +311,7 @@ Sim.prototype.step = function (dt) {
     c.odo += ns3 - c.s; c.s = ns3;
     if ((c.st === 'loop' || c.st === 'drive') && c.s >= sjStop - 0.6) {
       if (c.tStopSJ == null) c.tStopSJ = t;
-      var waited = t - c.tStopSJ, sb = w.sjBot, capOK = R.length < P.ringCap * L / gap;
+      var waited = t - c.tStopSJ, sb = w.sjBot, capOK = R.length + (MG.ST.res ? 1 : 0) < P.ringCap * L / gap;
       if (capOK && waited >= P.stopDwell) MG.SJ.wait = c;
       var room = ringRoom(sb - P.carLen, sb + gap) && (MG.SJ.rPassed >= 1 || ringRoom(sb - 14, sb - P.carLen));
       if (waited >= P.stopDwell && capOK && room) {
@@ -315,6 +327,26 @@ Sim.prototype.step = function (dt) {
   // cars already circling, waiting at the foot of San Jose, go before new cars enter the loop
   this.sjWaiting = 0;
   for (var m5 = 0; m5 < SJ.length; m5++) if (SJ[m5].lane === 'SJ' && SJ[m5].tStopSJ != null) this.sjWaiting++;
+
+  // 5a. over the Stockton Ave bridge: cars turn onto the Esplanade, taking turns with traffic coming down Stockton
+  var AS = lanes.AS, brEnd = w.brLen - 0.6, se = w.espS0;
+  for (var m6 = AS.length - 1; m6 >= 0; m6--) {
+    c = AS[m6];
+    var lim6 = m6 === AS.length - 1 ? brEnd : AS[m6 + 1].s - gap;
+    var ns6 = Math.max(c.s, Math.min(c.s + P.vApp * dt, lim6));
+    if (ns6 - c.s < 0.05 * dt) this.waitingIn++;
+    c.odo += ns6 - c.s; c.s = ns6;
+    if (m6 === AS.length - 1 && c.s >= brEnd - 0.6) {
+      if (c.tStopST == null) c.tStopST = t;
+      if (MG.ST.res !== c && this._entryOK('AS', R.length)) MG.ST.res = c;   // its turn and room on the loop: it claims a slot
+      if (MG.ST.res === c) MG.ST.wait = c;   // ... and traffic down Stockton leaves it a gap
+      if (MG.ST.res === c && ringRoom(se - P.carLen, se + gap) && (MG.ST.rPassed >= 1 || ringRoom(se - 14, se - P.carLen))) {
+        MG.ST.wait = null; MG.ST.rPassed = 0; MG.ST.res = null;
+        c.lane = 'R'; c.s = se + 0.1; c.tStopST = null; c.tEsp = t;
+        R.push(c); R.sort(function (p, q) { return p.s - q.s; });
+      }
+    }
+  }
 
   // 5b. the angled leg on the west side of the triangle: park, then merge back where it meets the beach aisle
   var DG = lanes.DG, dgEnd = w.dgLen - 0.6, sm = w.sMontJoin;
@@ -530,12 +562,17 @@ Sim.prototype._roomPast = function (f, id, ringRoom, ringN) {
   var w = this.w, gap = P.gap, L = w.loopLen;
   if (id === 'M') {
     if (f.lane === 'R' && f.exit === 'M') return true;                   // leaving north on Monterey
-    if (f.lane === 'AM' && ringN + (this.sjWaiting || 0) >= P.ringCap * L / gap) return false;   // the loop is packed: wait on Monterey
+    if (f.lane === 'AM' && !this._entryOK('AM', ringN)) return false;   // the loop is packed: wait on Monterey
     return ringRoom(w.exitS - 1, w.exitS + gap);
   }
   if (f.lane === 'R' && (f.exit === 'J' || f.leaving)) return true;      // leaving up Capitola Ave
-  if (f.lane === 'AJ') return ringN + (this.sjWaiting || 0) < P.ringCap * L / gap && ringRoom(0, 2 * gap) && ringRoom(L - 1, L + 1);
+  if (f.lane === 'AJ') return this._entryOK('AJ', ringN) && ringRoom(0, gap) && ringRoom(L - 1, L + 1);
   return ringRoom(0, gap);
+};
+// room for one more car on the loop? Cars circling back down San Jose go first, then the ways in by how long their front car has waited
+Sim.prototype._entryOK = function (lane, ringN) {
+  var free = P.ringCap * this.w.loopLen / P.gap - ringN - (this.sjWaiting || 0) - (this.merge.ST.res ? 1 : 0);   // a bridge car's claimed slot counts
+  return free > ((this.entryRank && this.entryRank[lane]) || 0);
 };
 Sim.prototype._crosswalkLimit = function (c, lane, lim, step, t) {
   for (var k = 0; k < this.xw.length; k++) {

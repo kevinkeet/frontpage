@@ -9,14 +9,20 @@ both pages). The repo is public and Pages serves this folder, so keep personal n
 `python3 build.py` writes `../index.html` and `../summer-rate/index.html`. Edit the parts, never the built pages:
 
 - `engine.js`: the traffic and parking simulation (1-D lanes, 1-second steps). Parameters in `P` at the top.
-- `world.js`: geometry. The loop, San Jose Ave, the angled leg (diag), approach lanes and the 130 spaces.
-- `app.js`: the page (canvas map with stopped-traffic shading, controls, day chart, rate sweep). `SWEEPS` holds the baked
-  sweeps from `sweeps.json`; other visitor numbers are computed live (8 rates, 1 run each).
+- `world.js`: geometry. The loop, San Jose Ave, the angled leg (diag), the three ways in (Capitola Ave `spur`, Monterey Ave
+  `amPath`, the Stockton Ave bridge `br`) and the 130 spaces.
+- `app.js`: the page (canvas map with stopped-traffic shading, controls, day chart, rate sweep). `build.py` writes `sweeps.json`
+  into `SWEEPS` and `recommend.json` into `REC` (placeholders `/*SWEEPS*/{}` and `/*REC*/[]`); nothing to paste by hand.
 - `css_part.html`, `body_part.html`: page styles and markup. `onepager.html`: the one-pager (its chart is drawn by `build.py`
   from `sweeps.json`; the numbers in its text and table are typed and come from `sweeps.json` too).
-- `sweeps.json`: whole-day results by crowd size and rate ($1 to $12, 1-3 PM window), from `node bake.js <crowds> <runs> [out.json]`.
-  1,500 and 4,500 use 2 runs; 6,000, 7,500 and 9,000 use 4. Bake crowds in parallel into separate files, then
-  `node bake.js merge a.json b.json ...`. Then paste sweeps.json into the `var SWEEPS = ...;` line of `app.js`.
+- `sweeps.json`: whole-day results by crowd size and rate ($1 to $12 by $0.50, 1-3 PM window), from
+  `node bake.js <crowds> <runs> [out.json]`. Every visitor-slider step (500 to 12,000 by 500) is baked with 6 runs (~7 min on
+  12 cores: 12 processes of two crowds each, pairing low with high, into separate files, then `node bake.js merge a.json ...`
+  after moving the old sweeps.json aside, since merge adds to it).
+- `recommend.js` -> `recommend.json`: the recommended rate for each crowd (rule in the file's header: lowest rate with <1 car
+  circling and <10% of the loop stopped at that rate and $0.50 more, smoothed so bigger crowds never get lower rates, rounded to
+  $0.50, floored at $2.00). The model page's "Recommended" button, its rate-chart rings, the #recs section (chart + table drawn
+  by `build.py`) and the one-pager's schedule table all read it.
 - `osm/geo.json`, `osm/paths.json`: OpenStreetMap streets, buildings, shoreline, crosswalks, projected to meters
   (x east, y north, origin near 36.9725 N, 121.95 W).
 
@@ -32,8 +38,8 @@ both pages). The repo is public and Pages serves this folder, so keep personal n
 - `node calib.js '[{"gearMean":10}]'`: drivers' price response (target about -0.4 between $2 and $4).
 - `node verify.js`, `prof.js`, `test5.js`: older constant-demand checks (`runHeadless`).
 
-If `engine.js`, `world.js` or settings change, re-run `bake.js` for 1500,4500 (2 runs) and 6000,7500,9000 (4 runs), rebuild, and
-update the typed numbers in `onepager.html` and `body_part.html` from `sweeps.json`.
+If `engine.js`, `world.js` or settings change, re-bake every crowd (6 runs), run `node recommend.js`, rebuild, and update the
+typed numbers in `onepager.html` and `body_part.html` from `sweeps.json` / `recommend.json`.
 
 ## What is measured and what is tuned
 
@@ -75,6 +81,13 @@ update the typed numbers in `onepager.html` and `body_part.html` from `sweeps.js
 ## Engine lessons
 
 - An all-way stop's queue must skip a car that has no room past the stop, or the loop gridlocks.
+- Three ways in (Nov 8, Kevin: ~60% of non-Monterey arrivals come over the Stockton bridge, 40% down Capitola Ave; `viaStockton`).
+  Bridge cars join the Esplanade at its start (`espS0`) by zipper with traffic coming down Stockton. When the loop is packed
+  (`ringCap`), free slots go to the ways in by the arrival time of each line's front car (`entryRank`, `_entryOK`); a bridge car
+  first claims a slot (`merge.ST.res`, counted against the cap) and only then do Stockton cars hold back for it. Holding them
+  back without a claimed slot gridlocked the loop; a fixed check order starved whichever way in was checked last.
+- Approach lines must be first-in, first-out: new arrivals join behind the last car (negative `s`, off the map). Stacking them
+  all at s = 0 let the newest car go first and left one car waiting hours (the old Capitola Ave line had this too).
 - Cars may only enter a packed loop when there is room (`ringCap`); otherwise the line stays on the approach street.
 - With 1-second steps, stop service times round up to whole seconds.
 - Merges zipper: when it's the merging car's turn, main-lane cars stop one car length (`carLen`) short of the merge point and

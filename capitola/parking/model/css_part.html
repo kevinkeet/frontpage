@@ -167,6 +167,16 @@ table.cmp td b { display: block; font-family: var(--f-display); font-weight: 600
 table.cmp td:nth-child(3) b { color: var(--good); }
 table.cmp td:nth-child(4) { font-size: 13px; color: var(--ink2); }
 table.cmp th { font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+table.rec { min-width: 560px; }
+table.rec td { font-family: inherit; font-size: 14px; white-space: nowrap; color: var(--ink2); font-variant-numeric: tabular-nums; }
+table.rec td:nth-child(1) { color: var(--ink); }
+table.rec td:nth-child(2) { font-family: var(--f-mono); color: var(--ink); }
+table.rec td:nth-child(2) b { color: var(--good); font-weight: 600; }
+table.rec .small { font-size: 12px; color: var(--ink3); }
+.recfig { margin: 14px 0 0; padding: 12px; background: var(--card); border: 1px solid var(--rule); border-radius: 8px; overflow-x: auto; }
+.recfig svg { min-width: 620px; }   /* on a phone, scroll sideways rather than shrink the labels */
+.hint.rec { margin-top: 6px; color: var(--ink2); }
+.hint.rec b { color: var(--ink); }
 
 footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink2); }
 footer h2 { margin: 0 0 8px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); font-weight: 600; }

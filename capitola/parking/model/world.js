@@ -35,6 +35,9 @@ function buildWorld(PATHS) {
   var sjTop = loop.nearestS(sj.p[0][0], sj.p[0][1], exitS, L);
   var sjBot = loop.nearestS(sj.p[sj.p.length - 1][0], sj.p[sj.p.length - 1][1], espS0, espEnd);
   var sMontJoin = loop.nearestS(-50.0, -15.8, corner, exitS);
+  // Stockton Ave over the bridge from the west (OpenStreetMap), meeting the loop where the Esplanade starts;
+  // extended 40 m off the map so a line has room to form
+  var e0 = loop.at(espS0), br = new Poly([[-319.7, -38.8], [-285, -17], [-250, 5], [e0.x, e0.y]]);
   var spaces = [], i, k;
   function add(lane, s, side, type, extra) { var o = { lane: lane, s: s, side: side, type: type }; for (var key in extra || {}) o[key] = extra[key]; spaces.push(o); }
   // Esplanade: seaward angled stalls along the curve, the beach straightaway and the aisle to the corner
@@ -76,7 +79,7 @@ function buildWorld(PATHS) {
   });
   xwalks.push({ lane: 'SJ', s: sj.nearestS(-121.6, 46.4), w: 1 });
   return {
-    loop: loop, spur: spur, montN: montN, amPath: amPath, sj: sj, dg: dg, dgLen: dg.len,
+    loop: loop, spur: spur, montN: montN, amPath: amPath, br: br, brLen: br.len, sj: sj, dg: dg, dgLen: dg.len,
     loopLen: L, espS0: espS0, espEnd: espEnd, corner: corner, exitS: exitS, sMontJoin: sMontJoin,
     sjTop: sjTop, sjBot: sjBot, sjLen: sj.len, searchEnd: rMax + 1,
     loadS: corner - 2, appLen: spur.len, amLen: amPath.len, ghostLen: 140, spaces: spaces, xwalks: xwalks,
