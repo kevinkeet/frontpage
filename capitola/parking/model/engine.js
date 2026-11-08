@@ -32,8 +32,9 @@ var P = {
   sjWaitMax: 25,                   // seconds a driver waits on Capitola Ave to turn onto a backed-up San Jose Ave
   balkSec: 6, balkFrac: 0.6, balkCars: 50,   // a car in line ahead costs ~6 s; drivers turn away when the wait eats much of what the space is worth
   dgSeek: 0.45, dgOther: 0.6,      // share taking the angled leg of the triangle: drivers still looking, everyone else
-  takeEarly: 0.08,                 // on a quiet first pass, chance a driver takes an open space well short of where they're going
-  choosyFull: 0.75, grabFull: 0.9, // ... rising to every time as the loop fills from 75% to 90%
+  takeEarly: 0.08,                 // on a quiet loop, share of drivers who take the first open space they see, even well short of where they're going
+  choosyFull: 0.9, grabFull: 0.98, // ... rising to all of them as the loop fills from 90% to 98%; the rest hold out for one near their destination
+  nearWin: 0.03,                   // "near where they're going": within about 10 m before it, or anywhere past it
   seeSide: 0.9,                    // chance a driver looking spots an open space down the angled leg or San Jose Ave and heads for it
   // everyone else on the loop
   bgK: 1.2, bgDropShare: 0.3, lotDropShare: 0.35, fullLoopShare: 0.5,
@@ -191,7 +192,7 @@ Sim.prototype._spawn = function (kind, d, tArr) {
   if (kind !== 'seek' && rng() < Math.min(0.8, q / P.balkCars)) return;
   var c = { id: ++this.id, kind: kind, d: d, lane: viaM ? 'AM' : 'AJ', s: 0, st: kind === 'seek' ? 'loop' : 'drive', laps: 0, tArr: tArr, odo: 0, odoMark: 0,
     exit: null, route: null, searched: false, dropped: false, leaving: false };
-  if (kind === 'seek') { c.adv = advantage(d, this.price, this._lotFull()); c.target = rng(); }
+  if (kind === 'seek') { c.adv = advantage(d, this.price, this._lotFull()); c.tsp = this.spaces[Math.floor(rng() * this.spaces.length)]; c.target = c.tsp.pos; c.grab = rng() < this._takeEarly(); }   // destinations spread like the spaces
   else if (kind === 'drop') { c.exit = rng() < 0.5 ? 'J' : 'M'; if (viaM) c.route = 'SJ'; }
   else if (kind === 'thru') {
     if (viaM) { if (rng() < 0.5) { c.exit = 'J'; c.route = 'J'; } else { c.exit = 'M'; c.route = 'SJ'; } }
@@ -381,6 +382,10 @@ Sim.prototype.step = function (dt) {
       var seeking = c.kind === 'seek' && c.st === 'loop' && !c.leaving;
       var dropping = c.kind === 'drop' && !c.dropped;
       var goDG = rng() < (seeking ? P.dgSeek : P.dgOther);
+      if (seeking && c.laps === 0 && c.tsp && rng() < P.seeSide) {   // headed for one side of the triangle: take that side
+        if (c.tsp.lane === 'DG') goDG = true;
+        else if (c.tsp.lane === 'R' && c.tsp.s > w.espEnd && c.tsp.s < w.sMontJoin) goDG = false;
+      }
       if (seeking && rng() < P.seeSide) {   // the triangle is small: a driver looking can see an open space on either side
         var openDG = this._openOn('DG', 0, w.dgLen), openAisle = this._openOn('R', w.espEnd, w.sMontJoin);
         if (openDG && !openAisle) goDG = true; else if (openAisle && !openDG) goDG = false;
@@ -421,7 +426,7 @@ Sim.prototype.step = function (dt) {
             if (c.d.v * searchedH > c.adv || c.laps >= c.d.patience) { c.leaving = true; c.exit = 'J'; c.route = 'J'; }
             else c.route = rng() < P.sjShare ? 'SJ' : 'J';
           } else c.route = rng() < P.sjShareNew ? 'SJ' : 'J';
-          if (!c.leaving && c.route === 'J' && rng() < P.seeSide && this._openOn('SJ', 0, w.sjLen)) c.route = 'SJ';   // an open space down San Jose
+          if (!c.leaving && c.route === 'J' && rng() < P.seeSide && (this._openOn('SJ', 0, w.sjLen) || (c.laps === 0 && c.tsp && c.tsp.lane === 'SJ'))) c.route = 'SJ';   // an open space down San Jose, or headed there
         }
       }
       if (c.route === 'SJ') {
@@ -575,12 +580,13 @@ Sim.prototype._scan = function (c, lane, a, b, t) {
   for (var j = lowerBound(sArr, a - 0.001); j < arr.length && arr[j].s <= b; j++) {
     var sp = arr[j];
     if (!sp.car && (!sp.resv || sp.resv === c)) {
-      if (c.laps === 0 && sp.resv !== c && sp.pos < (c.target || 0) - 0.15 && this.rng() > this._takeEarly()) continue;   // holding out for one closer
+      if (c.laps === 0 && sp.resv !== c && !c.grab && sp.pos < (c.target || 0) - P.nearWin) continue;   // holding out for one closer
       if (c.hoverSp && c.hoverSp !== sp) c.hoverSp.resv = null;
       sp.car = c; sp.resv = null; c.sp = sp; c.hoverSp = null; c.st = 'pin'; c.timer = P.maneuver;
       return sp.s;
     }
-    if (!hoverCand && !c.hoverSp && !c.hovered && sp.car && sp.car.st === 'parked' && !sp.resv && sp.car.tDep - t < P.hoverSec) hoverCand = sp;
+    if (!hoverCand && !c.hoverSp && !c.hovered && sp.car && sp.car.st === 'parked' && !sp.resv && sp.car.tDep - t < P.hoverSec &&
+        (c.laps > 0 || c.grab || sp.pos >= (c.target || 0) - P.nearWin)) hoverCand = sp;
   }
   if (hoverCand) { hoverCand.resv = c; c.hoverSp = hoverCand; c.hoverT = 0; c.hovered = true; return Math.min(b, Math.max(a, hoverCand.s - 6)); }
   return b;

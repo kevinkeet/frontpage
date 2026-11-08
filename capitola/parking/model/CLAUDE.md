@@ -59,11 +59,17 @@ update the typed numbers in `onepager.html` and `body_part.html` from `sweeps.js
   colored by type; tiles show shoppers & diners parked per hour and the share of spaces held by beachgoers. With types the
   overall price response is -0.41 between $2 and $4 (no retuning needed).
 - Assumed: meters charge for at most 3 h; overstaying costs $10 on average; value of time, patience, route shares, destinations, turning away from a long line; when the lots are full, free parking a
-  15-minute walk out with 1.5x the hauling (`farWalkMin`, `farGear`); pickiness fades from 75% to 90% full (`choosyFull`,
-  `grabFull`); drivers spot open spaces down the angled leg / San Jose 90% of the time (`seeSide`).
-- Results at 1-3 PM (Nov 8 rebake): matched rate ~$3.50 at 4,500, ~$4.50 at 6,000, ~$6.50 at 7,500, ~$8.50 at 9,000 (87-98%
-  full). 9,000 at $2: 100% full, 12-min trip, 38% stopped, ~20 circling, 34 min to park. Far walk 10 min -> ~$7 at 9,000.
-  Above ~10,000, through traffic and drop-offs alone back up the loop. The study's 1.63 cars/space turnover isn't comparable
+  15-minute walk out with 1.5x the hauling (`farWalkMin`, `farGear`); destinations are a random space (`c.tsp`), so they
+  spread like the spaces; each driver decides once on arrival whether to grab the first open space (share `takeEarly` 0.08,
+  rising to 1 from 90% to 98% full: `choosyFull`, `grabFull`) or hold out for one within `nearWin` 0.03 of the loop before
+  the destination (or anything past it), and takes the triangle side / San Jose if the destination is there; drivers spot
+  open spaces down the angled leg / San Jose 90% of the time (`seeSide`). Per-space grab chances compounded and a wide window
+  front-loaded each stretch, which left upper Monterey (the end of the route) mostly open; `node openwhere.js 9000 8` checks
+  open share by street.
+- Results at 1-3 PM (Nov 8, v9 rebake): matched rate ~$3.50 at 4,500, ~$4.50 at 6,000, ~$6 at 7,500, ~$7 at 9,000 (90-95%
+  full). 9,000: $2 -> 100% full, 12-min trip, 36% stopped, ~14 circling, beachgoers hold 77% of spaces, ~13 shoppers & diners
+  park/hr; $7 -> 92%, 4 min, 4%, <1 circling, 64%, ~22/hr. Above ~$7.50 the rate starts pricing off shoppers too. Above
+  ~10,000 visitors through traffic and drop-offs alone back up the loop. The study's 1.63 cars/space turnover isn't comparable
   (it includes private residential and business lots).
 
 ## Engine lessons
