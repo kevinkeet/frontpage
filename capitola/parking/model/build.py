@@ -56,7 +56,7 @@ def chart_svg():
     for k, crowd in enumerate(CHART_CROWDS):
         b = best_row(SWEEPS[crowd])
         if b:
-            o.append(f"<circle class='c-ring' cx='{xs(b['p']):.1f}' cy='{ys(b['trip']):.1f}' r='6.5'/><text class='c-ringlab' x='{xs(b['p']):.1f}' y='{ys(b['trip']) - 12 - (k % 2) * 14:.1f}' text-anchor='middle'>${b['p']:.2f}</text>")
+            o.append(f"<circle class='c-ring' cx='{xs(b['p']):.1f}' cy='{ys(b['trip']):.1f}' r='6.5'/><text class='c-ringlab' x='{xs(b['p']):.1f}' y='{ys(b['trip']) + (22 if k % 2 else -12):.1f}' text-anchor='middle'>${b['p']:.2f}</text>")
     for v in range(1, 13):
         o.append(f"<text class='c-tick' x='{xs(v):.1f}' y='{y0 + ph + 18}' text-anchor='middle'>${v}</text>")
     o.append(f"<text class='c-sub' x='{x0 + pw / 2:.0f}' y='{y0 + ph + 44}' text-anchor='middle'>Hourly rate on the loop meters, all day</text></svg>")

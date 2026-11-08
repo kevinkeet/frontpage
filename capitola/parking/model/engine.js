@@ -2,10 +2,18 @@
 var P = {
   // drivers looking for a space on the loop
   lotPrice: 1.00, walkMin: 7, limitH: 3,   // meters charge for at most 3 hours
-  stayMed: 3.0, staySig: 0.45,     // hours people stay: mostly beach trips of several hours
+  // who's coming: the main reason for the visit on a summer Saturday (2008 city survey: beach 53%, shopping 21%, restaurants
+  // 12%, other 14%), and how long each stays (assumed, set so the average visit is the survey's 3.4 hours)
+  types: [
+    { k: 'beach', share: 0.53, stayMed: 4.5, staySig: 0.35, gear: 10 },  // a beach day; $ hassle of hauling chairs, coolers and kids
+    { k: 'shop', share: 0.21, stayMed: 1.0, staySig: 0.5, gear: 1 },
+    { k: 'dine', share: 0.12, stayMed: 1.5, staySig: 0.35, gear: 1 },
+    { k: 'other', share: 0.14, stayMed: 2.5, staySig: 0.6, gear: 3 }    // work, visiting, everything else
+  ],
   citeCost: 10,                    // $ expected cost of overstaying the 3-hour limit (a ticket, sometimes)
   // the Beach & Village lots up Capitola Ave fill on busy days; then the fallback is free parking farther out
-  lotCap: 458, lotOther: 0.5,      // lot spaces (two lots, 2025-26 city fee schedule); share of other arriving cars (not trying the loop first) that park there
+  lotCap: 458, lotOther: 0.3,      // lot spaces (two lots, 2025-26 city fee schedule); share of other arriving cars (not trying the loop first) that park there
+  lotAware: 0.57,                  // visitors who know the lots exist (2008 city survey, summer Saturday: 57%); the rest compare the meter with parking farther out
   farWalkMin: 15, farGear: 1.5,    // when the lots are full: about a 15-minute walk each way, and more hauling
   // a day of visitors
   dayStart: 8,                     // the simulated day starts at 8 AM
@@ -13,7 +21,6 @@ var P = {
   loopShare: 0.45,                 // arriving cars that look for a space on the beach loop first
   profile: [0.03, 0.07, 0.12, 0.14, 0.14, 0.12, 0.10, 0.08, 0.07, 0.06, 0.04, 0.03],  // share of the day's arrivals, 8 AM to 8 PM
   votMed: 20, votSig: 0.8,         // $/hr value of a visitor's time
-  gearMean: 10,                    // $ hassle of hauling chairs, coolers, umbrellas and kids a quarter mile and back
   leaveShare: 0.2,                 // of drivers who give up circling, share who leave Capitola
   patienceMin: 3, patienceMax: 8,  // most laps a driver will tolerate
   hoverSec: 30, hoverMax: 40,      // stop and wait for someone clearly about to pull out
@@ -50,18 +57,20 @@ function makeRng(seed) {
 function randn(rng) { var u = 0; while (u === 0) u = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng()); }
 function expo(rng, ratePerHr) { return ratePerHr > 0 ? -Math.log(1 - rng()) / ratePerHr * 3600 : 1e12; }
 function makeDriver(rng) {
-  var T = P.stayMed * Math.exp(P.staySig * randn(rng));
+  var u = rng(), ty = P.types[P.types.length - 1];
+  for (var i = 0, acc = 0; i < P.types.length; i++) { acc += P.types[i].share; if (u < acc) { ty = P.types[i]; break; } }
+  var T = ty.stayMed * Math.exp(ty.staySig * randn(rng));
   var v = P.votMed * Math.exp(P.votSig * randn(rng));
-  var g = -P.gearMean * Math.log(1 - rng());
-  return { T: T, v: v, walk: v * (2 * P.walkMin / 60) + g, walkFar: v * (2 * P.farWalkMin / 60) + g * P.farGear,
-    patience: P.patienceMin + Math.floor(rng() * (P.patienceMax - P.patienceMin + 1)) };
+  var g = -ty.gear * Math.log(1 - rng());
+  return { type: ty.k, T: T, v: v, walk: v * (2 * P.walkMin / 60) + g, walkFar: v * (2 * P.farWalkMin / 60) + g * P.farGear,
+    patience: P.patienceMin + Math.floor(rng() * (P.patienceMax - P.patienceMin + 1)), aware: rng() < P.lotAware };
 }
 // $ a driver saves by parking on the loop instead of the lots: the lots charge for the whole stay (12 hours allowed),
 // the meters for at most 3 hours, plus the risk of a ticket for staying longer; the lots cost the walk.
-// When the lots are full the fallback is free parking farther out, which costs a longer walk.
+// Drivers who don't know the lots, or find them full, compare the meter with free parking farther out: a longer walk.
 function advantage(d, price, lotFull) {
   var meter = price * Math.min(d.T, P.limitH) + (d.T > P.limitH ? P.citeCost : 0);
-  return lotFull ? d.walkFar - meter : P.lotPrice * Math.min(d.T, 12) + d.walk - meter;
+  return lotFull || d.aware === false ? d.walkFar - meter : P.lotPrice * Math.min(d.T, 12) + d.walk - meter;
 }
 // cars an hour looking for a loop space, at a time of day, for a given number of daily visitors
 function arrivalsPerHour(visitors, tSec) {
@@ -142,10 +151,15 @@ Sim.prototype._lotAdd = function (d, used) {
   if (this.cur && !used) this.cur.lotRev += P.lotPrice * Math.min(d.T, 12);
   return true;
 };
+// a driver who passes on the loop: the lots if they know them, otherwise somewhere farther out
+Sim.prototype._divert = function (d) {
+  if (d.aware === false) { this.cur.far++; this.totals.far++; return false; }
+  return this._lotAdd(d);
+};
 Sim.prototype._newBucket = function () {
   this.cur = { t: Math.floor(this.t / 60), occ: 0, circ: 0, n: 0, arr: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0,
     cruiseM: 0, price: this.price, departs: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lam: this.lambda,
-    lotOcc: 0, far: 0, lotFull: 0 };
+    lotOcc: 0, far: 0, lotFull: 0, pShop: 0, pBeach: 0, occBeach: 0, occShop: 0 };
   this.min.push(this.cur);
   if (this.min.length > 720) this.min.shift();
   // demand follows the time of day: re-time the next arrivals at the new rates (arrivals have no memory)
@@ -171,7 +185,7 @@ Sim.prototype._spawn = function (kind, d, tArr) {
   // a long line into the Village turns people away: drivers head for the lots, others go elsewhere
   var q = (viaM ? this.qAM : this.qAJ) || 0;
   if (kind === 'seek' && d.v * (q * P.balkSec / 3600) > P.balkFrac * advantage(d, this.price, this._lotFull())) {
-    this.cur.toLot++; this.totals.lotFirst++; this.cur.balked++; this._lotAdd(d);
+    this.cur.toLot++; this.totals.lotFirst++; this.cur.balked++; this._divert(d);
     return;
   }
   if (kind !== 'seek' && rng() < Math.min(0.8, q / P.balkCars)) return;
@@ -198,7 +212,7 @@ Sim.prototype.step = function (dt) {
   while (this.nextSeek <= t) {
     var d = makeDriver(rng); B.arr++;
     if (advantage(d, this.price, this._lotFull()) <= 0) {
-      B.toLot++; this.totals.lotFirst++; this._lotAdd(d);
+      B.toLot++; this.totals.lotFirst++; this._divert(d);
       if (rng() < P.lotDropShare) this._spawn('drop', null, this.nextSeek);
     } else this._spawn('seek', d, this.nextSeek);
     this.nextSeek += expo(rng, this.lambda);
@@ -448,7 +462,10 @@ Sim.prototype.step = function (dt) {
     c = this.cars[i];
     if (c.st === 'pin') {
       c.timer -= dt;
-      if (c.timer <= 0) { c.st = 'parked'; c.tPark = t; c.tDep = t + c.d.T * 3600; c.paid = this.price; c.tEsp = c.tB = null; B.parked++; this.totals.parked++; B.searchSum += (t - c.tArr); }
+      if (c.timer <= 0) {
+        c.st = 'parked'; c.tPark = t; c.tDep = t + c.d.T * 3600; c.paid = this.price; c.tEsp = c.tB = null; B.parked++; this.totals.parked++; B.searchSum += (t - c.tArr);
+        if (c.d.type === 'shop' || c.d.type === 'dine') B.pShop++; else if (c.d.type === 'beach') B.pBeach++;
+      }
     } else if (c.st === 'parked') {
       if (t - c.tPark < P.limitH * 3600) B.rev += c.paid * dt / 3600;
       if (t >= c.tDep && canPullOut(lanes[c.lane], c.s, c.sp.resv, t >= c.tDep + 30)) { c.st = 'pout'; c.timer = P.maneuver; }
@@ -462,7 +479,13 @@ Sim.prototype.step = function (dt) {
     if (c.kind === 'seek' && c.st === 'loop' && (c.laps >= 1 || c.searched) && !c.leaving) circ++;   // missed at least once
     if (c.st === 'gone' && c.hoverSp) { c.hoverSp.resv = null; c.hoverSp = null; }
   }
-  for (i = 0; i < this.spaces.length; i++) if (this.spaces[i].car) occ++;
+  var occB = 0, occS = 0;
+  for (i = 0; i < this.spaces.length; i++) {
+    var sc = this.spaces[i].car; if (!sc) continue;
+    occ++; var ty = sc.d && sc.d.type;
+    if (ty === 'beach') occB++; else if (ty === 'shop' || ty === 'dine') occS++;
+  }
+  B.occBeach += occB / this.spaces.length * dt; B.occShop += occS / this.spaces.length * dt;
   var keep = [];
   for (i = 0; i < this.cars.length; i++) if (this.cars[i].st !== 'gone') keep.push(this.cars[i]);
   this.cars = keep;
@@ -583,7 +606,7 @@ Sim.prototype.avg = function (field, m) {
 };
 Sim.prototype.windowStats = function (m) {
   var arr = this.min.slice(-m - 1, -1); if (!arr.length) arr = this.min.slice(-1);
-  var o = { occ: 0, circ: 0, n: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0, cruiseM: 0, departs: 0, arr: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lotOcc: 0, far: 0, lotFull: 0 };
+  var o = { occ: 0, circ: 0, n: 0, parked: 0, searchSum: 0, toLot: 0, left: 0, rev: 0, lotRev: 0, cruiseM: 0, departs: 0, arr: 0, aSum: 0, aN: 0, bSum: 0, bN: 0, drops: 0, waitIn: 0, mQ: 0, stopLen: 0, balked: 0, lotOcc: 0, far: 0, lotFull: 0, pShop: 0, pBeach: 0, occBeach: 0, occShop: 0 };
   for (var i = 0; i < arr.length; i++) for (var k in o) o[k] += arr[i][k];
   var hrs = arr.length / 60, segA = o.aN ? o.aSum / o.aN / 60 : 0, segB = o.bN ? o.bSum / o.bN / 60 : 0;
   return {
@@ -594,7 +617,8 @@ Sim.prototype.windowStats = function (m) {
     cruiseMi: o.cruiseM / 1609.34 / hrs, turnover: o.departs / hrs / this.spaces.length,
     arr: o.arr / hrs, parked: o.parked / hrs, drops: o.drops / hrs,
     waitIn: o.n ? o.waitIn / o.n : 0, mQ: o.n ? o.mQ / o.n : 0, standstill: o.n ? o.stopLen / o.n : 0, balked: o.balked / hrs,
-    lotOcc: o.n ? o.lotOcc / o.n : 0, lotFull: o.n ? o.lotFull / o.n : 0, far: o.far / hrs
+    lotOcc: o.n ? o.lotOcc / o.n : 0, lotFull: o.n ? o.lotFull / o.n : 0, far: o.far / hrs,
+    shopDine: o.pShop / hrs, beachIn: o.pBeach / hrs, beachHeld: o.n ? o.occBeach / o.n : 0, shopHeld: o.n ? o.occShop / o.n : 0
   };
 };
 Sim.prototype.warm = function (minutes) { for (var i = 0; i < minutes * 60; i++) this.step(1); };
@@ -609,4 +633,4 @@ function runHeadless(world, price, lambda, seed, warmMin, measureMin) {
   for (var i = 0; i < (warmMin + measureMin) * 60; i++) sim.step(1);
   return sim.windowStats(measureMin);
 }
-if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, runHeadless: runHeadless, runDay: runDay, tryShare: tryShare, advantage: advantage, arrivalsPerHour: arrivalsPerHour };
+if (typeof module !== 'undefined') module.exports = { P: P, Sim: Sim, makeDriver: makeDriver, makeRng: makeRng, runHeadless: runHeadless, runDay: runDay, tryShare: tryShare, advantage: advantage, arrivalsPerHour: arrivalsPerHour };

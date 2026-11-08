@@ -14,12 +14,12 @@ const w = Wd.buildWorld(require('./osm/paths.json'));
 const file = process.argv[4] || 'sweeps.json';
 const out = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
 const SEEDS = [11, 23, 37, 53, 71, 89].slice(0, +(process.argv[3] || 2));
-const FIELDS = ['occ', 'trip', 'circ', 'standstill', 'left', 'rev', 'search', 'cruiseMi', 'lotOcc', 'lotFull', 'far', 'toLot'];
+const FIELDS = ['occ', 'trip', 'circ', 'standstill', 'left', 'rev', 'search', 'cruiseMi', 'lotOcc', 'lotFull', 'far', 'toLot', 'shopDine', 'beachIn', 'beachHeld', 'shopHeld'];
 for (const v of (process.argv[2] || '1500,4500,6000,7500,9000').split(',').map(Number)) {
   const rows = [];
   for (let p = 1; p <= 12.001; p += 0.5) {
     const runs = SEEDS.map(sd => E.runDay(w, p, v, sd, 300, 420)), r = { p };
-    FIELDS.forEach(f => { r[f] = +((runs.reduce((a, x) => a + x[f], 0) / runs.length).toFixed(['occ', 'standstill', 'lotOcc', 'lotFull'].includes(f) ? 3 : 1)); });
+    FIELDS.forEach(f => { r[f] = +((runs.reduce((a, x) => a + x[f], 0) / runs.length).toFixed(['occ', 'standstill', 'lotOcc', 'lotFull', 'beachHeld', 'shopHeld'].includes(f) ? 3 : 1)); });
     rows.push(r);
   }
   out[v] = rows;

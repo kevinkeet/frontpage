@@ -38,7 +38,7 @@ function one(seed) {
   return {
     occ: occS / occN, occMax, lot: lotS / occN, lotMax, lotFullAt, fullH, espN, firstFull: firstFull || 0, lastFull: lastFull || 0,
     perSpace: recs.length / sim.spaces.length, stayWin: inWin, stayFull: full.reduce((a, b) => a + b, 0) / full.length,
-    dgQ: dgQ / occN, sjQ: sjQ / occN, trip: pm.trip, standstill: pm.standstill, circ: pm.circ, far: pm.far, left: pm.left, toLot: pm.toLot, dgMax, sjMax,
+    dgQ: dgQ / occN, sjQ: sjQ / occN, shopDine: pm.shopDine, beachIn: pm.beachIn, beachHeld: pm.beachHeld, shopHeld: pm.shopHeld, trip: pm.trip, standstill: pm.standstill, circ: pm.circ, far: pm.far, left: pm.left, toLot: pm.toLot, dgMax, sjMax,
     skips: sim.skips || 0
   };
 }
@@ -51,4 +51,5 @@ console.log(`  lots full ${avg('fullH').toFixed(1)} h of the day (first ${avg('f
 console.log(`  cars per loop space 11-5: ${avg('perSpace').toFixed(2)}   [study: 1.63]`);
 console.log(`  average stay seen 11-5: ${avg('stayWin').toFixed(2)} h; whole stays ${avg('stayFull').toFixed(2)} h   [study: 2.75 h on street, 3.3 h in the lot, visits 3.4 h]`);
 console.log(`  1-3 PM: trip ${avg('trip').toFixed(1)} min, ${pct(avg('standstill'))} stopped, ${avg('circ').toFixed(1)} circling, ${avg('toLot').toFixed(0)}/hr to lots or farther (${avg('far').toFixed(0)}/hr farther), ${avg('left').toFixed(1)}/hr leave`);
+console.log(`  1-3 PM: shoppers & diners parked ${avg('shopDine').toFixed(0)}/hr, beachgoers ${avg('beachIn').toFixed(0)}/hr; spaces held by beachgoers ${pct(avg('beachHeld'))}, by shoppers & diners ${pct(avg('shopHeld'))}`);
 console.log(`  merges: longest wait angled leg ${avg('dgMax').toFixed(0)} s, San Jose ${avg('sjMax').toFixed(0)} s; cars waiting on average ${avg('dgQ').toFixed(2)} / ${avg('sjQ').toFixed(2)}`);

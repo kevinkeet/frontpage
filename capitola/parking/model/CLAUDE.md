@@ -46,13 +46,19 @@ update the typed numbers in `onepager.html` and `body_part.html` from `sweeps.js
 - Tuned to local observation (on a busy summer Saturday at $2 the whole loop is at a standstill by midday, backing up from the
   Monterey/Capitola stop): other traffic, drop-offs, pedestrian crossings, stop-sign service times (Monterey ~8 s,
   Stockton ~5 s), drivers waiting on Capitola Ave to turn onto a backed-up San Jose Ave.
-- Tuned to city statements: `lotOther` 0.5 (half of non-loop arrivals park in the lots) so the lots fill ~1-3:30 PM at 9,000
-  visitors and never at 6,000 ("full for a few hours on about 25 days a year"). Checked, not tuned: Esplanade ~2,600 vehicles
-  8 AM-8 PM at 9,000 vs RTC 3,055/24 h (July 2007).
+- Lots: `lotOther` 0.3 (three in ten non-loop arrivals park in the lots), tuned so the lots peak ~90% and don't fill at 9,000
+  visitors and $2 (city 2022: "rarely full"; Kevin: the upper lots are almost never full). `lotAware` 0.57 from the 2008 survey
+  (57% of summer-Saturday visitors knew the Pacific Cove lot): unaware drivers compare the meter with the 15-minute walk, which
+  is why demand holds up at higher rates.
+  Checked, not tuned: Esplanade ~2,600 vehicles 8 AM-8 PM at 9,000 vs RTC 3,055/24 h (July 2007).
 - Estimated: visitors (1,500 / 4,500 / 9,000 a day; 9,000 puts ~1,050 visitor cars in the Village at 2 PM vs the 2008 study's
   calculated 1,212 peak incl. residents/workers), 45% look for a loop space first, arrivals by hour in `P.profile`.
-- Assumed: stays spread (median 3 h, sig 0.45; meters charge for at most 3 h; overstaying costs $10 on average), value of time,
-  gear ($10), patience, route shares, destinations, turning away from a long line; when the lots are full, free parking a
+- Driver types (`P.types`, Kevin's idea Nov 8: higher rates sort all-day beachgoers to the lots and free spaces for shoppers):
+  shares from the 2008 survey's main reason for the visit (beach 53%, shopping 21%, restaurants 12%, other 14%); stays by type
+  assumed (medians 4.5 / 1 / 1.5 / 2.5 h) so the mean visit is the survey's 3.4 h; gear $10 / $1 / $1 / $3. Parked cars are
+  colored by type; tiles show shoppers & diners parked per hour and the share of spaces held by beachgoers. With types the
+  overall price response is -0.41 between $2 and $4 (no retuning needed).
+- Assumed: meters charge for at most 3 h; overstaying costs $10 on average; value of time, patience, route shares, destinations, turning away from a long line; when the lots are full, free parking a
   15-minute walk out with 1.5x the hauling (`farWalkMin`, `farGear`); pickiness fades from 75% to 90% full (`choosyFull`,
   `grabFull`); drivers spot open spaces down the angled leg / San Jose 90% of the time (`seeSide`).
 - Results at 1-3 PM (Nov 8 rebake): matched rate ~$3.50 at 4,500, ~$4.50 at 6,000, ~$6.50 at 7,500, ~$8.50 at 9,000 (87-98%
