@@ -3,7 +3,8 @@ Run after fetch_data.py (mop, wl, pred) and fetch_rain.py (rain, flow).
 Produces: merged_hourly.csv.gz, hourly_model.pkl, daily_max.pkl, winter_hours.pkl, winter_days.pkl,
           swell_climate.csv, resid_all.pkl, soquel_dailymax.csv.gz, soquel_annual_peaks.csv, rain_model_fit.json
 """
-import pandas as pd, numpy as np, json, requests, io
+import pandas as pd, numpy as np, json, io
+import net  # downloads with our User-Agent
 from model import *
 D = 'data/'
 TZ = 'America/Los_Angeles'
@@ -85,7 +86,7 @@ def creek():
     import rain_model as RM
     iv = pd.read_csv(D + 'soquel_iv.csv.gz', parse_dates=['t'], index_col='t')
     dmx = iv.resample('D').max(); dmx.columns = ['qmax', 'hmax']; dmx.to_csv(D + 'soquel_dailymax.csv.gz')
-    t = [l for l in requests.get('https://nwis.waterdata.usgs.gov/nwis/peak?site_no=11160000&agency_cd=USGS&format=rdb', timeout=60).text.splitlines() if not l.startswith('#')]
+    t = [l for l in net.get('https://nwis.waterdata.usgs.gov/nwis/peak?site_no=11160000&agency_cd=USGS&format=rdb', timeout=60).text.splitlines() if not l.startswith('#')]
     pk = pd.read_csv(io.StringIO('\n'.join([t[0]] + t[2:])), sep='\t')[['peak_dt', 'peak_va', 'gage_ht']]
     pk.columns = ['date', 'flow', 'stage']
     pk['flow'] = pd.to_numeric(pk.flow, errors='coerce'); pk['stage'] = pd.to_numeric(pk.stage, errors='coerce')

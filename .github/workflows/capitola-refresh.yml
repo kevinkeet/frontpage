@@ -1,15 +1,24 @@
-# Reruns the Capitola flood model (capitola/model) every morning and publishes its CSVs to
+# Reruns the Capitola flood model (capitola/model) twice a day and publishes its CSVs to
 # kevinkeet.com/capitola. The model pulls live NOAA tides, CDIP waves, NWS rain and USGS creek data.
 # Only the built-in GITHUB_TOKEN is used, so there are no secrets to set up.
 name: Refresh Capitola flood data
 
 on:
   schedule:
-    - cron: '23 9 * * *'    # 2:23 AM PDT; GitHub starts scheduled runs 3-8 h late, so this lands in the early morning
+    # GitHub starts scheduled runs hours late (6-10 h in Oct-Nov 2026), so these land around late morning and
+    # late evening Pacific time; the evening run keeps the next morning's high tide on a fresh swell forecast.
+    - cron: '23 9 * * *'
+    - cron: '23 1 * * *'
   workflow_dispatch:
+    inputs:
+      attempt:
+        description: Attempt number (a failed run starts a fresh one, up to 3 in all)
+        required: false
+        default: '1'
 
 permissions:
   contents: write
+  actions: write    # lets a failed run start a fresh one, which lands on a different machine
 
 concurrency:
   group: capitola-refresh
@@ -32,6 +41,7 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
+        shell: bash   # bash -eo pipefail: a model error inside `| tee` fails the step instead of publishing a partial run
         working-directory: capitola/model
     steps:
       - uses: actions/checkout@v7
@@ -76,3 +86,19 @@ jobs:
             sleep 10
           done
           exit 1
+
+  retry:
+    # CDIP sometimes refuses a GitHub machine outright (HTTP 403 on Nov 3 and 12, 2026), and waiting on the same machine
+    # never lifted it. A new run lands on a different machine, so a failed run starts another, up to 3 attempts in all.
+    needs: refresh
+    if: failure() && fromJSON(github.event.inputs.attempt || '1') < 3
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Start a fresh run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ATTEMPT: ${{ github.event.inputs.attempt || '1' }}
+        run: |
+          sleep 120
+          gh workflow run capitola-refresh.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f attempt=$((ATTEMPT + 1))
+          echo "Started attempt $((ATTEMPT + 1))" >> "$GITHUB_STEP_SUMMARY"

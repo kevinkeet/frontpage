@@ -2,14 +2,14 @@
 - CDIP MOP nearshore waves (15 m depth) off Capitola Beach: SC111-SC113
 - NOAA CO-OPS Monterey (9413450) hourly observed water level + datums
 """
-import xarray as xr, pandas as pd, numpy as np, requests, io, sys, os
-import thredds_ssl  # CA bundle fix + retrying open for OPeNDAP
+import pandas as pd, numpy as np, io, sys, os
+import net  # downloads with our User-Agent (CDIP refuses generic ones)
 D='data'
 MOP='https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{}_{}.nc'
 def mop(site, kind):
-    ds=thredds_ssl.open_dataset(MOP.format(site,kind))
-    df=pd.DataFrame({'Hs':ds.waveHs.values,'Tp':ds.waveTp.values,'Dp':ds.waveDp.values,'Dm':ds.waveDm.values},
-                    index=pd.to_datetime(ds.waveTime.values))
+    d=net.opendap(MOP.format(site,kind),['waveTime','waveHs','waveTp','waveDp','waveDm'])
+    df=pd.DataFrame({'Hs':d['waveHs'],'Tp':d['waveTp'],'Dp':d['waveDp'],'Dm':d['waveDm']},
+                    index=pd.to_datetime(d['waveTime'].astype('int64'),unit='s'))
     df.index.name='time_utc'
     return df
 if 'mop' in sys.argv:
@@ -27,7 +27,7 @@ if 'wlrecent' in sys.argv:
         e=min(t+pd.Timedelta(days=30),end)
         u=('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=9413450'
            f'&begin_date={t:%Y%m%d}&end_date={e:%Y%m%d}&datum=MLLW&units=english&time_zone=gmt&format=csv&application=capitola_flood')
-        df=pd.read_csv(io.StringIO(requests.get(u,timeout=60).text)); df.columns=[c.strip() for c in df.columns]
+        df=pd.read_csv(io.StringIO(net.get(u,timeout=60).text)); df.columns=[c.strip() for c in df.columns]
         if 'Water Level' in df:
             s=pd.Series(pd.to_numeric(df['Water Level'],errors='coerce').values,index=pd.to_datetime(df['Date Time'])).dropna()
             parts.append(s[s.index.minute==0])
@@ -43,7 +43,7 @@ if 'wl' in sys.argv:
            f'&begin_date={y}0101&end_date={y}1231&datum=MLLW&units=english&time_zone=gmt&format=csv&application=capitola_flood')
         if y==2026:
             u=u.replace('product=hourly_height','product=water_level').replace(f'{y}1231','20261009')
-        r=requests.get(u,timeout=60); df=pd.read_csv(io.StringIO(r.text))
+        r=net.get(u,timeout=60); df=pd.read_csv(io.StringIO(r.text))
         df.columns=[c.strip() for c in df.columns]
         if 'Water Level' not in df: print(y,'no data',r.text[:200]); continue
         df=df[['Date Time','Water Level']].rename(columns={'Date Time':'time_utc','Water Level':'wl_mllw_ft'})
@@ -51,13 +51,13 @@ if 'wl' in sys.argv:
     wl=pd.concat(out); wl['time_utc']=pd.to_datetime(wl.time_utc); wl=wl.set_index('time_utc')
     if 2026: wl=wl[~wl.index.duplicated()]
     wl.to_csv(f'{D}/monterey_wl_obs.csv.gz')
-    r=requests.get('https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9413450/datums.json?units=english',timeout=60)
+    r=net.get('https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9413450/datums.json?units=english',timeout=60)
     open(f'{D}/monterey_datums.json','w').write(r.text)
 if 'pred' in sys.argv:
     out=[]
     for y in range(2000,2028):
         u=('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&interval=h&station=9413450'
            f'&begin_date={y}0101&end_date={y}1231&datum=MLLW&units=english&time_zone=gmt&format=csv&application=capitola_flood')
-        df=pd.read_csv(io.StringIO(requests.get(u,timeout=60).text)); df.columns=[c.strip() for c in df.columns]
+        df=pd.read_csv(io.StringIO(net.get(u,timeout=60).text)); df.columns=[c.strip() for c in df.columns]
         out.append(df.rename(columns={'Date Time':'time_utc','Prediction':'pred_mllw_ft'})); print(y,len(df))
     p=pd.concat(out); p['time_utc']=pd.to_datetime(p.time_utc); p.set_index('time_utc').to_csv(f'{D}/monterey_pred.csv.gz')

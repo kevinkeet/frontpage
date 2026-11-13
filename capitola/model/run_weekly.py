@@ -3,7 +3,7 @@ Usage: python3 run_weekly.py            -> writes forecast.json, rain_forecast.j
                                            and prints ALERT / NO ALERT with a short summary.
 Needs data/ built (fetch_data.py, fetch_rain.py, build_tables.py) at least once.
 """
-import json, os, pandas as pd, numpy as np
+import json, os, sys, subprocess, pandas as pd, numpy as np
 import forecast as F, offsets as O
 from build_tables import kelvin_analogs
 
@@ -50,22 +50,32 @@ def main():
     kp = kelvin_paths(today, r['resid7_ft'])
     kp.to_csv('dash/kelvin_paths.csv', index=False)
     # 3 winter calendar + scenario totals (season.py uses data/resid_all.pkl for the 7-day offset)
-    import subprocess; subprocess.run(['python3', 'season.py'], check=True, stdout=subprocess.DEVNULL)
-    # 4 creek forecast (needs day max tide)
-    p = F.noaa('predictions', pd.Timestamp.now('UTC').strftime('%Y%m%d'), (pd.Timestamp.now('UTC') + pd.Timedelta(days=10)).strftime('%Y%m%d'), '&interval=h')
-    p.index = p.index.tz_localize('UTC').tz_convert(F.TZ).tz_localize(None)
-    rf = F.rain_forecast(p.groupby(p.index.normalize()).max()); json.dump(rf, open('rain_forecast.json', 'w'), indent=1)
+    subprocess.run([sys.executable, 'season.py'], check=True, stdout=subprocess.DEVNULL)
+    # 4 creek forecast (needs day max tide). If a rain or creek source is down, the coastal numbers still publish and the
+    # previous creek forecast stays on the page; the run summary says so.
+    rf = None
+    try:
+        p = F.noaa('predictions', pd.Timestamp.now('UTC').strftime('%Y%m%d'), (pd.Timestamp.now('UTC') + pd.Timedelta(days=10)).strftime('%Y%m%d'), '&interval=h')
+        p.index = p.index.tz_localize('UTC').tz_convert(F.TZ).tz_localize(None)
+        rf = F.rain_forecast(p.groupby(p.index.normalize()).max()); json.dump(rf, open('rain_forecast.json', 'w'), indent=1)
+    except Exception as e:
+        print(f'::warning::Creek forecast skipped, the page keeps the previous one: {e!r}', flush=True)
     # 5 dashboard CSVs
-    subprocess.run(['python3', 'build_dash_data.py'], check=True, stdout=subprocess.DEVNULL)
-    subprocess.run(['python3', 'build_rain_data.py'], check=True, stdout=subprocess.DEVNULL)
+    subprocess.run([sys.executable, 'build_dash_data.py'], check=True, stdout=subprocess.DEVNULL)
+    if rf is not None:
+        subprocess.run([sys.executable, 'build_rain_data.py'], check=True, stdout=subprocess.DEVNULL)
     # 6 alert summary
     coast = [d for d in r['days'] if d['level'] != 'Low']
-    creek = [d for d in rf['days'] if d['p_action'] >= 0.25 or d.get('compound')]
+    creek = [d for d in rf['days'] if d['p_action'] >= 0.25 or d.get('compound')] if rf else []
     alert = bool(coast or creek)
     print('ALERT' if alert else 'NO ALERT')
     print('Coast:', r['summary'])
     for d in coast: print(f"  {d['date']} {d['peak_time']}: {d['level']} (index {d['twl']} ft; waves {d['hs_capitola_ft']} ft @ {d['period_s']} s)")
-    print(f"Creek: Soquel Creek {rf['creek_now_stage_ft']} ft now; 30-day rain {rf['wetness_now_in']} in.")
+    if rf:
+        now = 'no reading in the past week' if rf['creek_now_stage_ft'] is None else f"{rf['creek_now_stage_ft']} ft now"
+        print(f"Creek: Soquel Creek {now}; 30-day rain {rf['wetness_now_in']} in.")
+    else:
+        print('Creek: forecast skipped this run.')
     for d in creek: print(f"  {d['date']}: {d['rain_in']} in rain, chance of flood stage {d['p_minor']:.0%}{' (compound with high tide)' if d['compound'] else ''}")
     return alert
 

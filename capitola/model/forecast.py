@@ -4,13 +4,13 @@ Days 7-15: Open-Meteo offshore wave forecast, scaled to Capitola by swell direct
 Offset   : mean observed-minus-predicted water level at Monterey over the last 72 h (Kelvin wave + surge)
 Usage    : python3 forecast.py  -> writes forecast.json and prints an alert summary
 """
-import pandas as pd, numpy as np, requests, io, json, datetime as dt, xarray as xr
-import thredds_ssl  # CA bundle fix + retrying open for OPeNDAP
+import pandas as pd, numpy as np, io, json, time, datetime as dt
+import net  # downloads with our User-Agent (CDIP refuses generic ones)
 from model import *
 TZ='America/Los_Angeles'
 NOAA='https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=9413450&datum=MLLW&units=english&time_zone=gmt&format=csv&application=capitola_flood'
 def noaa(prod,b,e,extra=''):
-    df=pd.read_csv(io.StringIO(requests.get(f'{NOAA}&product={prod}&begin_date={b}&end_date={e}{extra}',timeout=60).text))
+    df=pd.read_csv(io.StringIO(net.get(f'{NOAA}&product={prod}&begin_date={b}&end_date={e}{extra}',timeout=60).text))
     df.columns=[c.strip() for c in df.columns]; df['Date Time']=pd.to_datetime(df['Date Time'])
     return df.set_index('Date Time').iloc[:,0].astype(float)
 
@@ -26,13 +26,13 @@ def run(now=None):
     # nearshore forecast (MOP)
     mop=[]
     for s in ['SC111','SC112','SC113']:
-        ds=thredds_ssl.open_dataset(f'https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{s}_forecast.nc')
-        mop.append(pd.DataFrame({'Hs':ds.waveHs.values,'Tp':ds.waveTp.values,'Dp':ds.waveDp.values},index=pd.to_datetime(ds.waveTime.values)))
+        d=net.opendap(f'https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{s}_forecast.nc',['waveTime','waveHs','waveTp','waveDp'])
+        mop.append(pd.DataFrame({'Hs':d['waveHs'],'Tp':d['waveTp'],'Dp':d['waveDp']},index=pd.to_datetime(d['waveTime'].astype('int64'),unit='s')))
     m=pd.concat(mop).groupby(level=0).mean().resample('h').interpolate()
     m['src']='CDIP nearshore'
     # extended offshore forecast (Open-Meteo), scaled by direction ratio
     try:
-        j=requests.get('https://marine-api.open-meteo.com/v1/marine?latitude=37.0&longitude=-122.5'
+        j=net.get('https://marine-api.open-meteo.com/v1/marine?latitude=37.0&longitude=-122.5'
                        '&hourly=wave_height,wave_direction,wave_period,swell_wave_peak_period&forecast_days=16&timezone=GMT',timeout=60).json()
         o=pd.DataFrame(j['hourly']); o.index=pd.to_datetime(o.pop('time')); o=o.dropna(subset=['wave_height','wave_direction','wave_period'])
     except Exception:   # extended outlook is optional (free API has a daily cap); fall back to CDIP days only
@@ -110,11 +110,10 @@ def outlook(offset_today, now=None, climate_csv='data/swell_climate.csv'):
 # Observed rain: NCEI Ben Lomond COOP (lags ~1 week), most recent days from Watsonville airport (IEM) x k_wvi.
 # Forecast rain: NWS gridded QPF at Ben Lomond (MTR 91,73), 6-hourly, ~8 days.
 # Creek now: USGS 11160000 latest 15-minute stage and flow.
-UA={'User-Agent':'capitola-flood-model'}
 def _ncei(st,b,e):
     u=('https://www.ncei.noaa.gov/access/services/data/v1?dataset=daily-summaries'
        f'&stations={st}&startDate={b}&endDate={e}&dataTypes=PRCP&format=csv&units=standard')
-    d=pd.read_csv(io.StringIO(requests.get(u,timeout=120).text),parse_dates=['DATE'])
+    d=pd.read_csv(io.StringIO(net.get(u,timeout=120).text),parse_dates=['DATE'])
     return d.set_index('DATE').PRCP if len(d) else pd.Series(dtype=float)
 
 def rain_forecast(tide_daily_max=None):
@@ -125,13 +124,18 @@ def rain_forecast(tide_daily_max=None):
     bl=_ncei('USC00040673',b0.strftime('%Y-%m-%d'),today.strftime('%Y-%m-%d'))
     u=('https://mesonet.agron.iastate.edu/cgi-bin/request/daily.py?network=CA_ASOS&stations=WVI'
        f'&year1={b0.year}&month1={b0.month}&day1={b0.day}&year2={today.year}&month2={today.month}&day2={today.day}&format=csv')
-    w=pd.read_csv(io.StringIO(requests.get(u,timeout=120).text),parse_dates=['day']).set_index('day')
+    for i in range(3):   # IEM answers "Too many requests from your IP address, slow down." when pressed; give it time
+        txt=net.get(u,timeout=120).text
+        if txt.startswith('station,'): break
+        if i==2: raise RuntimeError(f'IEM Watsonville rain unavailable: {txt[:120]!r}')
+        time.sleep(30*(i+1))
+    w=pd.read_csv(io.StringIO(txt),parse_dates=['day']).set_index('day')
     wv=pd.to_numeric(w.precip_in,errors='coerce')
     obs=pd.Series(np.nan,index=pd.date_range(b0,today-pd.Timedelta(days=1)))
     obs.update(wv*fj['k_wvi']); obs.update(bl)        # Ben Lomond wins where it exists
     obs=obs.fillna(0.0)
     # NWS QPF (mm per 6 h, UTC intervals) -> inches per local day
-    g=requests.get('https://api.weather.gov/gridpoints/MTR/91,73',headers=UA,timeout=60).json()['properties']['quantitativePrecipitation']['values']
+    g=net.get('https://api.weather.gov/gridpoints/MTR/91,73',timeout=60).json()['properties']['quantitativePrecipitation']['values']
     q=[]
     for v in g:
         t0,dur=v['validTime'].split('/'); hrs=int(dur.replace('PT','').replace('P','').replace('H','') or 0) if 'D' not in dur else 24*int(dur.split('D')[0].replace('P',''))
@@ -142,11 +146,16 @@ def rain_forecast(tide_daily_max=None):
     R=pd.concat([obs,qpf]); R=R[~R.index.duplicated(keep='last')].sort_index()
     F=RM.features(R).loc[today:]
     P=RM.predict(F.R0,F.R1,F.A30.fillna(0),b,sd)
-    # creek now
-    t=[l for l in requests.get('https://waterservices.usgs.gov/nwis/iv/?format=rdb&sites=11160000&parameterCd=00060,00065&period=P1D',timeout=60).text.splitlines() if not l.startswith('#')]
-    iv=pd.read_csv(io.StringIO('\n'.join([t[0]]+t[2:])),sep='\t')
-    qc=[c for c in iv.columns if c.endswith('_00060')][0]; hc=[c for c in iv.columns if c.endswith('_00065')][0]
-    now_q=float(pd.to_numeric(iv[qc],errors='coerce').dropna().iloc[-1]); now_h=float(pd.to_numeric(iv[hc],errors='coerce').dropna().iloc[-1])
+    # creek now: the latest 15-minute stage and flow from the past week. None when the gauge has not reported; on Oct 14,
+    # 18 and 20, 2026 it had no reading in the past day and this step stopped the run before the page's files were written.
+    now_q=now_h=None
+    try:
+        t=[l for l in net.get('https://waterservices.usgs.gov/nwis/iv/?format=rdb&sites=11160000&parameterCd=00060,00065&period=P7D',timeout=60).text.splitlines() if not l.startswith('#')]
+        iv=pd.read_csv(io.StringIO('\n'.join([t[0]]+t[2:])),sep='\t')
+        last=lambda cols: (lambda s: float(s.iloc[-1]) if len(s) else None)(pd.to_numeric(iv[cols[0]],errors='coerce').dropna()) if cols else None
+        now_q=last([c for c in iv.columns if c.endswith('_00060')]); now_h=last([c for c in iv.columns if c.endswith('_00065')])
+    except Exception as e:
+        print(f'Soquel Creek gauge reading unavailable ({e!r})',flush=True)
     A_now=float(R.loc[today-pd.Timedelta(days=30):today-pd.Timedelta(days=1)].sum())
     days=[]
     for i,(d,r) in enumerate(F.iterrows()):
@@ -162,5 +171,5 @@ def rain_forecast(tide_daily_max=None):
                      'likely_level':lvl,'high_tide_ft':None if not np.isfinite(tide) else round(tide,2),'compound':compound,
                      'source':'Observed' if d<today else 'NWS rain forecast'})
     needed={k:round(RM.rain_needed(A_now,b,sd,k),1) for k in ['Action','Minor','Moderate']}
-    return {'creek_now_stage_ft':round(now_h,2),'creek_now_flow_cfs':now_q,'wetness_now_in':round(A_now,1),
+    return {'creek_now_stage_ft':None if now_h is None else round(now_h,2),'creek_now_flow_cfs':now_q,'wetness_now_in':round(A_now,1),
             'rain_needed_in':needed,'days':days}

@@ -8,9 +8,11 @@ superseded). The repo is public and GitHub Pages serves this folder, so keep per
 
 ## How the site stays current
 
-- `.github/workflows/capitola-refresh.yml` is scheduled daily at 09:23 UTC (2:23 AM PDT). GitHub starts scheduled runs late
-  (3-8.5 h in Oct 2026, when it was set to 13:23 UTC and ran 9:30 AM-2:45 PM PDT), so the early slot lands in the morning.
-  The page drops forecast days already past, so a day-old run still reads right. It also runs on demand
+- `.github/workflows/capitola-refresh.yml` is scheduled twice a day, 09:23 and 01:23 UTC (evening run added Nov 13, 2026).
+  GitHub starts scheduled runs hours late (3-8.5 h in Oct 2026; 6-10.5 h in Nov, the 09:23 slot ran 7:30 AM-noon PST),
+  so the evening run keeps the next morning's high tide on a fresh swell forecast. The page drops forecast days already
+  past, so an older run still reads right. A failed run starts a fresh one (`retry` job, `attempt` input, up to 3 in
+  all), because CDIP's refusals stick to a machine and a new run lands elsewhere. It also runs on demand
   (Actions tab → "Refresh Capitola flood data" → Run workflow, or `gh workflow run capitola-refresh.yml`):
   `fetch_data.py mop wlrecent` → `build_tables.py coastal` → `run_weekly.py` → copies `dash/*.csv` into
   `../data/` → commits "Capitola: model run … UTC" as github-actions[bot] and pushes. Pages redeploys in ~1 min.
@@ -81,7 +83,7 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | `build_dash_data.py`, `build_rain_data.py` | Write the page's CSVs into `dash/` |
 | `run_weekly.py` | One run: forecasts + outlook + CSVs; prints ALERT / NO ALERT |
 | `fetch_data.py`, `fetch_rain.py` | Downloaders (`mop` skips the hindcast if present; `wlrecent` appends recent water levels) |
-| `thredds_ssl.py` | Points netCDF's libcurl at the system CA bundle (see gotchas) |
+| `net.py` | Every download: our User-Agent, retries, and `opendap()` (CDIP through OPeNDAP's ASCII service, no netCDF) |
 | `data/` | Raw inputs committed here; hindcasts, nowcasts, pickles and `soquel_iv` are fetched/built (see `.gitignore`) |
 
 ## Data sources (all free, no keys)
@@ -95,7 +97,7 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | NWS NWPS gauge **SOQC1** | Flood levels | Action 13, Minor (flood stage) 16, Moderate 18, Major 22 ft |
 | NCEI GHCN-D daily rain | Ben Lomond **USC00040673** (primary), Santa Cruz USC00047916, Watsonville AP USW00023277 | Ben Lomond lags ~1 week |
 | IEM ASOS daily (Watsonville WVI) | Most recent days of rain (× 2.12 ≈ Ben Lomond) | |
-| NWS gridpoint QPF `api.weather.gov/gridpoints/MTR/91,73` | 8-day rain forecast at Ben Lomond | Needs a generic User-Agent header |
+| NWS gridpoint QPF `api.weather.gov/gridpoints/MTR/91,73` | 8-day rain forecast at Ben Lomond | Needs a User-Agent header (`net.get` sends one) |
 
 ## Coastal model (model.py)
 
@@ -142,11 +144,17 @@ give "Recedes fast" slightly more flood days than "Recedes".
 
 ## Gotchas
 
-- **THREDDS SSL**: netCDF4 points libcurl at certifi's CA bundle and netCDF-C strips spaces from that path, so every
-  OPeNDAP open fails ("NetCDF: I/O failure") when the venv sits under a folder with spaces ("Claude applications
-  folder"). `thredds_ssl.py` re-points it at the system bundle; import it in any script that opens THREDDS URLs.
+- **Always download through `net.py`.** CDIP refuses generic User-Agents from shared cloud machines (HTTP 403, "Access to
+  CDIP API has been restricted for this IP address or User-Agent", which failed the Nov 3 and Nov 12, 2026 runs).
+  netCDF's OPeNDAP client always sends "oc4.9.3" and ignores HTTP.USERAGENT, so the model no longer uses netCDF/xarray:
+  `net.opendap()` reads the `.dds` length and then `.ascii?var[a:1:b]`, like the page does (checked identical to the
+  netCDF values). That also retired the old netCDF CA-bundle workaround. `net.get` adds the User-Agent and retries
+  429/5xx; IEM (Watsonville rain) answers "Too many requests ... slow down" when pressed, so `rain_forecast` waits and retries.
+- **The creek step is optional.** If the USGS gauge has no reading in the past week, `creek_now_*` is blank (it used to stop
+  the run before the page's files were written: Oct 14, 18 and 20, 2026 published only the outlook). If any rain or creek
+  source is down, `run_weekly.py` prints a `::warning::`, publishes the coastal files and leaves the previous creek
+  forecast on the page. The workflow runs steps with `bash -eo pipefail`, so an error inside `| tee` fails the run.
 - pandas datetime units (µs vs ns): `offsets.offset_path` converts everything to ns.
-- The NWS gridpoint API needs a User-Agent (use a generic one).
 - `fetch_data.py wl` / `fetch_rain.py flow` have fixed end dates (2026-10-09); they're only for full rebuilds.
 
 ## Ideas not built
