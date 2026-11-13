@@ -424,7 +424,7 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
     const run = runTime();
     if (!run) { if (loaded) $('#stamp').textContent = "Couldn't load the latest model run."; return; }
     $('#stamp').textContent = 'Forecast run ' + fmtPT(run, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + fmtPT(run, { hour: 'numeric', minute: '2-digit' }) +
-      ' (reruns every morning); live data every 5 minutes.';
+      ' (reruns morning and evening); live data every 5 minutes.';
     const ageH = (Date.now() - run) / 36e5, stale = ageH > 36, box = $('#stale');
     document.body.classList.toggle('is-stale', stale); box.hidden = !stale;
     if (stale) {
