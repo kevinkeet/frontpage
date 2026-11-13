@@ -82,6 +82,7 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | `build_tables.py` | Rebuilds derived tables/fits from raw data (`coastal`, `creek`, or both) + `kelvin_analogs()` |
 | `build_dash_data.py`, `build_rain_data.py` | Write the page's CSVs into `dash/` |
 | `run_weekly.py` | One run: forecasts + outlook + CSVs; prints ALERT / NO ALERT |
+| `skill.py` | Scores past published forecasts against what happened (run locally after `build_tables.py coastal`; `--since DATE`) |
 | `fetch_data.py`, `fetch_rain.py` | Downloaders (`mop` skips the hindcast if present; `wlrecent` appends recent water levels) |
 | `net.py` | Every download: our User-Agent, retries, and `opendap()` (CDIP through OPeNDAP's ASCII service, no netCDF) |
 | `data/` | Raw inputs committed here; hindcasts, nowcasts, pickles and `soquel_iv` are fetched/built (see `.gitignore`) |
@@ -91,13 +92,26 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | Source | Use | Notes / quirks |
 |---|---|---|
 | NOAA CO-OPS Monterey **9413450** `api.tidesandcurrents.noaa.gov/api/prod/datagetter` | Observed water level, predictions | `hourly_height` max 1 yr/request; `water_level` (6-min) ~31 days; `predictions` hourly 1 yr. **NAVD88 = MLLW − 0.14 ft** here (MHHW 5.34 ft above MLLW) |
-| CDIP MOP alongshore **SC111–SC113** (THREDDS OPeNDAP `thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/SC11x_{hindcast,nowcast,forecast}.nc`) | Nearshore waves at 15 m depth just off Capitola Beach | Hindcast 2000-01-01 → 2025-03-31, nowcast after (hourly, ~2 h latency), forecast ~6 days. Vars `waveHs` (m), `waveTp`, `waveDp`, `waveTime`. MOP refracts offshore swell into the bay, so direction is built in |
-| Open-Meteo marine | 10-day offshore forecast for days 7–10 (scaled by direction ratio) | Free tier rate-limits; `forecast.py` falls back gracefully |
+| CDIP MOP alongshore **SC111–SC113** (THREDDS OPeNDAP `thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/SC11x_{hindcast,nowcast,ecmwf_fc,forecast}.nc`) | Nearshore waves at 15 m depth just off Capitola Beach | Hindcast 2000-01-01 → 2025-03-31, nowcast after (hourly, ~2 h latency). Forecast files are rebuilt daily and span 3.5 days back to ~6.5 ahead, 3-hourly; `ecmwf_fc` (ECMWF offshore waves) is the one used, `forecast` (NOAA WaveWatch III) the fallback. Vars `waveHs` (m), `waveTp`, `waveDp`, `waveTime`. MOP refracts offshore swell into the bay, so direction is built in |
+| Open-Meteo marine, `models=ecmwf_wam025` | Offshore forecast for days 7–9 (scaled by direction ratio) | ECMWF, like the ERA5 waves the direction ratios were fit on; runs 15 days but the forecast stops at today + 9. No peak period (uses 1.3 × mean period). Free tier rate-limits; `forecast.py` falls back gracefully |
 | USGS **11160000** Soquel Creek at Soquel | Creek flow/stage (15-min since 2007), daily since 1951, annual peaks since 1937 | |
 | NWS NWPS gauge **SOQC1** | Flood levels | Action 13, Minor (flood stage) 16, Moderate 18, Major 22 ft |
 | NCEI GHCN-D daily rain | Ben Lomond **USC00040673** (primary), Santa Cruz USC00047916, Watsonville AP USW00023277 | Ben Lomond lags ~1 week |
 | IEM ASOS daily (Watsonville WVI) | Most recent days of rain (× 2.12 ≈ Ben Lomond) | |
 | NWS gridpoint QPF `api.weather.gov/gridpoints/MTR/91,73` | 8-day rain forecast at Ben Lomond | Needs a User-Agent header (`net.get` sends one) |
+
+## Forecast skill (checked Nov 13, 2026 with `skill.py`)
+
+34 runs Oct 9 – Nov 13, scored against the model's own index on observed inputs:
+- **Still water (tide + Kelvin offset) is spot on**: bias 0.00 ft, mean error 0.16–0.26 ft out to 9 days. Persisting the
+  3-day offset works; the offset itself rose from +1.0 ft (Oct 9) to +1.15–1.3 ft in November, no recession yet.
+- **Waves were the whole problem**: the NOAA-driven CDIP forecast ran 0.4–0.6 ft low on wave height (8% low in October,
+  48% low in November), so the index ran 0.25–0.5 ft low at every lead (r = 0.8). With so many November days just over
+  11.0, it caught 1 of 26 Watch days 1–3 days out. CDIP's nowcast tracked buoy 156 (Monterey Canyon) normally, so the
+  reference was fine; over Nov 9–13 the ECMWF-driven CDIP run matched it within 7% (runup error +0.2 ft vs −0.5 ft).
+  Switched to ECMWF on Nov 13 (it raised that day's Sat Nov 14 peak from 12.7 to 13.75 ft). Re-run
+  `skill.py --since 2026-11-13` after a few weeks; if ECMWF runs high, consider averaging the two CDIP runs.
+- Days 7–9 (Open-Meteo) ran ~0.35 ft low too; not corrected (small sample, mostly small waves).
 
 ## Coastal model (model.py)
 

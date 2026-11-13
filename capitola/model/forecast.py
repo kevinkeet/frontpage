@@ -1,6 +1,7 @@
-"""Capitola flood-risk forecast: run weekly (or any time).
-Days 0-6 : CDIP MOP nearshore wave forecast off Capitola (SC111-113) + NOAA tide prediction + current offset
-Days 7-15: Open-Meteo offshore wave forecast, scaled to Capitola by swell direction (lower confidence)
+"""Capitola flood-risk forecast: run daily (or any time).
+Days 0-6 : CDIP MOP nearshore wave forecast off Capitola (SC111-113), ECMWF-driven run (NOAA WaveWatch III run as fallback)
+           + NOAA tide prediction + current offset
+Days 7-9 : Open-Meteo offshore ECMWF wave forecast, scaled to Capitola by swell direction (lower confidence)
 Offset   : mean observed-minus-predicted water level at Monterey over the last 72 h (Kelvin wave + surge)
 Usage    : python3 forecast.py  -> writes forecast.json and prints an alert summary
 """
@@ -23,26 +24,39 @@ def run(now=None):
     b7=(now-pd.Timedelta(days=7)).strftime('%Y%m%d')
     o7=noaa('water_level',b7,now.strftime('%Y%m%d')); o7=o7[o7.index.minute==0]
     p7=noaa('predictions',b7,now.strftime('%Y%m%d'),'&interval=h'); resid7=float((o7-p7).dropna()[-168:].mean())
-    # nearshore forecast (MOP)
-    mop=[]
-    for s in ['SC111','SC112','SC113']:
-        d=net.opendap(f'https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{s}_forecast.nc',['waveTime','waveHs','waveTp','waveDp'])
-        mop.append(pd.DataFrame({'Hs':d['waveHs'],'Tp':d['waveTp'],'Dp':d['waveDp']},index=pd.to_datetime(d['waveTime'].astype('int64'),unit='s')))
+    # nearshore forecast (MOP). CDIP runs it with offshore waves from ECMWF and from NOAA's WaveWatch III. ECMWF first:
+    # from Oct 9 to Nov 13, 2026 the NOAA-driven run put the flood index 0.3-0.5 ft below what the nowcast then showed
+    # (waves 8% low in October, 48% low in November), and over Nov 9-13 the ECMWF-driven run matched the nowcast's wave
+    # height within 7% (runup error +0.2 ft vs -0.5 ft). CDIP's own flooding forecasts switched to ECMWF in 2022.
+    mop=None
+    for kind,label in [('ecmwf_fc','CDIP nearshore (ECMWF)'),('forecast','CDIP nearshore (NOAA)')]:
+        try:
+            parts=[]
+            for s in ['SC111','SC112','SC113']:
+                d=net.opendap(f'https://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/{s}_{kind}.nc',['waveTime','waveHs','waveTp','waveDp'])
+                parts.append(pd.DataFrame({'Hs':d['waveHs'],'Tp':d['waveTp'],'Dp':d['waveDp']},index=pd.to_datetime(d['waveTime'].astype('int64'),unit='s')))
+            mop,src=parts,label
+            break
+        except Exception as e:
+            print(f'{label} forecast unavailable ({e!r})',flush=True)
+    if mop is None: raise RuntimeError('no CDIP nearshore forecast available')
     m=pd.concat(mop).groupby(level=0).mean().resample('h').interpolate()
-    m['src']='CDIP nearshore'
-    # extended offshore forecast (Open-Meteo), scaled by direction ratio
+    m['src']=src
+    # extended offshore forecast (Open-Meteo's ECMWF wave model, like the ERA5 waves the direction ratios came from)
     try:
-        j=net.get('https://marine-api.open-meteo.com/v1/marine?latitude=37.0&longitude=-122.5'
+        j=net.get('https://marine-api.open-meteo.com/v1/marine?latitude=37.0&longitude=-122.5&models=ecmwf_wam025'
                        '&hourly=wave_height,wave_direction,wave_period,swell_wave_peak_period&forecast_days=16&timezone=GMT',timeout=60).json()
         o=pd.DataFrame(j['hourly']); o.index=pd.to_datetime(o.pop('time')); o=o.dropna(subset=['wave_height','wave_direction','wave_period'])
     except Exception:   # extended outlook is optional (free API has a daily cap); fall back to CDIP days only
         o=pd.DataFrame(columns=['wave_height','wave_direction','wave_period','swell_wave_peak_period'],dtype=float)
     bins=np.array(sorted(DIR_RATIO)); ratio=np.array([DIR_RATIO[b] for b in bins])
     o['Hs']=o.wave_height*np.interp(o.wave_direction,bins,ratio)
-    o['Tp']=pd.to_numeric(o.swell_wave_peak_period,errors='coerce').fillna(o.wave_period*1.3); o['Dp']=o.wave_direction; o['src']='Open-Meteo offshore (scaled)'
+    o['Tp']=pd.to_numeric(o.swell_wave_peak_period,errors='coerce').fillna(o.wave_period*1.3); o['Dp']=o.wave_direction; o['src']='Open-Meteo offshore ECMWF (scaled)'
     o=o[o.index>m.index.max()][['Hs','Tp','Dp','src']]
     w=pd.concat([m[['Hs','Tp','Dp','src']],o])
-    f=w.join(pred.rename('tide'),how='inner'); f=f[f.index>=now.floor('h')]
+    f=w.join(pred.rename('tide'),how='inner')
+    end=(now.tz_localize('UTC').tz_convert(TZ).normalize()+pd.Timedelta(days=10)).tz_convert('UTC').tz_localize(None)   # today + 9 days
+    f=f[(f.index>=now.floor('h'))&(f.index<end)]
     f['still']=f.tide+offset
     f['runup']=runup_ft(f.Hs.values,f.Tp.values)
     f['twl']=f.still+MLLW_TO_NAVD88_FT+f.runup
