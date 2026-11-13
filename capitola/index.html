@@ -720,7 +720,9 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
     if (other.length) box.append(el('p', 'also', 'Also in effect: ' + [...new Set(other.map(p => p.event))].join(', ') + '.'));
     const coastal = main.find(p => /coastal flood/i.test(p.event)), note = $('#nws-note');
     note.hidden = !coastal;
-    if (coastal) note.textContent = 'The NWS ' + coastal.event + ' covers tidal flooding of low-lying areas around the bay; this table is about waves topping the Capitola seawall.';
+    if (coastal) note.textContent = /seawall|run ?up|breaking waves|wave overtopping/i.test(coastal.description || '')
+      ? 'The NWS ' + coastal.event + ' expects waves to run up beaches and over seawalls, the same thing this table measures for the Capitola seawall.'
+      : 'The NWS ' + coastal.event + ' covers tidal flooding of low-lying areas around the bay; this table is about waves topping the Capitola seawall.';
   }
 
   // ---- tide gauge: 72 h of 6-minute observations against the tide table, and the next highs and lows
