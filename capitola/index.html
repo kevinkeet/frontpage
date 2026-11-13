@@ -162,6 +162,7 @@ td.ix{width:40%;min-width:128px}
 .scale{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:var(--fs-caption);color:var(--ink-2);margin:8px 0 4px}
 .scale .ramp{display:inline-block;width:90px;height:8px;border-radius:2px;background:linear-gradient(90deg,var(--heat-lo),var(--heat-hi))}
 .scale .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--critical)}
+.scale .fcbox{display:inline-block;width:10px;height:10px;border-radius:2px;border:1.5px solid var(--ink)}
 .chips{display:inline-flex;flex-wrap:wrap;gap:4px;vertical-align:middle}
 .chip{border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:var(--fs-small);font-weight:600;background:var(--page);white-space:nowrap}
 .chart{width:100%;min-height:100px}
@@ -263,7 +264,7 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
         <div><span class="fig" data-k="offset_fig">—</span><span class="figlab">Kelvin-wave offset now<br>above the tide tables</span></div>
       </div>
       <p class="line" id="scen-line"></p>
-      <div class="scale" aria-hidden="true"><span>Daily chance of overtopping: 0%</span><i class="ramp"></i><span id="heat-max">—</span><span class="sep-dot">·</span><span>gray = past</span><span class="sep-dot">·</span><i class="dot"></i><span>observed overtopping</span></div>
+      <div class="scale" aria-hidden="true"><span>Daily chance of overtopping: 0%</span><i class="ramp"></i><span id="heat-max">—</span><span class="sep-dot">·</span><span>gray = past</span><span class="sep-dot">·</span><i class="dot"></i><span>observed overtopping</span><span class="sep-dot">·</span><i class="fcbox"></i><span>from the 10-day forecast</span></div>
       <div id="heat" class="chart"></div>
       <p class="line"><b>Riskiest:</b> <span class="chips" id="windows"></span> <span id="need-line"></span></p>
       <p class="line" id="dir-line"></p>
@@ -508,9 +509,10 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
     }
     if (fd && fd.length) setK('offset_fig', sgn1(num(fd[0].offset_ft)) + ' ft');
     if (wc) {
-      const ws = peakWindows(wc).filter(w => w.end >= todayPT);
+      const outlook = wc.filter(r => (r.p_source || 'outlook') === 'outlook');   // forecast days show in the 10-day table
+      const ws = peakWindows(outlook).filter(w => w.end >= todayPT);
       $('#windows').replaceChildren(...(ws.length ? ws.map(w => el('span', 'chip', w.label)) : [el('span', null, 'the big king tides have passed.')]));
-      const ahead = wc.filter(r => parseDay(r.date) >= todayPT);
+      const ahead = outlook.filter(r => parseDay(r.date) >= todayPT);
       const top = ahead.length ? ahead.reduce((x, y) => (num(y.p_flood) > num(x.p_flood) ? y : x)) : null;
       $('#need-line').textContent = top ? 'Worst morning, ' + dayFmt(parseDay(top.date)) + ' (' + pct(num(top.p_flood)) + '): an 18-second swell of about ' +
         Math.round(num(top.offshore_ft_SW)) + ' ft from the SW, ' + Math.round(num(top.offshore_ft_W)) + ' ft W or ' + Math.round(num(top.offshore_ft_WNW)) +
@@ -546,7 +548,8 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
     const H = months.length * (ch + gap) + 16;
     const svg = d3.select(box).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'region')
       .attr('aria-label', 'Daily chance of waves over the seawall, November to March. Use the arrow keys to step through the days.');
-    const pmax = d3.max(rows, r => r.p) || 1;
+    const isFc = r => r.p_source === 'forecast';
+    const pmax = d3.max(rows.filter(r => !isFc(r)), r => r.p) || 1;   // forecast days can sit near 100%; they cap at the darkest
     $('#heat-max').textContent = pct(pmax);
     const cs = getComputedStyle(document.documentElement);
     const ramp = d3.interpolateLab(cs.getPropertyValue('--heat-lo').trim(), cs.getPropertyValue('--heat-hi').trim());
@@ -562,6 +565,9 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
       .style('fill', c => past(c) ? 'var(--grid)' : ramp(Math.min(1, c.r.p / pmax)));
     svg.append('g').attr('aria-hidden', 'true').selectAll('circle').data(cells.filter(c => past(c) && num(c.r.observed_twl_ft) >= L.Flood)).join('circle')
       .attr('cx', c => c.x + cw / 2).attr('cy', c => c.y + ch / 2).attr('r', clamp(cw / 3, 2, 4)).style('fill', 'var(--critical)');
+    svg.append('g').attr('aria-hidden', 'true').selectAll('rect').data(cells.filter(c => isFc(c.r))).join('rect')
+      .attr('x', c => c.x + 0.75).attr('y', c => c.y + 0.75).attr('width', cw - 1.5).attr('height', ch - 1.5).attr('rx', Math.min(2.5, cw / 2))
+      .style('fill', 'none').style('stroke', 'var(--ink)').style('stroke-width', 1.5);
     const ti = cells.findIndex(c => +c.r.d === +todayPT);
     if (ti >= 0) svg.append('rect').attr('x', cells[ti].x - 1).attr('y', cells[ti].y - 1).attr('width', cw + 2).attr('height', ch + 2).attr('rx', 3)
       .style('fill', 'none').style('stroke', 'var(--accent)').style('stroke-width', 2);
@@ -575,7 +581,7 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
       const [ax, ay] = svgToCard(svg.node(), card, c.x + cw / 2, c.y + ch / 2), ob = num(r.observed_twl_ft);
       if (past(c)) return showTip(card, [dayFmt(r.d) + ', past', isFinite(ob) ? { k: 'Observed peak index', v: f1(ob) + ' ft' + (ob >= L.Flood ? ', over the seawall' : '') }
         : { k: 'Observed', v: 'not available' }], ax, ev ? d3.pointer(ev, card)[1] : ay);
-      showTip(card, [dayFmt(r.d),
+      showTip(card, [dayFmt(r.d) + (isFc(r) ? ', from the 10-day forecast' : ''),
         { k: 'Chance of overtopping', v: pct(r.p) }, { k: 'Chance of severe', v: pct(num(r.p_severe)) },
         { k: 'High tide', v: f1(num(r.high_tide_ft)) + ' ft at ' + r.high_tide_time },
         { k: 'Swell needed, SW', v: Math.round(num(r.offshore_ft_SW)) + ' ft' }, { k: 'Swell needed, W', v: Math.round(num(r.offshore_ft_W)) + ' ft' },
@@ -595,7 +601,8 @@ noscript p{padding:8px 12px;border:1px solid var(--line);border-radius:8px}
       { h: 'Chance', n: 1, f: r => pct(r.p) }, { h: 'Severe', n: 1, f: r => pct(num(r.p_severe)) },
       { h: 'SW (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_SW)) }, { h: 'W (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_W)) },
       { h: 'WNW (ft)', n: 1, f: r => Math.round(num(r.offshore_ft_WNW)) },
-      { h: 'Observed (ft)', n: 1, f: r => isFinite(num(r.observed_twl_ft)) ? f1(num(r.observed_twl_ft)) : '' }], rows);
+      { h: 'Observed (ft)', n: 1, f: r => isFinite(num(r.observed_twl_ft)) ? f1(num(r.observed_twl_ft)) : '' },
+      { h: 'Basis', f: r => ({ observed: 'Observed', forecast: 'Swell forecast' })[r.p_source] || 'Outlook' }], rows);
   }
 
   // ---------------------------------------------------------------- how it has done

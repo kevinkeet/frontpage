@@ -2,8 +2,11 @@
 Daily risk = P(Y >= threshold - base), base = day's highest predicted tide (NAVD88) + offset that day,
 offset follows a receding Kelvin-wave scenario (offsets.py; central = 'recede'),
 Y = (day's max TWL - day's max base) sampled from El Nino winters 2002-03, 2009-10, 2015-16, 2023-24.
-Validated: reproduces observed flood-threshold days per winter (2.5 expected vs 2.3 actual, all winters)."""
+Validated: reproduces observed flood-threshold days per winter (2.5 expected vs 2.3 actual, all winters).
+Days already past count by what happened, and days 1-6 ahead by the swell forecast (p_source says which), so the
+winter totals are observed so far + forecast for the coming week + this outlook for the rest of the winter."""
 import pandas as pd, numpy as np, json, os
+from math import erf, sqrt
 from model import *
 import offsets as O
 ELNINO=[2002,2009,2015,2023]
@@ -23,12 +26,26 @@ day['high_tide_time']=pd.to_datetime(day.t_max).dt.strftime('%-I:%M %p'); day=da
 obs=pd.read_pickle('data/daily_max.pkl').TWL
 seen=np.asarray((day.index<TODAY)&day.index.isin(obs.index))
 day['observed_twl']=np.where(seen,obs.reindex(day.index).values,np.nan)
+# Days 1-6 ahead come from the CDIP swell forecast: P(peak >= line) with the forecast's daily-peak error, sd 0.55 ft at
+# 1-3 days and 0.60 ft at 4-6 days (Oct 9 - Nov 13, 2026 runs scored by skill.py, after removing their bias).
+fc={}
+try:
+    for x in json.load(open('forecast.json'))['days']:
+        d=pd.Timestamp(x['date']); lead=(d-TODAY).days
+        if 1<=lead<=6 and str(x['source']).startswith('CDIP') and d in day.index: fc[d]=(float(x['twl']),0.55 if lead<=3 else 0.60)
+except Exception as e:
+    print('no forecast days for the winter totals:',repr(e))
+def pfc(level_ft):
+    return np.array([0.5*(1-erf((level_ft-fc[d][0])/(fc[d][1]*sqrt(2)))) if d in fc else np.nan for d in day.index])
+pf_fc,ps_fc=pfc(FLOOD),pfc(SEVERE); ahead=~np.isnan(pf_fc)
+day['p_source']=np.where(seen,'observed',np.where(ahead,'forecast','outlook'))
 summary={}
 for k in O.SHAPES:
     off=O.offset_path(day.index+pd.Timedelta(hours=12),k,resid7,TODAY)
     base=day.tide_max+MLLW_TO_NAVD88_FT+off
     pf,ps=pexc(FLOOD-base),pexc(SEVERE-base)
     pf=np.where(seen,(day.observed_twl>=FLOOD).astype(float),pf); ps=np.where(seen,(day.observed_twl>=SEVERE).astype(float),ps)
+    pf=np.where(ahead,pf_fc,pf); ps=np.where(ahead,ps_fc,ps)
     summary[k]={'flood_days':float(pf.sum()),'severe_days':float(ps.sum()),'mean_offset_ft':float(off.mean())}
     if k=='recede':
         day['offset_ft']=off; day['base']=base; day['p_flood']=pf; day['p_severe']=ps

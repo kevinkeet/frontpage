@@ -136,15 +136,20 @@ more: SW ~0.65, W 0.45, WNW 0.39, NW 0.32 (used for "swell needed").
 **Winter probabilities (season.py)**: P(flood) = P(Y ≥ threshold − base), base = day's highest predicted tide + 0.14
 + offset that day; Y = (day's max TWL − day's max base) from the El Niño winters in the wave record (2002–03,
 2009–10, 2015–16, 2023–24). Back-test: all winters 2.53 expected vs 2.30 actual flood days; El Niño winters 6.7 vs 6.25.
-Days before today use the observed daily peak instead (1 if it crossed the line, else 0), so totals read
-"observed so far + expected for the rest of the winter".
+Days before today use the observed daily peak instead (1 if it crossed the line, else 0), and days 1–6 ahead use the
+CDIP swell forecast, P(peak ≥ line) with a normal error of sd 0.55 ft (1–3 days) / 0.60 ft (4–6 days), from `skill.py`
+(added Nov 13, 2026, when the forecast had Sat Nov 14 at 13.75 ft and the outlook alone gave it 7%). `p_source` in
+`winter_calendar.csv` says which (observed / forecast / outlook). Totals read "observed so far + forecast for the coming
+week + outlook for the rest of the winter". The page scales the heatmap on outlook days, outlines forecast days, and
+picks the riskiest stretches and the swell-needed line from outlook days only.
 
-**Kelvin-wave offset (offsets.py)**: offset(t) = 0.12 + A_now × shape(t) / shape(today), A_now = last-7-day mean
-(observed − predicted) − 0.12. Shapes = anomaly after its Sep–Nov peak in 1982–83, 1997–98, 2015–16, peak = mid-Oct:
-`recede` = their mean (Nov .87, Dec .66, Jan .69, Feb .59, Mar .38), `fast` = month-by-month minimum (Nov .60,
-Dec .56, Jan .56, Feb .57, Mar .19), `hold` = 1.0. Dividing by shape(today) makes later runs start from the
-measured level (runs before Oct 15 are unchanged). Quirk: because `fast` is flat Dec–Feb, a run in December can
-give "Recedes fast" slightly more flood days than "Recedes".
+**Kelvin-wave offset (offsets.py)**: offset(t) = 0.12 + A_now × s(t), A_now = last-7-day mean (observed − predicted)
+− 0.12. Each analog (1982–83, 1997–98, 2015–16) is its anomaly normalised to its Sep–Nov peak, at mid-month knots with
+mid-October = 1.0 (1982–83 Nov 1.00 Dec .56 Jan .81 Feb .63 Mar .41; 1997–98 1.00 .73 .56 .57 .19; 2015–16 .60 .70 .70
+.57 .55); its path from today is shape_a(t) / shape_a(today), so every scenario starts at the measured level.
+`recede` = the analogs' mean path from today, `fast` = their minimum, `hold` = 1.0. Until Nov 13, 2026 the averaged
+shape was divided by its own value today; once the offset held at +1.15 ft through mid-November that left "Recedes fast"
+flatter than "Recedes" (12.0 vs 11.0 days). Now fast ≤ recede ≤ hold from any date.
 
 ## Creek model (rain_model.py)
 

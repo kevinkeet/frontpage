@@ -4,7 +4,7 @@ out='dash/'
 # 1 season calendar
 s=pd.read_csv('season_calendar.csv',parse_dates=['time_utc']).rename(columns={'time_utc':'date'})
 s['date']=s.date.dt.strftime('%Y-%m-%d')
-s=s[['date','tide_max','high_tide_time','p_flood','p_severe','runup_needed_ft','offshore_ft_SW','offshore_ft_W','offshore_ft_WNW','offshore_ft_NW','observed_twl']]
+s=s[['date','tide_max','high_tide_time','p_flood','p_severe','runup_needed_ft','offshore_ft_SW','offshore_ft_W','offshore_ft_WNW','offshore_ft_NW','observed_twl','p_source']]
 s=s.rename(columns={'tide_max':'high_tide_ft','observed_twl':'observed_twl_ft'}).round(3)
 s.to_csv(out+'winter_calendar.csv',index=False)
 # 2 scenarios
