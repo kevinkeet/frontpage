@@ -22,17 +22,22 @@ p=p['2026-11-01':'2027-03-31 23:00']
 day=p.groupby(p.index.normalize()).agg(['max','idxmax']); day.columns=['tide_max','t_max']
 day['high_tide_time']=pd.to_datetime(day.t_max).dt.strftime('%-I:%M %p'); day=day.drop(columns='t_max')
 # Days already past count by what happened: the observed daily peak of the flood index (tide gauge + CDIP nowcast),
-# so the winter totals are "observed so far + expected for the rest of the winter".
+# so the winter totals are "observed so far + expected for the rest of the winter". Where Capitola's actual impact is on
+# record (data/observed_impacts.csv), that decides instead: Nov 14, 2026 peaked at 16.2 ft, past the Severe line, but
+# brought only a few waves over the seawall, so it counts as a flood day and not a severe one.
 obs=pd.read_pickle('data/daily_max.pkl').TWL
 seen=np.asarray((day.index<TODAY)&day.index.isin(obs.index))
 day['observed_twl']=np.where(seen,obs.reindex(day.index).values,np.nan)
-# Days 1-6 ahead come from the CDIP swell forecast: P(peak >= line) with the forecast's daily-peak error, sd 0.55 ft at
-# 1-3 days and 0.60 ft at 4-6 days (Oct 9 - Nov 13, 2026 runs scored by skill.py, after removing their bias).
+imp=pd.read_csv('data/observed_impacts.csv',parse_dates=['date']).set_index('date').level.reindex(day.index)
+known=seen&imp.notna().values
+# Days 1-6 ahead come from the CDIP swell forecast: P(peak >= line) with the forecast's daily-peak error, sd 0.70 ft at
+# 1-3 days and 0.90 ft at 4-6 days (41 runs Oct 10 - Nov 16, 2026 scored by skill.py with the wave calibration applied;
+# the Nov 14 swell, 2 ft bigger than forecast, widened it from 0.55/0.60).
 fc={}
 try:
     for x in json.load(open('forecast.json'))['days']:
         d=pd.Timestamp(x['date']); lead=(d-TODAY).days
-        if 1<=lead<=6 and str(x['source']).startswith('CDIP') and d in day.index: fc[d]=(float(x['twl']),0.55 if lead<=3 else 0.60)
+        if 1<=lead<=6 and str(x['source']).startswith('CDIP') and d in day.index: fc[d]=(float(x['twl']),0.70 if lead<=3 else 0.90)
 except Exception as e:
     print('no forecast days for the winter totals:',repr(e))
 def pfc(level_ft):
@@ -45,6 +50,7 @@ for k in O.SHAPES:
     base=day.tide_max+MLLW_TO_NAVD88_FT+off
     pf,ps=pexc(FLOOD-base),pexc(SEVERE-base)
     pf=np.where(seen,(day.observed_twl>=FLOOD).astype(float),pf); ps=np.where(seen,(day.observed_twl>=SEVERE).astype(float),ps)
+    pf=np.where(known,imp.isin(['Flood','Severe']).astype(float),pf); ps=np.where(known,(imp=='Severe').astype(float),ps)
     pf=np.where(ahead,pf_fc,pf); ps=np.where(ahead,ps_fc,ps)
     summary[k]={'flood_days':float(pf.sum()),'severe_days':float(ps.sum()),'mean_offset_ft':float(off.mean())}
     if k=='recede':

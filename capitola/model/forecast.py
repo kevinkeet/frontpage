@@ -9,6 +9,12 @@ import pandas as pd, numpy as np, io, json, time, datetime as dt
 import net  # downloads with our User-Agent (CDIP refuses generic ones)
 from model import *
 TZ='America/Los_Angeles'
+# Wave-height calibration, fit Nov 16, 2026 by `skill.py --fit` on 41 runs (Oct 10 - Nov 16) against the CDIP nowcast:
+# every forecast source ran low, and more so for bigger swells (Sat Nov 14: the ECMWF-driven run had 8.7 ft at the 15 m
+# line for the noon high tide, the nowcast 12.9 ft, 14.7 ft at 8 AM). Height in ft -> scale * Hs**WAVE_EXP, one exponent
+# for every source. Open-Meteo's ECMWF waves use the CDIP-ECMWF scale until there are runs to fit them on.
+WAVE_EXP=1.145
+WAVE_SCALE={'ecmwf':0.935,'noaa':1.064}
 NOAA='https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=9413450&datum=MLLW&units=english&time_zone=gmt&format=csv&application=capitola_flood'
 def noaa(prod,b,e,extra=''):
     df=pd.read_csv(io.StringIO(net.get(f'{NOAA}&product={prod}&begin_date={b}&end_date={e}{extra}',timeout=60).text))
@@ -54,6 +60,9 @@ def run(now=None):
     o['Tp']=pd.to_numeric(o.swell_wave_peak_period,errors='coerce').fillna(o.wave_period*1.3); o['Dp']=o.wave_direction; o['src']='Open-Meteo offshore ECMWF (scaled)'
     o=o[o.index>m.index.max()][['Hs','Tp','Dp','src']]
     w=pd.concat([m[['Hs','Tp','Dp','src']],o])
+    w['Hs_raw']=w.Hs        # as the wave model gave it; kept in the hourly output so skill.py can refit the calibration
+    scale=w.src.map(lambda s: WAVE_SCALE['ecmwf' if 'ECMWF' in s else 'noaa'])
+    w['Hs']=scale*(w.Hs*M2FT)**WAVE_EXP/M2FT
     f=w.join(pred.rename('tide'),how='inner')
     end=(now.tz_localize('UTC').tz_convert(TZ).normalize()+pd.Timedelta(days=10)).tz_convert('UTC').tz_localize(None)   # today + 9 days
     f=f[(f.index>=now.floor('h'))&(f.index<end)]
@@ -71,7 +80,7 @@ def run(now=None):
     res={'run_at_utc':now.strftime('%Y-%m-%d %H:%M'),'offset_ft':round(offset,2),'resid7_ft':round(resid7,2),
          'thresholds':{'watch':WATCH,'flood':FLOOD,'severe':SEVERE},'days':days,
          'hourly':[{'t':t.strftime('%Y-%m-%dT%H:%M'),'twl':round(float(r.twl),2),'tide':round(float(r.tide),2),'still_navd':round(float(r.still)+MLLW_TO_NAVD88_FT,2),'runup':round(float(r.runup),2),
-                    'hs_ft':round(float(r.Hs)*M2FT,1),'tp':round(float(r.Tp),1)} for t,r in f.iterrows()]}
+                    'hs_ft':round(float(r.Hs)*M2FT,1),'tp':round(float(r.Tp),1),'hs_raw_ft':round(float(r.Hs_raw)*M2FT,1)} for t,r in f.iterrows()]}
     worst=max(days,key=lambda x:x['twl'])
     alerts=[x for x in days if x['level']!='Low']
     res['summary']=(f"Highest risk: {worst['date']} around {worst['peak_time']} ({worst['level']}, index {worst['twl']} ft vs flood {FLOOD} ft). "

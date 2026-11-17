@@ -38,11 +38,14 @@ ev=[('2023-01-05','Wharf broken, Esplanade restaurants gutted','KTVU, Santa Cruz
     ('2008-01-05','Surf over the wharf; old bathhouse battered','multer.com, Capitola hazard plan'),
     ('2024-12-23','Village closed; seawater flooded parts of the Village','Patch'),
     ('2014-03-01','Waves over seawall; Esplanade closed, car floated','Latitude 38')]
+# plus this winter's days whose actual impact is on record (season.py counts those by what happened, not by the index)
+ev+=[(r.date,r.what_happened,r.source) for r in pd.read_csv('data/observed_impacts.csv').itertuples()]
 er=[]
 for t,impact,src in ev:
+    if pd.Timestamp(t) not in d.index: continue
     r=d.loc[t]; er.append({'date':t,'impact':impact,'source':src,'twl_index_ft':round(float(r.TWL),1),'water_level_ft':round(float(r.wl_mllw_ft),1),
        'hs_capitola_ft':round(float(r.Hs)*M2FT,1),'period_s':round(float(r.Tp),0),'rank':int((d.TWL>r.TWL).sum()+1),'of_days':n,'peak_time':r.time})
-pd.DataFrame(er).to_csv(out+'validation_events.csv',index=False)
+pd.DataFrame(er).sort_values('rank').to_csv(out+'validation_events.csv',index=False)
 # 5 direction ratio
 lab={180:'S',195:'SSW',210:'SSW',225:'SW',240:'WSW',255:'WSW',270:'W',285:'WNW',300:'WNW',315:'NW'}
 pd.DataFrame([{'direction_deg':k,'compass':lab[k],'share_reaching_capitola':v} for k,v in DIR_RATIO.items()]).to_csv(out+'direction_ratio.csv',index=False)

@@ -38,6 +38,9 @@ def twl_ft(wl_mllw_ft,Hs15,Tp,beta=BEACH_SLOPE):
 #   2024-12-23 (Village closed, seawater in)    -> 13.2
 #   2023-12-28 (condos/restaurants flooded)     -> 15.8
 #   2023-01-05 (wharf broken, Esplanade gutted) -> 17.5
+#   2026-11-14 (a few waves over the seawall, businesses unharmed) -> 16.2: past the Severe line but only a flood,
+#     likely because the beach still had its fall sand. The lines still fit the documented record best (moving Severe
+#     above 16.2 would misplace Dec 2023 and Jan 2008), so they stay; season.py counts known days by what happened.
 WATCH, FLOOD, SEVERE = 11.0, 12.5, 15.5
 
 def level(twl):

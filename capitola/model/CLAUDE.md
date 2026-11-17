@@ -82,10 +82,10 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | `build_tables.py` | Rebuilds derived tables/fits from raw data (`coastal`, `creek`, or both) + `kelvin_analogs()` |
 | `build_dash_data.py`, `build_rain_data.py` | Write the page's CSVs into `dash/` |
 | `run_weekly.py` | One run: forecasts + outlook + CSVs; prints ALERT / NO ALERT |
-| `skill.py` | Scores past published forecasts against what happened (run locally after `build_tables.py coastal`; `--since DATE`) |
+| `skill.py` | Scores past published forecasts against what happened (run locally after `build_tables.py coastal`; `--since DATE`; `--fit` refits the wave calibration) |
 | `fetch_data.py`, `fetch_rain.py` | Downloaders (`mop` skips the hindcast if present; `wlrecent` appends recent water levels) |
 | `net.py` | Every download: our User-Agent, retries, and `opendap()` (CDIP through OPeNDAP's ASCII service, no netCDF) |
-| `data/` | Raw inputs committed here; hindcasts, nowcasts, pickles and `soquel_iv` are fetched/built (see `.gitignore`) |
+| `data/` | Raw inputs committed here; hindcasts, nowcasts, pickles and `soquel_iv` are fetched/built (see `.gitignore`). `observed_impacts.csv` = what actually happened on days we know (ground truth for the winter totals) |
 
 ## Data sources (all free, no keys)
 
@@ -100,18 +100,33 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | IEM ASOS daily (Watsonville WVI) | Most recent days of rain (× 2.12 ≈ Ben Lomond) | |
 | NWS gridpoint QPF `api.weather.gov/gridpoints/MTR/91,73` | 8-day rain forecast at Ben Lomond | Needs a User-Agent header (`net.get` sends one) |
 
-## Forecast skill (checked Nov 13, 2026 with `skill.py`)
+## Forecast skill and calibration (Nov 16, 2026)
 
-34 runs Oct 9 – Nov 13, scored against the model's own index on observed inputs:
-- **Still water (tide + Kelvin offset) is spot on**: bias 0.00 ft, mean error 0.16–0.26 ft out to 9 days. Persisting the
-  3-day offset works; the offset itself rose from +1.0 ft (Oct 9) to +1.15–1.3 ft in November, no recession yet.
-- **Waves were the whole problem**: the NOAA-driven CDIP forecast ran 0.4–0.6 ft low on wave height (8% low in October,
-  48% low in November), so the index ran 0.25–0.5 ft low at every lead (r = 0.8). With so many November days just over
-  11.0, it caught 1 of 26 Watch days 1–3 days out. CDIP's nowcast tracked buoy 156 (Monterey Canyon) normally, so the
-  reference was fine; over Nov 9–13 the ECMWF-driven CDIP run matched it within 7% (runup error +0.2 ft vs −0.5 ft).
-  Switched to ECMWF on Nov 13 (it raised that day's Sat Nov 14 peak from 12.7 to 13.75 ft). Re-run
-  `skill.py --since 2026-11-13` after a few weeks; if ECMWF runs high, consider averaging the two CDIP runs.
-- Days 7–9 (Open-Meteo) ran ~0.35 ft low too; not corrected (small sample, mostly small waves).
+**What happened on Sat Nov 14, 2026, the first big test.** NWS High Surf Warning (25-35 ft breakers, buoy 46042 at
+32.8 ft) on a 6.2 ft MLLW noon high tide. The forecast had it as Low 5-9 days out (Open-Meteo and the NOAA-driven run
+missed the swell), Flood 13.3 ft at 4 days, 12.7-13.9 ft at 0-3 days (13.75 ft once ECMWF waves were in). On observed
+inputs the index reached **16.2 ft at 10 AM** (15.9 at the noon high tide; nowcast 14.7 ft at 20 s at 8 AM), rank 4 of
+9,818 days since 2000 and past the Severe line from 8 AM to noon. What actually happened was a **minor flood**: a few waves
+over the seawall a little way into the Esplanade parking (a resident saw it that morning), coastal debris on the road, Riverview
+Path flooded by overtopping, sand piled around Venetian Court, the wharf's decking, railings and two piles damaged, the
+bottom of the Hooper's Beach ramp washed out; Esplanade businesses unharmed; the evacuation warning (Fri 2 PM) lifted Mon
+morning (City of Capitola oceanfront updates, Lookout, Good Times, KAZU, NWS storm report via IEM). So the waves came in
+bigger than forecast, and the impact was milder than the index said. Recorded in `data/observed_impacts.csv`.
+
+**Skill, 41 runs Oct 10 - Nov 16** (`skill.py`, against the model's own index on observed inputs):
+- Still water (tide + Kelvin offset) is spot on: bias 0.00 ft, mean error 0.17-0.24 ft out to 9 days.
+- Waves ran low from every source, and more so the bigger the swell. By forecast height, the NOAA-driven CDIP run
+  said 2.3 / 5.1 / 6.8 ft when the nowcast then had 2.9 / 7.9 / 11.4 ft; the ECMWF-driven run said 5.2 / 6.6 / 8.6 ft
+  for 6.1 / 8.0 / 12.9 ft (that last bin is Nov 14). Daily peaks 1-3 days out ran 0.47 ft low and caught 16 of 43
+  Watch-level days.
+- **Calibration (`forecast.py` WAVE_EXP, WAVE_SCALE):** forecast height in ft -> scale × Hs^1.145, scale 0.935 for ECMWF
+  waves and 1.064 for NOAA's; Open-Meteo's ECMWF waves (days 7-9) use the ECMWF scale until there are runs to check them.
+  Refit on these runs, daily peaks 1-3 days out: bias -0.08 ft, mean error 0.51 ft (was 0.70), 32 of 43 Watch days caught
+  (false alarms 8 -> 10), Nov 14 forecast 13.9-14.9 ft instead of 12.7-13.9 (in-sample, so expect a little worse).
+  The hourly output keeps the raw height as `hs_raw_ft`; `skill.py --fit` refits from it. Refit after the next few big
+  swells and check `skill.py --since 2026-11-16`.
+- The winter odds' forecast-day error (season.py) is now sd 0.70 ft at 1-3 days and 0.90 ft at 4-6 days (was 0.55 / 0.60
+  before the Nov 14 miss).
 
 ## Coastal model (model.py)
 
@@ -126,6 +141,19 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | Flood | 12.5 | 2014-03-01 Esplanade closed, car floated (index 12.5, rank 61 of 9,780 days); 2024-12-23 Village closed, seawater in (13.2, rank 28) |
 | Severe | 15.5 | 2023-12-28 condos/restaurants flooded (15.8, rank 5); 2023-01-05 wharf broken (17.5, rank 1); 2008-01-05 surf over wharf (15.9, rank 4) |
 
+**Nov 14, 2026 (16.2 ft, minor flood) is the first day past the Severe line that stayed a flood.** Its inputs nearly
+match Dec 28, 2023 (15.8 ft: still water 6.3 vs 6.2 ft MLLW, waves 11.6 vs 12.9 ft at 20 s at high tide), which flooded
+restaurants and red-tagged two Venetian units, so no rescaling of the index separates them; the likely difference is sand
+(mid-November, the beach still held its wide fall berm; the documented severe days all came Dec 28 - Jan 5). Lines kept:
+moving Severe above 16.2 would misplace Dec 2023 and Jan 2008, and 15.5 still fits the documented record best. Instead
+known days count by what happened (`data/observed_impacts.csv`: date, level, what happened, source; season.py and the
+page's documented-floods table read it), which took the central "chance of a damaging flood" from 89% back to 69% on
+Nov 16, since Nov 14 had counted as a damaging flood already happened. Nov 8, 2002 (16.45 ft, rank 2, also early season)
+left no record in the city's 2013 hazard timeline or the news. Next season, consider an early-season allowance on the
+lines until the first beach-cutting swell; this season the Nov 14 swell has likely cut the beach already. Add a row to
+`observed_impacts.csv` whenever a day's actual impact is known (including Watch days when waves did or didn't reach the
+wall).
+
 Beach slope 0.04–0.15 keeps Jan 2023 #1 and Dec 2023 #5. Mar 2014 was a short-period storm that Stockdon
 under-weights; minor overtopping is under-reported, so the Flood line may be slightly conservative.
 
@@ -137,8 +165,9 @@ more: SW ~0.65, W 0.45, WNW 0.39, NW 0.32 (used for "swell needed").
 + offset that day; Y = (day's max TWL − day's max base) from the El Niño winters in the wave record (2002–03,
 2009–10, 2015–16, 2023–24). Back-test: all winters 2.53 expected vs 2.30 actual flood days; El Niño winters 6.7 vs 6.25.
 Days before today use the observed daily peak instead (1 if it crossed the line, else 0), and days 1–6 ahead use the
-CDIP swell forecast, P(peak ≥ line) with a normal error of sd 0.55 ft (1–3 days) / 0.60 ft (4–6 days), from `skill.py`
-(added Nov 13, 2026, when the forecast had Sat Nov 14 at 13.75 ft and the outlook alone gave it 7%). `p_source` in
+CDIP swell forecast, P(peak ≥ line) with a normal error of sd 0.70 ft (1–3 days) / 0.90 ft (4–6 days), from `skill.py`
+(added Nov 13, 2026, when the forecast had Sat Nov 14 at 13.75 ft and the outlook alone gave it 7%; widened Nov 16). Days
+whose actual impact is in `data/observed_impacts.csv` count by that instead of the index. `p_source` in
 `winter_calendar.csv` says which (observed / forecast / outlook). Totals read "observed so far + forecast for the coming
 week + outlook for the rest of the winter". The page scales the heatmap on outlook days, outlines forecast days, and
 picks the riskiest stretches and the swell-needed line from outlook days only.

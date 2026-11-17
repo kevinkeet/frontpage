@@ -4,13 +4,15 @@ Each daily run's forecast_daily.csv / forecast_hourly.csv is in git history; "ob
 observed inputs (Monterey tide gauge + CDIP nowcast) from data/hourly_model.pkl and data/daily_max.pkl. Errors are
 forecast minus observed, in feet, split into still water (tide + offset) and wave runup.
 
-Usage: python skill.py [--since YYYY-MM-DD]    (e.g. --since 2026-11-13 for runs since the switch to ECMWF waves)
+Usage: python skill.py [--since YYYY-MM-DD] [--fit]
+  --since 2026-11-16   runs since the wave calibration (2026-11-13 for runs since the switch to ECMWF waves)
+  --fit                refit the wave-height calibration in forecast.py (WAVE_EXP, WAVE_SCALE) from the raw forecasts
 """
 import argparse, io, subprocess
 import numpy as np, pandas as pd
 from model import M2FT, WATCH
 
-ap = argparse.ArgumentParser(); ap.add_argument('--since', default='2026-10-09'); a = ap.parse_args()
+ap = argparse.ArgumentParser(); ap.add_argument('--since', default='2026-10-09'); ap.add_argument('--fit', action='store_true'); a = ap.parse_args()
 git = lambda *x: subprocess.run(['git', *x], check=True, capture_output=True, text=True).stdout
 commits = git('log', '--since=' + a.since, '--format=%H', '--', '../data/forecast_daily.csv').split()
 H = pd.read_pickle('data/hourly_model.pkl'); last = H.index.max()
@@ -42,3 +44,17 @@ for lo, hi in [(1, 3), (4, 6), (7, 9)]:
     ow, fw = g.obs >= WATCH, g.fc >= WATCH
     print(f'  {lo}-{hi} days: n={len(g)} bias {(g.fc - g.obs).mean():+.2f} MAE {(g.fc - g.obs).abs().mean():.2f} r={g.fc.corr(g.obs):.2f} | '
           f'caught {int((ow & fw).sum())}, missed {int((ow & ~fw).sum())}, false {int((fw & ~ow).sum())}')
+if a.fit:
+    # Raw wave-model heights (runs before Nov 16, 2026 published them uncorrected) against the nowcast, leads 1-6 days.
+    # Plain arrays: F's index repeats (one row per run and hour), which pandas won't align.
+    raw = (F.hs_raw_ft.fillna(F.hs_ft) if 'hs_raw_ft' in F else F.hs_ft).to_numpy()
+    fam = F.src.fillna('').map(lambda s: 'ecmwf' if s.startswith('CDIP') and 'ECMWF' in s else 'noaa' if s.startswith('CDIP')
+                               else 'open-meteo ecmwf' if 'ECMWF' in s else 'open-meteo (old)').to_numpy()
+    obs, lead, run = (F.Hs * M2FT).to_numpy(), F.lead.to_numpy(), F.run.to_numpy()
+    use = (lead >= 1) & (lead <= 6) & (raw >= 1) & (obs > 0)
+    cdip = use & np.isin(fam, ['ecmwf', 'noaa'])
+    b = np.polyfit(np.log(raw[cdip]), np.log(obs[cdip]), 1)[0]
+    print(f'\nWave-height calibration for forecast.py (raw forecast vs nowcast, leads 1-6): WAVE_EXP = {b:.3f}')
+    for k in ['ecmwf', 'noaa', 'open-meteo ecmwf', 'open-meteo (old)']:
+        g = use & (fam == k)
+        if g.any(): print(f'  {k}: scale {np.exp(np.mean(np.log(obs[g]) - b * np.log(raw[g]))):.3f} ({len(np.unique(run[g]))} runs, {int(g.sum())} hours)')
