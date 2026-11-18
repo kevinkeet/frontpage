@@ -1,6 +1,6 @@
 scenario,offset_ft,flood_days,severe_days,p_any_severe
 "Average winter, 2000-2025 (observed)",,2.2,0.21,0.189
 Past El Niño winters (observed),,6.2,0.75,0.528
-Kelvin offset stays at today's level,1.28,15.9,1.43,0.761
-Offset recedes like past El Niños (central),1.03,13.1,1.18,0.693
-Offset recedes fast,0.81,11.1,0.99,0.628
+Kelvin offset stays at today's level,1.29,15.7,1.41,0.756
+Offset recedes like past El Niños (central),1.04,12.8,1.16,0.687
+Offset recedes fast,0.82,10.8,0.97,0.621
