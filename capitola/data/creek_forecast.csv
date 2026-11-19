@@ -1,9 +1,9 @@
 date,rain_in,wetness_in,peak_flow_cfs,peak_stage_ft,p_action,p_minor,p_moderate,likely_level,high_tide_ft,compound,source,still_water_ft,creek_now_stage_ft,creek_now_flow_cfs,wetness_now_in,rain_needed_action_in,rain_needed_minor_in,rain_needed_moderate_in
-2026-11-19,0.78,1.6,276.0,3.7,0.0,0.0,0.0,None,4.79,False,NWS rain forecast,6.03,4.33,199.0,6.9,8.9,11.2,12.8
-2026-11-20,0.13,6.9,,,0.0,0.0,0.0,None,5.21,False,NWS rain forecast,6.45,4.33,199.0,6.9,8.9,11.2,12.8
-2026-11-21,0.04,7.7,,,0.0,0.0,0.0,None,5.67,False,NWS rain forecast,6.91,4.33,199.0,6.9,8.9,11.2,12.8
-2026-11-22,0.01,7.7,,,0.0,0.0,0.0,None,6.09,False,NWS rain forecast,7.33,4.33,199.0,6.9,8.9,11.2,12.8
-2026-11-23,0.0,7.7,,,0.0,0.0,0.0,None,6.48,False,NWS rain forecast,7.72,4.33,199.0,6.9,8.9,11.2,12.8
-2026-11-24,0.93,7.4,,,0.0,0.0,0.0,None,6.76,False,NWS rain forecast,8.0,4.33,199.0,6.9,8.9,11.2,12.8
-2026-11-25,0.85,7.4,167.0,3.0,0.0,0.0,0.0,None,6.82,False,NWS rain forecast,8.06,4.33,199.0,6.9,8.9,11.2,12.8
-2026-11-26,0.0,8.4,,,0.0,0.0,0.0,None,6.71,False,NWS rain forecast,7.95,4.33,199.0,6.9,8.9,11.2,12.8
+2026-11-19,0.73,1.6,269.0,3.6,0.0,0.0,0.0,None,4.79,False,NWS rain forecast,6.07,4.01,137.0,6.9,8.9,11.2,12.8
+2026-11-20,0.43,6.9,71.0,2.2,0.0,0.0,0.0,None,5.21,False,NWS rain forecast,6.49,4.01,137.0,6.9,8.9,11.2,12.8
+2026-11-21,0.06,7.6,,,0.0,0.0,0.0,None,5.67,False,NWS rain forecast,6.95,4.01,137.0,6.9,8.9,11.2,12.8
+2026-11-22,0.14,7.9,,,0.0,0.0,0.0,None,6.09,False,NWS rain forecast,7.37,4.01,137.0,6.9,8.9,11.2,12.8
+2026-11-23,0.0,7.9,,,0.0,0.0,0.0,None,6.48,False,NWS rain forecast,7.76,4.01,137.0,6.9,8.9,11.2,12.8
+2026-11-24,0.93,7.8,,,0.0,0.0,0.0,None,6.76,False,NWS rain forecast,8.04,4.01,137.0,6.9,8.9,11.2,12.8
+2026-11-25,0.85,7.8,174.0,3.1,0.0,0.0,0.0,None,6.82,False,NWS rain forecast,8.1,4.01,137.0,6.9,8.9,11.2,12.8
+2026-11-26,0.0,8.8,,,0.0,0.0,0.0,None,6.71,False,NWS rain forecast,7.99,4.01,137.0,6.9,8.9,11.2,12.8
