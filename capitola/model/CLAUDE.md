@@ -3,18 +3,26 @@
 Model behind **kevinkeet.com/capitola**: when is Capitola Village (Esplanade, creekside streets) most likely to
 flood in the 2026–27 El Niño winter, from the **ocean** (tide + Kelvin-wave sea-level anomaly + swell) and from
 **rain** (Soquel Creek). Built in a claude.ai chat for Kevin Keet on Oct 9, 2026, then moved here so a GitHub
-Action can rerun it on a schedule (hourly since Nov 22, 2026). This folder is the canonical copy (the old local `capitola-flood/` folder is
+Action can rerun it about every hour (since Nov 23, 2026). This folder is the canonical copy (the old local `capitola-flood/` folder is
 superseded). The repo is public and GitHub Pages serves this folder, so keep personal notes out of it.
 
 ## How the site stays current
 
-- `.github/workflows/capitola-refresh.yml` is scheduled every hour at :23 UTC since Nov 22, 2026 (before that twice a
-  day, 09:23 and 01:23 UTC). GitHub starts scheduled runs hours late (3-8.5 h in Oct 2026; 6-10.5 h in Nov) and may skip
-  some when busy, so the gap between runs varies; the page flags a forecast more than 12 h old. CDIP rebuilds its wave
+- `.github/workflows/capitola-refresh.yml` reruns the model about every hour since Nov 23, 2026 (twice a day before,
+  09:23 and 01:23 UTC). GitHub's schedule can't keep that pace for this repo: it started scheduled runs hours late
+  (3-8.5 h in Oct 2026; 6-10.5 h in Nov), and after the cron went hourly on Nov 22 not one hourly slot ran in the next
+  8 h. So the runs form a chain. Each run's `next` job dispatches the next run with `wait=true`; that run's `wait` job
+  uses the repo environment **`capitola-hourly`** (Settings → Environments, added Nov 23 with Kevin's OK), whose
+  57-minute wait timer holds the job without using a machine, and then `refresh` runs the model. The `wait` job fails,
+  ending the chain, if the run started less than 50 min earlier, so a missing timer can't set off back-to-back runs.
+  The hourly cron is only a watchdog: while a run is `waiting` (created in the last 90 min) it does nothing; otherwise
+  it runs the model and restarts the chain, a few hours late. `refresh` has job-level concurrency so two runs never
+  push clashing CSVs. To stop everything, disable the workflow (cancelling the waiting run only pauses the chain until
+  the watchdog fires). The page flags a forecast more than 12 h old. CDIP rebuilds its wave
   forecasts more than once a day and the gauge reports every 6 minutes, so hourly runs pick up real changes (each run
   commits, since the run time is in the data). The page drops forecast days already past, so an older run still reads right. A failed run starts a fresh one (`retry` job, `attempt` input, up to 3 in
   all), because CDIP's refusals stick to a machine and a new run lands elsewhere. It also runs on demand
-  (Actions tab → "Refresh Capitola flood data" → Run workflow, or `gh workflow run capitola-refresh.yml`):
+  (Actions tab → "Refresh Capitola flood data" → Run workflow with `wait` off, or `gh workflow run capitola-refresh.yml`):
   `fetch_data.py mop wlrecent` → `build_tables.py coastal` → `run_weekly.py` → copies `dash/*.csv` into
   `../data/` → commits "Capitola: model run … UTC" as github-actions[bot] and pushes. Pages redeploys in ~1 min.
   The run summary (ALERT / NO ALERT and the day list) shows on the workflow run page.

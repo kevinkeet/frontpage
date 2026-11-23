@@ -1,15 +1,25 @@
-# Reruns the Capitola flood model (capitola/model) every hour and publishes its CSVs to
+# Reruns the Capitola flood model (capitola/model) about every hour and publishes its CSVs to
 # kevinkeet.com/capitola. The model pulls live NOAA tides, CDIP waves, NWS rain and USGS creek data.
 # Only the built-in GITHUB_TOKEN is used, so there are no secrets to set up.
+#
+# How it keeps an hourly pace: GitHub started this repo's scheduled runs 6-10 h late in Oct-Nov 2026, and after the
+# schedule went hourly on Nov 22 not one hourly slot ran in the next 8 h, so the schedule can't keep time. Instead each
+# run ends by starting the next one (`next` job), and that run waits about an hour before doing anything: its `wait`
+# job uses the repo environment `capitola-hourly`, whose 57-minute wait timer (Settings > Environments) holds a job
+# without using a machine. The schedule is only a watchdog: it does nothing while a run is waiting, and when none is
+# (the chain broke), it runs the model and restarts the chain. To stop everything, disable the workflow in the Actions tab.
 name: Refresh Capitola flood data
+run-name: ${{ github.event_name == 'schedule' && 'Capitola watchdog check' || inputs.wait && 'Capitola hourly run' || 'Capitola run now' }}
 
 on:
   schedule:
-    # Hourly since Nov 22, 2026 (twice a day before). GitHub starts scheduled runs late (6-10 h in Oct-Nov 2026)
-    # and may skip some when busy, so the gap between runs varies; minute 23 stays clear of the top-of-hour rush.
-    - cron: '23 * * * *'
+    - cron: '23 * * * *'   # watchdog (see above); minute 23 stays clear of the top-of-hour rush
   workflow_dispatch:
     inputs:
+      wait:
+        description: Wait about an hour before running (the hourly chain sets this; leave it off to run now)
+        type: boolean
+        default: false
       attempt:
         description: Attempt number (a failed run starts a fresh one, up to 3 in all)
         required: false
@@ -17,25 +27,59 @@ on:
 
 permissions:
   contents: write
-  actions: write    # lets a failed run start a fresh one, which lands on a different machine
-
-concurrency:
-  group: capitola-refresh
-  cancel-in-progress: false
+  actions: write    # lets a run start the next one, and a failed run start a fresh one on a different machine
 
 jobs:
-  season:
+  plan:
     runs-on: ubuntu-24.04
     outputs:
-      active: ${{ steps.check.outputs.active }}
+      go: ${{ steps.plan.outputs.go }}
     steps:
-      - id: check
-        # the model covers winter 2026-27; stop quietly after April instead of failing every day
-        run: echo "active=$([ "$(date -u +%Y%m%d)" -le 20270430 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          # the model covers winter 2026-27; stop quietly after April instead of failing every day
+          if [ "$(date -u +%Y%m%d)" -gt 20270430 ]; then echo go=false >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ "$EVENT" = schedule ]; then
+            # a run waiting on the timer, started in the last 90 min, means the hourly chain is alive
+            waiting=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/capitola-refresh.yml/runs?status=waiting&per_page=10" \
+              --jq '[.workflow_runs[] | select(now - (.created_at | fromdateiso8601) < 5400)] | length')
+            if [ "$waiting" -gt 0 ]; then
+              echo "The hourly chain is running (the next run is waiting), so there is nothing to do." >> "$GITHUB_STEP_SUMMARY"
+              echo go=false >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            echo "No run was waiting, so this run refreshes the model and restarts the hourly chain." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo go=true >> "$GITHUB_OUTPUT"
+
+  wait:
+    # Held by the capitola-hourly environment's wait timer (57 min), which uses no machine. Without that timer the runs
+    # would follow each other back to back, so this stops the chain if the run started less than 50 min ago.
+    needs: plan
+    if: needs.plan.outputs.go == 'true' && inputs.wait
+    runs-on: ubuntu-24.04
+    environment: capitola-hourly
+    steps:
+      - name: Check that the timer held this run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          created=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .created_at)
+          waited=$(( $(date +%s) - $(date -d "$created" +%s) ))
+          echo "Waited $((waited / 60)) min since the run started" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$waited" -lt 3000 ]; then
+            echo "::error::Only $((waited / 60)) min since the run started: the capitola-hourly environment needs its 57-minute wait timer. Stopping the hourly chain."
+            exit 1
+          fi
 
   refresh:
-    needs: season
-    if: needs.season.outputs.active == 'true'
+    needs: [plan, wait]
+    if: ${{ !cancelled() && needs.plan.outputs.go == 'true' && (needs.wait.result == 'success' || needs.wait.result == 'skipped') }}
+    concurrency:
+      group: capitola-refresh   # one model run at a time, so two runs never push clashing CSVs
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
@@ -90,7 +134,7 @@ jobs:
     # CDIP sometimes refuses a GitHub machine outright (HTTP 403 on Nov 3 and 12, 2026), and waiting on the same machine
     # never lifted it. A new run lands on a different machine, so a failed run starts another, up to 3 attempts in all.
     needs: refresh
-    if: failure() && fromJSON(github.event.inputs.attempt || '1') < 3
+    if: ${{ !cancelled() && needs.refresh.result == 'failure' && fromJSON(github.event.inputs.attempt || '1') < 3 }}
     runs-on: ubuntu-24.04
     steps:
       - name: Start a fresh run
@@ -101,3 +145,25 @@ jobs:
           sleep 120
           gh workflow run capitola-refresh.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f attempt=$((ATTEMPT + 1))
           echo "Started attempt $((ATTEMPT + 1))" >> "$GITHUB_STEP_SUMMARY"
+
+  next:
+    # Keeps the hourly chain going: starts the next run, which waits about an hour, unless one is already waiting.
+    # It runs even when the model failed, so one bad hour doesn't stop the updates.
+    needs: [plan, wait, refresh]
+    if: ${{ !cancelled() && needs.plan.outputs.go == 'true' && needs.wait.result != 'failure' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Start the next hourly run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          waiting=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/capitola-refresh.yml/runs?status=waiting&per_page=10" \
+            --jq '[.workflow_runs[] | select(now - (.created_at | fromdateiso8601) < 5400)] | length')
+          if [ "$waiting" -gt 0 ]; then echo "The next hourly run is already waiting." >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          for try in 1 2 3; do
+            if gh workflow run capitola-refresh.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f wait=true; then
+              echo "Started the next hourly run (it waits about an hour)." >> "$GITHUB_STEP_SUMMARY"; exit 0
+            fi
+            sleep 30
+          done
+          exit 1
