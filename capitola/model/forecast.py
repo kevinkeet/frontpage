@@ -1,12 +1,15 @@
 """Capitola flood-risk forecast: run daily (or any time).
 Days 0-6 : CDIP MOP nearshore wave forecast off Capitola (SC111-113), ECMWF-driven run (NOAA WaveWatch III run as fallback)
-           + NOAA tide prediction + current offset
+           + NOAA tide prediction + offset
 Days 7-9 : Open-Meteo offshore ECMWF wave forecast, scaled to Capitola by swell direction (lower confidence)
-Offset   : mean observed-minus-predicted water level at Monterey over the last 72 h (Kelvin wave + surge)
+Offset   : observed-minus-predicted water level at Monterey (Kelvin wave + warm water + surge). Since Nov 23, 2026 it
+           follows NOAA's STOFS surge forecast re-anchored to the gauge hour by hour (surge.py); if STOFS can't be
+           fetched it falls back to holding the last-72-h mean, as before.
 Usage    : python3 forecast.py  -> writes forecast.json and prints an alert summary
 """
 import pandas as pd, numpy as np, io, json, time, datetime as dt
 import net  # downloads with our User-Agent (CDIP refuses generic ones)
+import surge
 from model import *
 TZ='America/Los_Angeles'
 # Wave-height calibration, fit Nov 16, 2026 by `skill.py --fit` on 41 runs (Oct 10 - Nov 16) against the CDIP nowcast:
@@ -66,7 +69,16 @@ def run(now=None):
     f=w.join(pred.rename('tide'),how='inner')
     end=(now.tz_localize('UTC').tz_convert(TZ).normalize()+pd.Timedelta(days=10)).tz_convert('UTC').tz_localize(None)   # today + 9 days
     f=f[(f.index>=now.floor('h'))&(f.index<end)]
-    f['still']=f.tide+offset
+    try:
+        path,surge_info=surge.offset_path(resid,now,f.index)
+    except Exception as e:
+        path,surge_info=None,{'source':'held','why':repr(e)}
+    if path is None:
+        print(f"STOFS surge forecast unavailable ({surge_info['why']}); holding the 72-h offset",flush=True)
+        f['offset']=offset
+    else:
+        f['offset']=path.values
+    f['still']=f.tide+f.offset
     f['runup']=runup_ft(f.Hs.values,f.Tp.values)
     f['twl']=f.still+MLLW_TO_NAVD88_FT+f.runup
     f['level']=level(f.twl.values)
@@ -75,23 +87,26 @@ def run(now=None):
     for d,g in f.dropna(subset=['twl']).groupby(f.dropna(subset=['twl']).index.normalize()):
         k=g.twl.idxmax(); r=g.loc[k]
         days.append({'date':d.strftime('%Y-%m-%d'),'peak_time':k.strftime('%-I %p'),'twl':round(float(r.twl),2),
-                     'level':str(r.level),'tide_ft':round(float(r.tide),2),'hs_capitola_ft':round(float(r.Hs)*M2FT,1),
-                     'period_s':round(float(r.Tp),1),'source':r.src})
-    res={'run_at_utc':now.strftime('%Y-%m-%d %H:%M'),'offset_ft':round(offset,2),'resid7_ft':round(resid7,2),
+                     'level':str(r.level),'tide_ft':round(float(r.tide),2),'offset_peak_ft':round(float(r.offset),2),
+                     'hs_capitola_ft':round(float(r.Hs)*M2FT,1),'period_s':round(float(r.Tp),1),'source':r.src})
+    res={'run_at_utc':now.strftime('%Y-%m-%d %H:%M'),'offset_ft':round(offset,2),'resid7_ft':round(resid7,2),'surge':surge_info,
          'thresholds':{'watch':WATCH,'flood':FLOOD,'severe':SEVERE},'days':days,
-         'hourly':[{'t':t.strftime('%Y-%m-%dT%H:%M'),'twl':round(float(r.twl),2),'tide':round(float(r.tide),2),'still_navd':round(float(r.still)+MLLW_TO_NAVD88_FT,2),'runup':round(float(r.runup),2),
+         'hourly':[{'t':t.strftime('%Y-%m-%dT%H:%M'),'twl':round(float(r.twl),2),'tide':round(float(r.tide),2),'offset':round(float(r.offset),2),
+                    'still_navd':round(float(r.still)+MLLW_TO_NAVD88_FT,2),'runup':round(float(r.runup),2),
                     'hs_ft':round(float(r.Hs)*M2FT,1),'tp':round(float(r.Tp),1),'hs_raw_ft':round(float(r.Hs_raw)*M2FT,1)} for t,r in f.iterrows()]}
     worst=max(days,key=lambda x:x['twl'])
     alerts=[x for x in days if x['level']!='Low']
     res['summary']=(f"Highest risk: {worst['date']} around {worst['peak_time']} ({worst['level']}, index {worst['twl']} ft vs flood {FLOOD} ft). "
-                    f"Water level offset now {offset:+.2f} ft.")
+                    f"Water level offset now {offset:+.2f} ft; "
+                    + (f"STOFS surge forecast (cycle {surge_info['cycle']}, bias {surge_info['bias_ft']:+.2f} ft)." if surge_info['source']=='stofs'
+                       else "held flat (no surge forecast)."))
     res['alert']=bool(alerts)
     return res
 
 if __name__=='__main__':
     r=run(); json.dump(r,open('forecast.json','w'),indent=1)
     print(r['summary'])
-    for x in r['days']: print(x['date'],x['peak_time'],x['level'],x['twl'],'tide',x['tide_ft'],'Hs',x['hs_capitola_ft'],'ft @',x['period_s'],'s',x['source'])
+    for x in r['days']: print(x['date'],x['peak_time'],x['level'],x['twl'],'tide',x['tide_ft'],'offset',x['offset_peak_ft'],'Hs',x['hs_capitola_ft'],'ft @',x['period_s'],'s',x['source'])
 
 # ---------------- Long-range outlook (no swell forecast) ----------------
 # Still water = NOAA predicted tide + an assumed offset; swell lines add the typical (median hour) and

@@ -33,15 +33,25 @@ superseded). The repo is public and GitHub Pages serves this folder, so keep per
 ## The page (../index.html)
 
 One dense dashboard (consolidated on Oct 9, 2026 at Kevin's request: "information dense"), plain HTML + d3 v7.9.0 vendored
-in `../vendor/`. Order: NWS alert banner → 12-column grid. At ≥1080 px: **Next 10 days** (8 cols: status line + one table
-merging `forecast_daily` with `creek_forecast`, index bars with Watch/Flood ticks) beside **Right now** (4 cols: live flood
+in `../vendor/`. Order: NWS alert banner → 12-column grid. At ≥1080 px: **Next 10 days** (8 cols: status line, the
+**what-to-expect block**, then one table merging `forecast_daily` with `creek_forecast`, index bars 6-18 ft with
+Watch/Flood/Severe ticks, an Offset column) beside **Right now** (4 cols: live flood
 index + meter, key-value rows for next high tide, tide, waves, creek, rain, and a tide sparkline); **This winter** (8: headline
 numbers, scenario line, calendar heatmap, riskiest windows + swell needed, direction shares, creek odds) beside **Live
 views** (4: webcam + radar, links); **How it works and how it has done** (12: method, limits, documented floods). Below
 1080 px everything stacks; phones hide the Tide/Period/Rain columns.
-- **Model CSVs it reads** (from `../data/`, `cache: 'no-cache'`): forecast_daily, creek_forecast, scenarios, winter_calendar,
-  thresholds, validation_events, creek_levels, creek_rain_needed, direction_ratio. The model still writes the others
-  (outlook_*, forecast_hourly, kelvin_paths, offsets, offset_monthly, swell_climate, creek_events, creek_annual_peaks); the
+- **What to expect** (added Nov 23, 2026; Kevin wanted "more obvious the degree of damage that you expect on each of the
+  severe days"): a red card for each Severe day ("major damage likely", or "destructive flood possible" at 17 ft and up)
+  and one orange card listing the Flood days. Each gives the hours over the seawall (hourly index ≥ Flood; "worst" = ≥
+  Severe), the chance of reaching the line (winter_calendar, forecast days only), the ingredients (waves, tide, offset,
+  still water, and "higher than in any documented Capitola flood" when the still water beats validation_events'
+  `water_level_ft`), and the documented floods in the same band. The damage words come from those floods: Flood = the
+  Esplanade and Village streets flood and close (Mar 2014 at 12.5, Dec 2024 at 13.2); Severe = seawater into restaurants
+  and condos (Dec 2023), wharf and bathhouse battered (Jan 2008), or only the wharf and path when a wide fall beach
+  helped (Nov 14, 2026); 17.5 = Jan 2023, wharf broken and restaurants gutted. Edit the words in `renderExpect()`.
+- **Model CSVs it reads** (from `../data/`, `cache: 'no-cache'`): forecast_daily, forecast_hourly, creek_forecast, scenarios,
+  winter_calendar, thresholds, validation_events, creek_levels, creek_rain_needed, direction_ratio. The model still writes
+  the others (outlook_*, kelvin_paths, offsets, offset_monthly, swell_climate, creek_events, creek_annual_peaks); the
   longer page that charted them is in git history (commit af4d1f4) if any of it should come back.
 - **Live data fetched in the visitor's browser**, refreshed every 5 min while the tab is visible (rain every 30 min). All
   CORS-enabled (checked Oct 9, 2026): NWS active alerts for the Capitola point (combined statements merged into one banner, led
@@ -86,12 +96,14 @@ embedding disabled; HDOnTap Seascape sends X-Frame-Options DENY; Surfline offers
 | `skill.py` | Scores past published forecasts against what happened (run locally after `build_tables.py coastal`; `--since DATE`; `--fit` refits the wave calibration) |
 | `fetch_data.py`, `fetch_rain.py` | Downloaders (`mop` skips the hindcast if present; `wlrecent` appends recent water levels) |
 | `net.py` | Every download: our User-Agent, retries, and `opendap()` (CDIP through OPeNDAP's ASCII service, no netCDF) |
+| `surge.py` | The forecast's offset hour by hour: NOAA's STOFS surge forecast for Monterey, re-anchored to the gauge (see Storm surge below) |
 | `data/` | Raw inputs committed here; hindcasts, nowcasts, pickles and `soquel_iv` are fetched/built (see `.gitignore`). `observed_impacts.csv` = what actually happened on days we know (ground truth for the winter totals) |
 
 ## Data sources (all free, no keys)
 
 | Source | Use | Notes / quirks |
 |---|---|---|
+| NOAA STOFS-2D-Global, public AWS bucket `noaa-gestofs-pds`, `stofs_2d_glo.YYYYMMDD/stofs_2d_glo.tHHz.points.swl.shef` | Storm surge forecast at Monterey (station **MEYC1**; San Francisco is FTPC1) | Cycles 00/06/12/18 UTC, posted ~7.3 h later; 30-min sub-tidal water level, ft, 7.5 days ahead; SHEF text, 1.8 MB for all 383 stations (the .nc points files are 25 MB). `cwl` = `htp` (tide) + `swl`. Runs ~0.1-0.2 ft high at Monterey, hence the re-anchoring |
 | NOAA CO-OPS Monterey **9413450** `api.tidesandcurrents.noaa.gov/api/prod/datagetter` | Observed water level, predictions | `hourly_height` max 1 yr/request; `water_level` (6-min) ~31 days; `predictions` hourly 1 yr. **NAVD88 = MLLW − 0.14 ft** here (MHHW 5.34 ft above MLLW) |
 | CDIP MOP alongshore **SC111–SC113** (THREDDS OPeNDAP `thredds.cdip.ucsd.edu/thredds/dodsC/cdip/model/MOP_alongshore/SC11x_{hindcast,nowcast,ecmwf_fc,forecast}.nc`) | Nearshore waves at 15 m depth just off Capitola Beach | Hindcast 2000-01-01 → 2025-03-31, nowcast after (hourly, ~2 h latency). Forecast files are rebuilt daily and span 3.5 days back to ~6.5 ahead, 3-hourly; `ecmwf_fc` (ECMWF offshore waves) is the one used, `forecast` (NOAA WaveWatch III) the fallback. Vars `waveHs` (m), `waveTp`, `waveDp`, `waveTime`. MOP refracts offshore swell into the bay, so direction is built in |
 | Open-Meteo marine, `models=ecmwf_wam025` | Offshore forecast for days 7–9 (scaled by direction ratio) | ECMWF, like the ERA5 waves the direction ratios were fit on; runs 15 days but the forecast stops at today + 9. No peak period (uses 1.3 × mean period). Free tier rate-limits; `forecast.py` falls back gracefully |
@@ -128,6 +140,25 @@ bigger than forecast, and the impact was milder than the index said. Recorded in
   swells and check `skill.py --since 2026-11-16`.
 - The winter odds' forecast-day error (season.py) is now sd 0.70 ft at 1-3 days and 0.90 ft at 4-6 days (was 0.55 / 0.60
   before the Nov 14 miss).
+
+## Storm surge (Nov 23, 2026)
+
+Until Nov 23 the forecast held the offset at the last-72-h mean for all ten days, so incoming storm surge was missed:
+Thu Nov 19 came in about 1 ft above the day-ahead forecast (12.2 vs 11.1 ft), roughly 0.3 ft of it surge (the gauge ran
+1.5 ft over the table that morning, the forecast held 1.2), and before the Nov 14 swell the gauge ran 1.7-1.8 ft over the
+table while forecasts 1-2 days out held 1.05. Now `surge.py` takes NOAA's STOFS-2D-Global sub-tidal water level for
+Monterey and re-anchors it to the gauge: bias = mean(observed − STOFS) over the last 24 h, each hour from the newest of
+the last 3 cycles that covered it within its first 12 h; offset(t) = STOFS(t) + bias; past STOFS's 7.5 days it holds
+STOFS's last-day mean. If no cycle can be fetched or there are < 12 h of overlap, it falls back to the 72-h hold (the run
+log says so; `forecast.json` `surge` records the source, cycle and bias). Outputs: `offset_peak_ft` per day, `offset` per
+hour; `offset_ft` stays the observed 72-h mean ("now").
+
+Scored over Oct 28 - Nov 22, 2026 (52 cycles, 7,768 hours, scratch script, not in the repo): RMS error of the offset at
+daily high tides 0.16 / 0.17 / 0.18 / 0.20 / 0.22 ft at 0-1 / 1-2 / 2-3 / 3-4 / 4-6 days vs 0.21 / 0.24 / 0.23 / 0.22 /
+0.25 for the hold; raw STOFS 0.17-0.20 but biased +0.06 to +0.09. In the Nov 18-19 storm (0.5-3 days out) the hold ran
+0.16 ft low, the re-anchored STOFS 0.07. For the Nov 25 king tide the Nov 22 18Z cycle gave Monterey 0.96 ft vs the hold's
+1.06; NWS's San Francisco forecast implied +1.6 ft over the table there while STOFS, re-anchored, said +0.9, so they
+disagreed; check how Nov 25 verified.
 
 ## Coastal model (model.py)
 
