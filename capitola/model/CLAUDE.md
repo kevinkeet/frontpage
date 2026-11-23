@@ -3,15 +3,16 @@
 Model behind **kevinkeet.com/capitola**: when is Capitola Village (Esplanade, creekside streets) most likely to
 flood in the 2026–27 El Niño winter, from the **ocean** (tide + Kelvin-wave sea-level anomaly + swell) and from
 **rain** (Soquel Creek). Built in a claude.ai chat for Kevin Keet on Oct 9, 2026, then moved here so a GitHub
-Action can rerun it every morning. This folder is the canonical copy (the old local `capitola-flood/` folder is
+Action can rerun it on a schedule (hourly since Nov 22, 2026). This folder is the canonical copy (the old local `capitola-flood/` folder is
 superseded). The repo is public and GitHub Pages serves this folder, so keep personal notes out of it.
 
 ## How the site stays current
 
-- `.github/workflows/capitola-refresh.yml` is scheduled twice a day, 09:23 and 01:23 UTC (evening run added Nov 13, 2026).
-  GitHub starts scheduled runs hours late (3-8.5 h in Oct 2026; 6-10.5 h in Nov, the 09:23 slot ran 7:30 AM-noon PST),
-  so the evening run keeps the next morning's high tide on a fresh swell forecast. The page drops forecast days already
-  past, so an older run still reads right. A failed run starts a fresh one (`retry` job, `attempt` input, up to 3 in
+- `.github/workflows/capitola-refresh.yml` is scheduled every hour at :23 UTC since Nov 22, 2026 (before that twice a
+  day, 09:23 and 01:23 UTC). GitHub starts scheduled runs hours late (3-8.5 h in Oct 2026; 6-10.5 h in Nov) and may skip
+  some when busy, so the gap between runs varies; the page flags a forecast more than 12 h old. CDIP rebuilds its wave
+  forecasts more than once a day and the gauge reports every 6 minutes, so hourly runs pick up real changes (each run
+  commits, since the run time is in the data). The page drops forecast days already past, so an older run still reads right. A failed run starts a fresh one (`retry` job, `attempt` input, up to 3 in
   all), because CDIP's refusals stick to a machine and a new run lands elsewhere. It also runs on demand
   (Actions tab → "Refresh Capitola flood data" → Run workflow, or `gh workflow run capitola-refresh.yml`):
   `fetch_data.py mop wlrecent` → `build_tables.py coastal` → `run_weekly.py` → copies `dash/*.csv` into

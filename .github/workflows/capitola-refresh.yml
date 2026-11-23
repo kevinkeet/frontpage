@@ -1,14 +1,13 @@
-# Reruns the Capitola flood model (capitola/model) twice a day and publishes its CSVs to
+# Reruns the Capitola flood model (capitola/model) every hour and publishes its CSVs to
 # kevinkeet.com/capitola. The model pulls live NOAA tides, CDIP waves, NWS rain and USGS creek data.
 # Only the built-in GITHUB_TOKEN is used, so there are no secrets to set up.
 name: Refresh Capitola flood data
 
 on:
   schedule:
-    # GitHub starts scheduled runs hours late (6-10 h in Oct-Nov 2026), so these land around late morning and
-    # late evening Pacific time; the evening run keeps the next morning's high tide on a fresh swell forecast.
-    - cron: '23 9 * * *'
-    - cron: '23 1 * * *'
+    # Hourly since Nov 22, 2026 (twice a day before). GitHub starts scheduled runs late (6-10 h in Oct-Nov 2026)
+    # and may skip some when busy, so the gap between runs varies; minute 23 stays clear of the top-of-hour rush.
+    - cron: '23 * * * *'
   workflow_dispatch:
     inputs:
       attempt:
