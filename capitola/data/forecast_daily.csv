@@ -1,11 +1,11 @@
 date,peak_time,twl,level,tide_ft,offset_peak_ft,hs_capitola_ft,period_s,source,offset_ft,run_at_utc
-2026-11-24,10 AM,11.2,Watch,6.38,1.1,2.8,14.7,CDIP nearshore (ECMWF),1.04,2026-11-24 18:12
-2026-11-25,10 AM,16.5,Severe,6.82,1.07,9.5,20.0,CDIP nearshore (ECMWF),1.04,2026-11-24 18:12
-2026-11-26,10 AM,12.68,Flood,6.71,0.96,4.8,15.4,CDIP nearshore (ECMWF),1.04,2026-11-24 18:12
-2026-11-27,11 AM,13.41,Flood,6.44,1.19,4.9,18.2,CDIP nearshore (ECMWF),1.04,2026-11-24 18:12
-2026-11-28,12 PM,11.18,Watch,5.94,1.32,3.0,15.1,CDIP nearshore (ECMWF),1.04,2026-11-24 18:12
-2026-11-29,2 PM,9.42,Low,5.22,1.37,2.0,12.8,CDIP nearshore (ECMWF),1.04,2026-11-24 18:12
-2026-11-30,2 PM,9.57,Low,4.57,1.28,3.7,12.3,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 18:12
-2026-12-01,4 PM,10.94,Low,4.05,1.33,10.2,11.2,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 18:12
-2026-12-02,6 AM,12.81,Flood,5.09,1.33,9.7,13.6,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 18:12
-2026-12-03,6 AM,9.99,Low,5.43,1.33,3.0,11.7,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 18:12
+2026-11-24,11 AM,10.37,Low,5.38,1.16,3.1,14.4,CDIP nearshore (ECMWF),1.04,2026-11-24 19:11
+2026-11-25,10 AM,16.52,Severe,6.82,1.08,9.5,20.0,CDIP nearshore (ECMWF),1.04,2026-11-24 19:11
+2026-11-26,10 AM,12.69,Flood,6.71,0.98,4.8,15.4,CDIP nearshore (ECMWF),1.04,2026-11-24 19:11
+2026-11-27,11 AM,13.43,Flood,6.44,1.21,4.9,18.2,CDIP nearshore (ECMWF),1.04,2026-11-24 19:11
+2026-11-28,12 PM,11.19,Watch,5.94,1.33,3.0,15.1,CDIP nearshore (ECMWF),1.04,2026-11-24 19:11
+2026-11-29,2 PM,9.43,Low,5.22,1.39,2.0,12.8,CDIP nearshore (ECMWF),1.04,2026-11-24 19:11
+2026-11-30,2 PM,9.58,Low,4.57,1.29,3.7,12.3,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 19:11
+2026-12-01,4 PM,10.95,Low,4.05,1.34,10.2,11.2,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 19:11
+2026-12-02,6 AM,12.82,Flood,5.09,1.34,9.7,13.6,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 19:11
+2026-12-03,6 AM,10.0,Low,5.43,1.34,3.0,11.7,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-24 19:11
