@@ -1,11 +1,11 @@
 date,peak_time,twl,level,tide_ft,offset_peak_ft,hs_capitola_ft,period_s,source,offset_ft,run_at_utc
-2026-11-24,11 PM,10.07,Low,3.95,1.18,5.5,13.9,CDIP nearshore (ECMWF),1.05,2026-11-24 21:12
-2026-11-25,10 AM,16.5,Severe,6.82,1.06,9.5,20.0,CDIP nearshore (ECMWF),1.05,2026-11-24 21:12
-2026-11-26,10 AM,12.64,Flood,6.71,0.92,4.8,15.4,CDIP nearshore (ECMWF),1.05,2026-11-24 21:12
-2026-11-27,11 AM,13.42,Flood,6.44,1.2,4.9,18.2,CDIP nearshore (ECMWF),1.05,2026-11-24 21:12
-2026-11-28,12 PM,11.19,Watch,5.94,1.32,3.0,15.1,CDIP nearshore (ECMWF),1.05,2026-11-24 21:12
-2026-11-29,2 PM,9.41,Low,5.22,1.37,2.0,12.8,CDIP nearshore (ECMWF),1.05,2026-11-24 21:12
-2026-11-30,3 PM,10.55,Low,4.61,1.11,5.4,13.7,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 21:12
-2026-12-01,5 AM,10.81,Low,4.79,1.21,7.5,11.2,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 21:12
-2026-12-02,6 AM,11.07,Watch,5.09,1.31,5.4,13.1,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 21:12
-2026-12-03,6 AM,9.88,Low,5.43,1.31,2.6,12.3,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 21:12
+2026-11-24,11 PM,10.13,Low,3.95,1.18,5.7,13.9,CDIP nearshore (ECMWF),1.05,2026-11-24 22:08
+2026-11-25,10 AM,16.44,Severe,6.82,1.06,9.4,20.0,CDIP nearshore (ECMWF),1.05,2026-11-24 22:08
+2026-11-26,10 AM,12.63,Flood,6.71,0.92,4.8,15.4,CDIP nearshore (ECMWF),1.05,2026-11-24 22:08
+2026-11-27,11 AM,13.53,Flood,6.44,1.2,5.1,18.2,CDIP nearshore (ECMWF),1.05,2026-11-24 22:08
+2026-11-28,12 PM,11.18,Watch,5.94,1.32,3.0,15.1,CDIP nearshore (ECMWF),1.05,2026-11-24 22:08
+2026-11-29,1 PM,10.19,Low,5.3,1.35,2.1,16.3,CDIP nearshore (ECMWF),1.05,2026-11-24 22:08
+2026-11-30,3 PM,10.54,Low,4.61,1.11,5.4,13.7,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 22:08
+2026-12-01,5 AM,10.8,Low,4.79,1.2,7.5,11.2,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 22:08
+2026-12-02,6 AM,11.06,Watch,5.09,1.31,5.4,13.1,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 22:08
+2026-12-03,6 AM,9.88,Low,5.43,1.31,2.6,12.3,Open-Meteo offshore ECMWF (scaled),1.05,2026-11-24 22:08
