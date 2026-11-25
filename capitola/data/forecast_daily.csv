@@ -1,11 +1,11 @@
 date,peak_time,twl,level,tide_ft,offset_peak_ft,hs_capitola_ft,period_s,source,offset_ft,run_at_utc
-2026-11-25,10 AM,16.44,Severe,6.82,1.05,9.4,20.0,CDIP nearshore (ECMWF),1.03,2026-11-25 16:42
-2026-11-26,10 AM,12.61,Flood,6.71,0.94,4.7,15.4,CDIP nearshore (ECMWF),1.03,2026-11-25 16:42
-2026-11-27,11 AM,13.44,Flood,6.44,1.16,5.0,18.2,CDIP nearshore (ECMWF),1.03,2026-11-25 16:42
-2026-11-28,12 PM,11.24,Watch,5.94,1.37,3.0,15.1,CDIP nearshore (ECMWF),1.03,2026-11-25 16:42
-2026-11-29,1 PM,10.43,Low,5.3,1.48,2.2,16.7,CDIP nearshore (ECMWF),1.03,2026-11-25 16:42
-2026-11-30,4 AM,10.06,Low,4.48,1.15,5.1,12.8,CDIP nearshore (ECMWF),1.03,2026-11-25 16:42
-2026-12-01,4 AM,10.43,Low,4.63,1.05,5.6,13.1,CDIP nearshore (ECMWF),1.03,2026-11-25 16:42
-2026-12-02,5 AM,11.3,Watch,5.06,1.38,6.1,12.9,Open-Meteo offshore ECMWF (scaled),1.03,2026-11-25 16:42
-2026-12-03,6 AM,10.04,Low,5.43,1.39,2.8,12.2,Open-Meteo offshore ECMWF (scaled),1.03,2026-11-25 16:42
-2026-12-04,7 AM,9.79,Low,5.68,1.39,1.8,12.7,Open-Meteo offshore ECMWF (scaled),1.03,2026-11-25 16:42
+2026-11-25,10 AM,16.44,Severe,6.82,1.05,9.4,20.0,CDIP nearshore (ECMWF),1.03,2026-11-25 17:41
+2026-11-26,10 AM,12.61,Flood,6.71,0.94,4.7,15.4,CDIP nearshore (ECMWF),1.03,2026-11-25 17:41
+2026-11-27,11 AM,13.44,Flood,6.44,1.16,5.0,18.2,CDIP nearshore (ECMWF),1.03,2026-11-25 17:41
+2026-11-28,12 PM,11.24,Watch,5.94,1.37,3.0,15.1,CDIP nearshore (ECMWF),1.03,2026-11-25 17:41
+2026-11-29,1 PM,10.43,Low,5.3,1.48,2.2,16.7,CDIP nearshore (ECMWF),1.03,2026-11-25 17:41
+2026-11-30,4 AM,10.06,Low,4.48,1.15,5.1,12.8,CDIP nearshore (ECMWF),1.03,2026-11-25 17:41
+2026-12-01,4 AM,10.43,Low,4.63,1.05,5.6,13.1,CDIP nearshore (ECMWF),1.03,2026-11-25 17:41
+2026-12-02,5 AM,11.3,Watch,5.06,1.38,6.1,12.9,Open-Meteo offshore ECMWF (scaled),1.03,2026-11-25 17:41
+2026-12-03,6 AM,10.04,Low,5.43,1.39,2.8,12.2,Open-Meteo offshore ECMWF (scaled),1.03,2026-11-25 17:41
+2026-12-04,7 AM,9.79,Low,5.68,1.39,1.8,12.7,Open-Meteo offshore ECMWF (scaled),1.03,2026-11-25 17:41
