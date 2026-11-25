@@ -1,11 +1,11 @@
 date,peak_time,twl,level,tide_ft,offset_peak_ft,hs_capitola_ft,period_s,source,offset_ft,run_at_utc
-2026-11-25,10 AM,16.36,Severe,6.82,1.01,9.4,20.0,CDIP nearshore (ECMWF),1.04,2026-11-25 12:48
-2026-11-26,10 AM,12.58,Flood,6.71,0.86,4.8,15.4,CDIP nearshore (ECMWF),1.04,2026-11-25 12:48
-2026-11-27,11 AM,13.48,Flood,6.44,1.1,5.2,18.2,CDIP nearshore (ECMWF),1.04,2026-11-25 12:48
-2026-11-28,12 PM,11.23,Watch,5.94,1.29,3.0,15.4,CDIP nearshore (ECMWF),1.04,2026-11-25 12:48
-2026-11-29,1 PM,10.34,Low,5.3,1.36,2.1,17.2,CDIP nearshore (ECMWF),1.04,2026-11-25 12:48
-2026-11-30,3 PM,10.17,Low,4.61,0.98,5.1,13.3,CDIP nearshore (ECMWF),1.04,2026-11-25 12:48
-2026-12-01,4 PM,10.1,Low,4.05,1.09,6.7,12.4,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 12:48
-2026-12-02,5 AM,11.13,Watch,5.06,1.21,6.1,12.9,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 12:48
-2026-12-03,6 AM,9.85,Low,5.43,1.21,2.8,12.2,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 12:48
-2026-12-04,7 AM,9.6,Low,5.68,1.21,1.8,12.7,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 12:48
+2026-11-25,10 AM,16.38,Severe,6.82,1.03,9.4,20.0,CDIP nearshore (ECMWF),1.04,2026-11-25 13:46
+2026-11-26,10 AM,12.64,Flood,6.71,0.92,4.8,15.4,CDIP nearshore (ECMWF),1.04,2026-11-25 13:46
+2026-11-27,11 AM,13.53,Flood,6.44,1.15,5.2,18.2,CDIP nearshore (ECMWF),1.04,2026-11-25 13:46
+2026-11-28,12 PM,11.29,Watch,5.94,1.35,3.0,15.4,CDIP nearshore (ECMWF),1.04,2026-11-25 13:46
+2026-11-29,1 PM,10.45,Low,5.3,1.46,2.1,17.2,CDIP nearshore (ECMWF),1.04,2026-11-25 13:46
+2026-11-30,3 PM,10.32,Low,4.61,1.13,5.1,13.3,CDIP nearshore (ECMWF),1.04,2026-11-25 13:46
+2026-12-01,4 PM,10.17,Low,4.05,1.16,6.7,12.4,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 13:46
+2026-12-02,5 AM,11.28,Watch,5.06,1.36,6.1,12.9,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 13:46
+2026-12-03,6 AM,10.02,Low,5.43,1.38,2.8,12.2,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 13:46
+2026-12-04,7 AM,9.77,Low,5.68,1.38,1.8,12.7,Open-Meteo offshore ECMWF (scaled),1.04,2026-11-25 13:46
