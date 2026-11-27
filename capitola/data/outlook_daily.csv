@@ -1,5 +1,5 @@
 date,tide_mllw,tide_navd,offset_hold,still_hold,avg_hold,big_hold,offset_recede,still_recede,avg_recede,big_recede,offset_fast,still_fast,avg_fast,big_fast,high_tide_time,runup_typical,runup_big,level_avg_hold,level_big_hold,level_avg_recede,level_big_recede,level_avg_fast,level_big_fast
-2026-11-27,5.62,5.76,1.0,6.76,9.89,12.04,1.0,6.75,9.88,12.03,0.99,6.75,9.88,12.03,1:00 PM,3.13,5.28,Low,Watch,Low,Watch,Low,Watch
+2026-11-27,4.42,4.56,1.0,5.56,8.69,10.84,1.0,5.56,8.69,10.84,0.99,5.55,8.68,10.83,2:00 PM,3.13,5.28,Low,Low,Low,Low,Low,Low
 2026-11-28,5.94,6.08,1.0,7.08,10.21,12.36,0.99,7.07,10.2,12.35,0.98,7.06,10.19,12.34,12:00 PM,3.13,5.28,Low,Watch,Low,Watch,Low,Watch
 2026-11-29,5.3,5.44,1.0,6.44,9.57,11.72,0.99,6.42,9.55,11.7,0.97,6.4,9.53,11.68,1:00 PM,3.13,5.28,Low,Watch,Low,Watch,Low,Watch
 2026-11-30,4.61,4.75,1.0,5.75,8.88,11.03,0.98,5.72,8.85,11.0,0.95,5.69,8.82,10.97,3:00 PM,3.13,5.28,Low,Watch,Low,Watch,Low,Low
