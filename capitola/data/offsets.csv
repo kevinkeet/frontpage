@@ -1,4 +1,4 @@
 key,label,description,offset_now_ft,offset_dec15_ft,offset_feb15_ft
 hold,Stays,Stays at today's level,1.0,1.0,1.0
-recede,Recedes,Recedes like past El Niños,1.0,0.88,0.79
-fast,Recedes fast,Recedes fast,1.0,0.72,0.68
+recede,Recedes,Recedes like past El Niños,1.0,0.88,0.8
+fast,Recedes fast,Recedes fast,1.0,0.73,0.69
